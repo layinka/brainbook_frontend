@@ -1,0 +1,12 @@
+<app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
+<app-auth-overlay></app-auth-overlay>
+
+<div class="bb-app-shell">
+  @if (!web3Service.isMiniPay) {
+    <app-navbar></app-navbar>
+  }
+
+  <main class="bb-main">
+    <router-outlet />
+  </main>
+</div>

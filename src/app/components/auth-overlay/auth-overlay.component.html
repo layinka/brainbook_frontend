@@ -1,0 +1,112 @@
+<div class="auth-overlay-backdrop" *ngIf="showOverlay">
+  <!-- SIWE Flow -->
+  <div class="glass-card auth-modal-card animate-fade-in" *ngIf="!isLoggedIn">
+    <div class="card-glow"></div>
+    <div class="card-content">
+      <div class="icon-header">
+        <div class="shield-icon-wrapper">
+          <i class="bi bi-shield-lock-fill"></i>
+        </div>
+      </div>
+      
+      <h2 class="auth-title">Authenticate Wallet</h2>
+      <p class="auth-description">
+        Please sign a secure, gasless message with your wallet to prove ownership and authenticate your session on Save-Up.
+      </p>
+
+      <div class="wallet-info-badge">
+        <i class="bi bi-wallet2"></i>
+        <span>{{ saveUpAuth.web3Service.account$() | slice:0:6 }}...{{ saveUpAuth.web3Service.account$() | slice:-4 }}</span>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-primary btn-glow-purple" (click)="onSignIn()" [disabled]="isLoading()">
+          <span *ngIf="!isLoading()">
+            <i class="bi bi-pen-fill me-2"></i>Sign In with Ethereum
+          </span>
+          <span *ngIf="isLoading()">
+            Authenticating...
+          </span>
+        </button>
+        <button *ngIf="!saveUpAuth.web3Service.isMiniPay" class="btn btn-outline-cancel" (click)="onCancel()" [disabled]="isLoading()">
+          Disconnect Wallet
+        </button>
+      </div>
+    </div>
+    <ngx-spinner name="siwe-spinner" [fullScreen]="false" type="ball-scale-multiple" bdColor="rgba(0,0,0,0.5)"></ngx-spinner>
+  </div>
+
+  <!-- Email OTP Flow -->
+  <div class="glass-card auth-modal-card animate-fade-in" *ngIf="isLoggedIn && !emailVerified">
+    <div class="card-glow blue-glow"></div>
+    <div class="card-content">
+      <div class="icon-header">
+        <div class="shield-icon-wrapper blue-icon">
+          <i class="bi bi-envelope-check-fill"></i>
+        </div>
+      </div>
+      
+      <h2 class="auth-title">Two-Step Verification</h2>
+      <p class="auth-description">
+        We require a verified email to send you updates regarding your savings streaks, performance dividends, and speed rewards.
+      </p>
+
+      <!-- Step 1: Request OTP -->
+      <form (submit)="onRequestOtp()" *ngIf="!otpSent()" class="otp-form">
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <div class="input-with-icon">
+            <i class="bi bi-envelope"></i>
+            <input type="email" id="email" name="email" class="form-control" [(ngModel)]="emailInput" placeholder="name@domain.com" required [disabled]="isLoading()">
+          </div>
+        </div>
+
+        <div class="action-buttons mt-4">
+          <button type="submit" class="btn btn-primary btn-glow-blue" [disabled]="isLoading() || !emailInput">
+            <span *ngIf="!isLoading()">
+              <i class="bi bi-send-fill me-2"></i>Send Verification Code
+            </span>
+            <span *ngIf="isLoading()">
+              Sending...
+            </span>
+          </button>
+          <button *ngIf="!saveUpAuth.web3Service.isMiniPay" type="button" class="btn btn-outline-cancel" (click)="onCancel()" [disabled]="isLoading()">
+            Disconnect Wallet
+          </button>
+        </div>
+      </form>
+
+      <!-- Step 2: Verify OTP -->
+      <form (submit)="onVerifyOtp()" *ngIf="otpSent()" class="otp-form">
+        <div class="email-sent-alert">
+          <i class="bi bi-check-circle-fill me-2 text-success"></i>
+          <span>Code sent to <strong>{{ emailInput }}</strong></span>
+          <button type="button" class="btn btn-link btn-change-email" (click)="otpSent.set(false)" [disabled]="isLoading()">Change</button>
+        </div>
+
+        <div class="form-group">
+          <label for="otp" class="form-label">6-Digit Verification Code</label>
+          <div class="input-with-icon">
+            <i class="bi bi-key"></i>
+            <input type="text" id="otp" name="otp" class="form-control text-center letter-spacing-wide" [(ngModel)]="otpInput" maxlength="6" placeholder="0 0 0 0 0 0" required [disabled]="isLoading()">
+          </div>
+        </div>
+
+        <div class="action-buttons mt-4">
+          <button type="submit" class="btn btn-primary btn-glow-blue" [disabled]="isLoading() || otpInput.length !== 6">
+            <span *ngIf="!isLoading()">
+              <i class="bi bi-patch-check-fill me-2"></i>Confirm and Activate
+            </span>
+            <span *ngIf="isLoading()">
+              Activating...
+            </span>
+          </button>
+          <button type="button" class="btn btn-link mt-2 text-muted" (click)="onRequestOtp()" [disabled]="isLoading()">
+            Resend Verification Code
+          </button>
+        </div>
+      </form>
+    </div>
+    <ngx-spinner name="otp-spinner" [fullScreen]="false" type="ball-scale-multiple" bdColor="rgba(0,0,0,0.5)"></ngx-spinner>
+  </div>
+</div>

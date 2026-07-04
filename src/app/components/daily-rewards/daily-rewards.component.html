@@ -1,0 +1,108 @@
+<div class="rewards-page">
+
+  <!-- Header -->
+  <div class="rewards-header bb-anim-slide-up">
+    <button class="bb-btn bb-btn--ghost rewards-back-btn" routerLink="/">
+      <span>←</span> Back
+    </button>
+    <h1 class="rewards-title">
+      <span class="bb-text-gradient">Daily</span> Rewards
+    </h1>
+    <p class="rewards-subtitle">Log in consecutive days to earn $BRAINBOOK tokens and rare Milestone NFTs!</p>
+  </div>
+
+  <!-- Main Info Card -->
+  <div class="rewards-status-card bb-card bb-anim-slide-up">
+    <div class="rewards-streak-display">
+      <span class="fire-icon">🔥</span>
+      <div class="streak-details">
+        <span class="count">{{ currentStreak() }} Day Streak</span>
+        <span class="label">Keep the flame alive by claiming every 24h!</span>
+      </div>
+    </div>
+
+    <div class="rewards-action-section">
+      @if (loading()) {
+        <button class="bb-btn bb-btn--primary claim-btn" disabled>
+          <span class="spinner-border spinner-border-sm me-1"></span>
+          Checking calendar...
+        </button>
+      } @else if (canClaim()) {
+        <button class="bb-btn bb-btn--gold bb-anim-pulse claim-btn" (click)="claimReward()">
+          🎁 Claim Day {{ currentDay() }} Reward
+        </button>
+      } @else {
+        <button class="bb-btn bb-btn--ghost claim-btn" disabled>
+          ✅ Claimed Today (Next in {{ formattedTimeRemaining() }})
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- 7-Day Calendar Grid -->
+  <div class="rewards-calendar bb-anim-slide-up">
+    @for (day of calendarDays; track day.dayNumber) {
+      <div
+        class="calendar-card bb-card"
+        [class.calendar-card--past]="day.dayNumber < currentDay()"
+        [class.calendar-card--active]="day.dayNumber === currentDay() && canClaim()"
+        [class.calendar-card--claimed]="day.dayNumber === currentDay() && !canClaim()"
+        [class.calendar-card--future]="day.dayNumber > currentDay()"
+        [class.calendar-card--gold]="day.dayNumber === 7"
+      >
+        <!-- Card status indicator -->
+        <div class="card-status">
+          @if (day.dayNumber < currentDay() || (day.dayNumber === currentDay() && !canClaim())) {
+            <span class="status-check">✓</span>
+          } @else if (day.dayNumber === currentDay() && canClaim()) {
+            <span class="status-active">CLAIM</span>
+          } @else {
+            <span class="status-locked">🔒</span>
+          }
+        </div>
+
+        <div class="day-label">Day {{ day.dayNumber }}</div>
+
+        <!-- Reward representation -->
+        <div class="reward-graphic">
+          <span class="reward-icon">{{ day.icon }}</span>
+          @if (day.dayNumber === 7) {
+            <span class="reward-nft-badge">NFT</span>
+          }
+        </div>
+
+        <div class="reward-amount">{{ day.rewardText }}</div>
+      </div>
+    }
+  </div>
+
+  <!-- EIP-712 Claims queue overlay (for on-chain NFT/Token claims) -->
+  @if (pendingClaim()) {
+    <div class="claim-overlay bb-glass bb-anim-fade-in">
+      <div class="claim-box text-center">
+        <h2>🎉 Day 7 Achievement!</h2>
+        <p>You qualified for the <strong>Weekly Warrior NFT</strong> Badge!</p>
+        <p class="description">Submit a transaction to mint your soulbound reward to the blockchain.</p>
+        
+        <div class="claim-actions">
+          <button
+            class="bb-btn bb-btn--primary w-100 mb-2"
+            [disabled]="mintingClaim()"
+            (click)="mintPendingClaim()"
+          >
+            @if (mintingClaim()) {
+              <span class="spinner-border spinner-border-sm me-1"></span>
+              Minting on Celo...
+            } @else {
+              🏆 Mint Soulbound NFT
+            }
+          </button>
+          <button class="bb-btn bb-btn--ghost w-100" [disabled]="mintingClaim()" (click)="cancelPendingClaim()">
+            Claim Later (Offline)
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

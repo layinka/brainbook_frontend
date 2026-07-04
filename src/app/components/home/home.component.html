@@ -1,0 +1,125 @@
+<div class="home">
+
+  <!-- Hero Background -->
+  <div class="home__bg">
+    <img src="/images/background-sheet0.png" alt="" class="home__bgimg" />
+    <div class="home__bg-overlay"></div>
+  </div>
+
+  <!-- Hero Content -->
+  <section class="home__hero">
+
+    <!-- Logo / Brand -->
+    <div class="home__logo bb-anim-bounce-in">
+      <div class="home__logo-icon">🧠</div>
+      <h1 class="home__logo-name">
+        <span class="bb-text-gradient">Brain</span><span class="bb-text-gold">Book</span>
+      </h1>
+      <p class="home__logo-tagline">Quiz. Earn. Conquer.</p>
+    </div>
+
+    <!-- Player Stats Bar -->
+    <div class="home__stats bb-anim-slide-up">
+      <div class="home__stat">
+        <span class="home__stat-icon">🔥</span>
+        <div>
+          <div class="home__stat-value">{{ loginStreak() }}</div>
+          <div class="home__stat-label">Day Streak</div>
+        </div>
+      </div>
+      <div class="home__stat-divider"></div>
+      <div class="home__stat">
+        <span class="home__stat-icon">🪙</span>
+        <div>
+          <div class="home__stat-value">{{ totalScore() | number }}</div>
+          <div class="home__stat-label">Total Score</div>
+        </div>
+      </div>
+      <div class="home__stat-divider"></div>
+      <div class="home__stat">
+        <span class="home__stat-icon">👑</span>
+        <div>
+          <div class="home__stat-value">{{ completedCount() }}<span class="home__stat-of">/22</span></div>
+          <div class="home__stat-label">Categories</div>
+        </div>
+      </div>
+      <div class="home__stat-divider"></div>
+      <div class="home__stat">
+        <span class="home__stat-icon">💰</span>
+        <div>
+          <div class="home__stat-value">{{ tokenBalance() }}</div>
+          <div class="home__stat-label">BRAINBOOK</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Reward CTA -->
+    <button class="home__daily-btn bb-anim-float" (click)="goDaily()" id="btn-daily-reward">
+      <span class="home__daily-btn__icon">🎁</span>
+      <span>
+        <strong>Daily Reward</strong>
+        @if (loginStreak() > 0) {
+        <small>Day {{ loginStreak() }} — Claim now!</small>
+        }
+      </span>
+      <span class="home__daily-btn__arrow">→</span>
+    </button>
+
+    <!-- Main Play Button -->
+    <button class="home__play-btn bb-btn bb-btn--primary bb-btn--lg" (click)="goCategories()" id="btn-play-main">
+      ▶ Play Now
+    </button>
+  </section>
+
+  <!-- Quick Play Categories -->
+  <section class="home__quick">
+    <div class="home__quick-header">
+      <h2 class="home__section-title">Quick Play</h2>
+      <button class="bb-btn bb-btn--ghost" (click)="goCategories()" id="btn-see-all"
+        style="padding:0.4rem 0.9rem;font-size:0.85rem">See All →</button>
+    </div>
+
+    <div class="row g-2">
+      @for (cat of CATEGORIES_PREVIEW; track cat.key) {
+      <div class="col-4 col-sm-3 col-md-2">
+        <button class="home__cat-chip w-100" (click)="play(cat.key)" [id]="'home-cat-' + cat.key">
+          <span class="home__cat-chip__emoji">{{ cat.emoji }}</span>
+          <span class="home__cat-chip__name">{{ cat.name }}</span>
+        </button>
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- Feature Highlights -->
+  <section class="home__features bb-anim-slide-up row g-3 d-flex justify-content-center">
+    <div class="col-9 col-md-4">
+      <div class="home__feature bb-card h-100">
+        <span class="home__feature__icon">🏆</span>
+        <h3>Leaderboard</h3>
+        <p>Compete globally. Top players earn exclusive NFTs.</p>
+        <button class="bb-btn bb-btn--ghost" routerLink="/leaderboard"
+          style="font-size:0.8rem;padding:0.4rem 0.8rem">View →</button>
+      </div>
+    </div>
+    <div class="col-9 col-md-4">
+      <div class="home__feature bb-card h-100">
+        <span class="home__feature__icon">🛒</span>
+        <h3>Item Shop</h3>
+        <p>Buy hints, time freezes &amp; more with $BRAINBOOK.</p>
+        <button class="bb-btn bb-btn--ghost" routerLink="/store" style="font-size:0.8rem;padding:0.4rem 0.8rem">Shop
+          →</button>
+      </div>
+    </div>
+    <div class="col-9 col-md-4">
+      <div class="home__feature bb-card h-100">
+        <span class="home__feature__icon">🎴</span>
+        <h3>Earn NFTs</h3>
+        <p>Complete categories and hit milestones to win rare NFTs.</p>
+        <button class="bb-btn bb-btn--ghost" routerLink="/profile"
+          style="font-size:0.8rem;padding:0.4rem 0.8rem">Profile →</button>
+      </div>
+    </div>
+  </section>
+
+</div>

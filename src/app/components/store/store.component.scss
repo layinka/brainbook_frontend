@@ -1,0 +1,306 @@
+:host { display: block; }
+
+.store-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.store-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.store-back-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.store-title {
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  font-weight: 900;
+  margin: 0 0 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.store-subtitle {
+  color: var(--bb-text-secondary);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ── Balance Card ───────────────────────────────────────────────────────────── */
+.store-balance-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(236, 72, 153, 0.05) 100%);
+  border-color: rgba(124, 58, 237, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  .store-balance-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .store-balance-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--bb-text-muted);
+    font-weight: 700;
+  }
+
+  .store-balance-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .coin-icon {
+      font-size: 2rem;
+      filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.6));
+    }
+
+    .value {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--bb-gold-light);
+      text-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+      line-height: 1;
+    }
+
+    .symbol {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--bb-text-secondary);
+      letter-spacing: 0.05em;
+      margin-top: 0.5rem;
+    }
+  }
+
+  .store-wallet-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    text-align: right;
+
+    p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--bb-text-secondary);
+    }
+  }
+
+  .store-wallet-address {
+    font-family: var(--bb-font-mono);
+    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--bb-text-muted);
+    max-width: 320px;
+
+    span {
+      color: var(--bb-purple-light);
+      font-weight: 700;
+    }
+  }
+}
+
+/* ── Store Grid ─────────────────────────────────────────────────────────────── */
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.item-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.75rem 1.5rem;
+  position: relative;
+  transition: all var(--bb-transition-bounce);
+  min-height: 380px;
+
+  &--loading {
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  .item-owned-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.3rem 0.65rem;
+    border-radius: 20px;
+    color: var(--bb-text-secondary);
+  }
+
+  .item-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    background: rgba(124, 58, 237, 0.08);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+
+    .item-icon {
+      font-size: 2.5rem;
+      z-index: 2;
+      transition: transform 0.3s ease;
+    }
+
+    .item-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, transparent 70%);
+      opacity: 0.5;
+      transition: opacity 0.3s ease;
+      z-index: 1;
+    }
+  }
+
+  &:hover {
+    .item-icon-wrap {
+      border-color: var(--bb-purple-light);
+      box-shadow: var(--bb-glow-purple);
+      .item-icon { transform: scale(1.1) rotate(5deg); }
+      .item-glow { opacity: 0.8; }
+    }
+  }
+
+  .item-details {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+
+    .item-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      color: var(--bb-text-primary);
+    }
+
+    .item-desc {
+      font-size: 0.8rem;
+      color: var(--bb-text-secondary);
+      line-height: 1.4;
+      margin: 0;
+    }
+  }
+
+  .item-action {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: auto;
+  }
+
+  .item-price {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--bb-gold);
+    margin-bottom: 0.25rem;
+
+    .coin-icon {
+      font-size: 1.1em;
+    }
+  }
+
+  .quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 0.25rem;
+
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--bb-text-secondary);
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+
+      &:hover:not(:disabled) {
+        background: var(--bb-purple);
+        color: white;
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+    }
+
+    .qty-val {
+      font-size: 0.95rem;
+      font-weight: 800;
+      min-width: 20px;
+      text-align: center;
+      color: var(--bb-text-primary);
+    }
+  }
+
+  .buy-btn {
+    font-weight: 800;
+  }
+}
+
+/* ── Mobile Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .store-balance-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem;
+    
+    .store-wallet-cta {
+      align-items: flex-start;
+      text-align: left;
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .store-page { padding: 1rem 0.5rem 2rem; }
+  .store-back-btn { position: relative; display: inline-flex; margin-bottom: 1rem; }
+  .store-grid { grid-template-columns: 1fr; }
+  .item-card { min-height: auto; padding: 1.25rem; }
+}

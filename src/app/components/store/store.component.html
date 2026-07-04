@@ -1,0 +1,102 @@
+<div class="store-page">
+
+  <!-- Header -->
+  <div class="store-header bb-anim-slide-up">
+    <button class="bb-btn bb-btn--ghost store-back-btn" routerLink="/">
+      <span>←</span> Back
+    </button>
+    <h1 class="store-title">
+      <span class="bb-text-gradient">Item</span> Shop
+    </h1>
+    <p class="store-subtitle">Gear up for victory using $BRAINBOOK tokens or free daily claims</p>
+  </div>
+
+  <!-- Wallet/Balance Stats -->
+  <div class="store-balance-card bb-card bb-anim-slide-up">
+    <div class="store-balance-info">
+      <span class="store-balance-label">Your Balance</span>
+      <div class="store-balance-value">
+        <span class="coin-icon">🪙</span>
+        <span class="value">{{ tokenBalance() }}</span>
+        <span class="symbol">BRAINBOOK</span>
+      </div>
+    </div>
+    @if (!w3s.account$()) {
+      <div class="store-wallet-cta">
+        <p>Connect your wallet to purchase and manage game items.</p>
+        <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
+      </div>
+    } @else {
+      <div class="store-wallet-address text-truncate">
+        <span>Address:</span> {{ w3s.account$() }}
+      </div>
+    }
+  </div>
+
+  <!-- Items Grid -->
+  <div class="store-grid bb-anim-slide-up">
+    @for (item of storeItems; track item.id) {
+      <div class="item-card bb-card" [class.item-card--loading]="purchasingItemId() === item.id">
+        <!-- Quantity owned badge -->
+        <div class="item-owned-badge" title="Quantity in inventory">
+          🎒 {{ ownedCounts()[item.id] || 0 }} Owned
+        </div>
+
+        <!-- Visual Icon -->
+        <div class="item-icon-wrap">
+          <span class="item-icon">{{ item.icon }}</span>
+          <div class="item-glow"></div>
+        </div>
+
+        <!-- Info -->
+        <div class="item-details">
+          <h3 class="item-name">{{ item.name }}</h3>
+          <p class="item-desc">{{ item.description }}</p>
+        </div>
+
+        <!-- Action / Price -->
+        <div class="item-action">
+          <div class="item-price">
+            <span class="coin-icon">🪙</span>
+            <span class="price-val">{{ item.price }}</span>
+          </div>
+
+          @if (w3s.account$()) {
+            <div class="quantity-selector">
+              <button class="qty-btn" (click)="adjustQuantity(item.id, -1)" [disabled]="quantities()[item.id] <= 1">-</button>
+              <span class="qty-val">{{ quantities()[item.id] || 1 }}</span>
+              <button class="qty-btn" (click)="adjustQuantity(item.id, 1)">+</button>
+            </div>
+
+            <button
+              class="bb-btn bb-btn--primary w-100 buy-btn"
+              [disabled]="purchasingItemId() !== null"
+              (click)="buyItem(item.id)"
+            >
+              @if (purchasingItemId() === item.id) {
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Processing...
+              } @else {
+                Buy for {{ item.price * quantities()[item.id] }}
+              }
+            </button>
+
+            <!-- Free claim via Ad (if ads enabled) -->
+            @if (adService.isAdsEnabled()) {
+              <button
+                class="bb-btn bb-btn--ghost w-100 ad-btn mt-2"
+                [disabled]="purchasingItemId() !== null || adService.isAdPlaying()"
+                (click)="claimFreeWithAd(item.id)"
+              >
+                📺 Claim 1 Free (Watch Ad)
+              </button>
+            }
+          @} @else {
+            <button class="bb-btn bb-btn--ghost w-100" disabled>Connect Wallet to Buy</button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+</div>

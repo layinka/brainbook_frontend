@@ -1,0 +1,326 @@
+:host { display: block; }
+
+.profile-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.profile-back-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.profile-title {
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  font-weight: 900;
+  margin: 0 0 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.profile-subtitle {
+  color: var(--bb-text-secondary);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ── Main Profile Card ──────────────────────────────────────────────────────── */
+.profile-card {
+  padding: 1.75rem 2rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.03) 100%);
+  border-color: rgba(124, 58, 237, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  .profile-identity {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .avatar-wrap {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    padding: 3px;
+    background: var(--bb-grad-primary);
+    box-shadow: var(--bb-glow-purple);
+
+    .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--bb-bg-surface);
+      color: white;
+      font-size: 2rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    }
+  }
+
+  .identity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1;
+    min-width: 200px;
+
+    .display-name-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      h2 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin: 0;
+        color: var(--bb-text-primary);
+        line-height: 1.2;
+      }
+
+      .edit-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: transform 0.2s;
+        padding: 0;
+        line-height: 1;
+
+        &:hover {
+          transform: scale(1.2);
+        }
+      }
+    }
+
+    .edit-name-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .edit-name-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--bb-border);
+      border-radius: 8px;
+      color: white;
+      padding: 0.4rem 0.8rem;
+      font-family: var(--bb-font);
+      outline: none;
+      font-size: 0.95rem;
+
+      &:focus {
+        border-color: var(--bb-purple-light);
+      }
+    }
+
+    .wallet-address {
+      font-family: var(--bb-font-mono);
+      font-size: 0.8rem;
+      color: var(--bb-text-muted);
+      max-width: 320px;
+    }
+  }
+
+  .profile-wallet-cta {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--bb-text-secondary);
+      max-width: 440px;
+    }
+  }
+}
+
+/* ── Stats Grid ────────────────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+
+  .stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem 0.5rem;
+    text-align: center;
+    gap: 0.25rem;
+
+    .stat-icon {
+      font-size: 1.6rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--bb-text-primary);
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--bb-text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+}
+
+/* ── Sections Titles ────────────────────────────────────────────────────────── */
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--bb-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 1rem;
+}
+
+/* ── Inventory Section ──────────────────────────────────────────────────────── */
+.inventory-section {
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  .inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .inventory-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+
+    .item-icon { font-size: 1.6rem; }
+    .item-name { font-size: 0.9rem; font-weight: 700; color: var(--bb-text-secondary); flex-grow: 1; }
+    .item-count { font-size: 1.2rem; font-weight: 900; color: var(--bb-purple-light); }
+  }
+}
+
+/* ── NFT Showcase Grid ──────────────────────────────────────────────────────── */
+.nft-showcase {
+  .badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 1rem;
+  }
+
+  .badge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.75rem 1.25rem 1.5rem;
+    text-align: center;
+    position: relative;
+    transition: all var(--bb-transition-bounce);
+    min-height: 220px;
+    border-width: 2px;
+
+    .badge-graphic {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+      transition: transform 0.3s;
+    }
+
+    .badge-name {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--bb-text-primary);
+      margin-bottom: 0.4rem;
+    }
+
+    .badge-desc {
+      font-size: 0.72rem;
+      color: var(--bb-text-secondary);
+      line-height: 1.4;
+      margin: 0 0 0.75rem;
+      flex-grow: 1;
+    }
+
+    .badge-qty {
+      font-size: 0.7rem;
+      font-weight: 800;
+      background: var(--bb-grad-primary);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
+    }
+
+    &:hover:not(.badge-card--locked) {
+      transform: translateY(-4px) scale(1.02);
+      border-color: var(--bb-purple-light);
+      box-shadow: var(--bb-glow-purple);
+      .badge-graphic { transform: scale(1.15) rotate(5deg); }
+    }
+
+    &--locked {
+      opacity: 0.45;
+      border-style: dashed;
+      background: rgba(0, 0, 0, 0.2);
+
+      .badge-graphic {
+        filter: grayscale(1) opacity(0.3);
+      }
+
+      .locked-icon {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+/* ── Mobile Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  .inventory-section .inventory-grid { grid-template-columns: 1fr; gap: 0.6rem; }
+}
+
+@media (max-width: 480px) {
+  .profile-page { padding: 1rem 0.5rem 2rem; }
+  .profile-back-btn { position: relative; display: inline-flex; margin-bottom: 1rem; }
+  .profile-card {
+    padding: 1.25rem;
+    .profile-identity { gap: 1rem; }
+    .avatar-wrap { width: 56px; height: 56px; .avatar { font-size: 1.5rem; } }
+    .identity-info h2 { font-size: 1.25rem; }
+    .profile-wallet-cta { flex-direction: column; align-items: stretch; p { text-align: left; } }
+  }
+  .stats-grid { grid-template-columns: 1fr; }
+  .nft-showcase .badge-grid { grid-template-columns: 1fr; }
+}

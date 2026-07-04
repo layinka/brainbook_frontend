@@ -1,0 +1,94 @@
+<header class="bb-navbar-header">
+  <nav class="navbar navbar-expand-md navbar-dark py-2">
+    <div class="container-fluid px-4">
+      <a href="/" [routerLink]="'/'" class="navbar-brand brand-logo d-flex align-items-center gap-2">
+        <span class="brand-emoji">🧠</span>
+        <span class="brand-text">Brain<span class="brand-text-gold">Book</span></span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" (click)="isMenuCollapsed = !isMenuCollapsed"
+        data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" [ngbCollapse]="isMenuCollapsed" id="navbarTogglerDemo02">
+        <ul class="navbar-nav me-auto mb-2 mb-md-0 gap-1 ms-md-4">
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom" routerLink="/" [routerLinkActiveOptions]="{exact: true}" (click)="isMenuCollapsed = true"
+              routerLinkActive="active">
+              🏠 Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom" routerLink="/categories" (click)="isMenuCollapsed = true"
+              routerLinkActive="active">
+              📚 Categories
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom" routerLink="/leaderboard" (click)="isMenuCollapsed = true"
+              routerLinkActive="active">
+              🏆 Leaderboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom" routerLink="/store" (click)="isMenuCollapsed = true"
+              routerLinkActive="active">
+              🛒 Store
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom" routerLink="/daily-rewards" (click)="isMenuCollapsed = true"
+              routerLinkActive="active">
+              🎁 Rewards
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom" routerLink="/profile" (click)="isMenuCollapsed = true"
+              routerLinkActive="active">
+              👤 Profile
+            </a>
+          </li>
+        </ul>
+
+        <!-- Right Side Items -->
+        <div class="navbar-right d-flex align-items-center gap-3">
+          @if (chainName) {
+          <div class="chain-badge">
+            <span class="badge chain-indicator">{{chainName}}</span>
+          </div>
+          }
+
+          @if (w3s.account$()) {
+          <div class="balance-badge">
+            <span class="badge balance-indicator">🪙 {{ tokenBalance() }}</span>
+          </div>
+          }
+
+          <!-- Better-Auth Status Badges -->
+          @if (authService.authService.isLoggedIn()) {
+            @if (authService.authService.session()?.user?.emailVerified) {
+              <div class="auth-status-badge">
+                <span class="badge bg-success-glow" title="Wallet and Email authenticated">
+                  Verified
+                </span>
+              </div>
+            } @else {
+              <div class="auth-status-badge">
+                <span class="badge bg-warning-glow" title="Email verification pending">
+                  Verify Email
+                </span>
+              </div>
+            }
+          }
+
+          <!-- Wallet Connection -->
+          @if (!w3s.hideConnectWalletForMiniPay) {
+          <div class="wallet-connection">
+            <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

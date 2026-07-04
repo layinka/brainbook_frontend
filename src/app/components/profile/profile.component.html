@@ -1,0 +1,133 @@
+<div class="profile-page">
+
+  <!-- Header -->
+  <div class="profile-header bb-anim-slide-up">
+    <button class="bb-btn bb-btn--ghost profile-back-btn" routerLink="/">
+      <span>←</span> Back
+    </button>
+    <h1 class="profile-title">
+      <span class="bb-text-gradient">Player</span> Profile
+    </h1>
+    <p class="profile-subtitle">Manage your credentials, track statistics, and view your on-chain NFT badges</p>
+  </div>
+
+  <!-- Main Profile Card -->
+  <div class="profile-card bb-card bb-anim-slide-up">
+    <div class="profile-identity">
+      <div class="avatar-wrap">
+        <div class="avatar font-weight-black">
+          {{ (profile()?.displayName || 'Anon')[0].toUpperCase() }}
+        </div>
+      </div>
+      <div class="identity-info">
+        @if (editingName()) {
+          <div class="edit-name-group">
+            <input
+              type="text"
+              class="edit-name-input"
+              [(ngModel)]="newName"
+              placeholder="Enter name..."
+              maxlength="20"
+              id="edit-name-input"
+            />
+            <button class="bb-btn bb-btn--primary py-1 px-3" (click)="saveDisplayName()">Save</button>
+            <button class="bb-btn bb-btn--ghost py-1 px-3" (click)="editingName.set(false)">Cancel</button>
+          </div>
+        } @else {
+          <div class="display-name-row">
+            <h2>{{ profile()?.displayName || 'Anonymous Player' }}</h2>
+            <button class="edit-btn" (click)="startEditing()" title="Edit Name">✏️</button>
+          </div>
+        }
+        <span class="wallet-address text-truncate">
+          {{ w3s.account$() || 'Wallet Not Connected' }}
+        </span>
+      </div>
+    </div>
+
+    @if (!w3s.account$()) {
+      <div class="profile-wallet-cta">
+        <p>Connect your wallet to fetch your earned NFT badges and contract items.</p>
+        <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
+      </div>
+    }
+  </div>
+
+  <!-- Stats Grid -->
+  @if (profile()) {
+    <div class="stats-grid bb-anim-slide-up">
+      <div class="stat-card bb-card">
+        <span class="stat-icon">🎮</span>
+        <span class="stat-value">{{ profile()?.gamesPlayed }}</span>
+        <span class="stat-label">Games Played</span>
+      </div>
+      <div class="stat-card bb-card">
+        <span class="stat-icon">🏆</span>
+        <span class="stat-value">{{ profile()?.totalScore | number }}</span>
+        <span class="stat-label">Total Score</span>
+      </div>
+      <div class="stat-card bb-card">
+        <span class="stat-icon">🎯</span>
+        <span class="stat-value">{{ accuracy() }}%</span>
+        <span class="stat-label">Accuracy Rate</span>
+      </div>
+      <div class="stat-card bb-card">
+        <span class="stat-icon">🔥</span>
+        <span class="stat-value">{{ profile()?.currentDailyStreak }} Days</span>
+        <span class="stat-label">Daily Streak</span>
+      </div>
+    </div>
+  }
+
+  <!-- Inventory Section -->
+  @if (w3s.account$()) {
+    <div class="inventory-section bb-card bb-anim-slide-up">
+      <h3 class="section-title">🎒 Consumables Inventory</h3>
+      <div class="inventory-grid">
+        <div class="inventory-item">
+          <span class="item-icon">⏳</span>
+          <span class="item-name">Time Freeze</span>
+          <span class="item-count">{{ ownedItems()[1000] || 0 }}</span>
+        </div>
+        <div class="inventory-item">
+          <span class="item-icon">💡</span>
+          <span class="item-name">Hint Reveal</span>
+          <span class="item-count">{{ ownedItems()[1001] || 0 }}</span>
+        </div>
+        <div class="inventory-item">
+          <span class="item-icon">❌</span>
+          <span class="item-name">Eliminate Option</span>
+          <span class="item-count">{{ ownedItems()[1002] || 0 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NFT Badge Collection Showcase -->
+    <div class="nft-showcase bb-anim-slide-up">
+      <h3 class="section-title">🏆 NFT Achievement Showcase</h3>
+      <div class="badge-grid">
+        @for (badge of achievementBadges; track badge.tokenId) {
+          <div
+            class="badge-card bb-card"
+            [class.badge-card--locked]="!ownedBadges()[badge.tokenId]"
+          >
+            <!-- Lock indicator overlay -->
+            @if (!ownedBadges()[badge.tokenId]) {
+              <div class="locked-icon">🔒</div>
+            }
+
+            <div class="badge-graphic">
+              {{ badge.icon }}
+            </div>
+            <h4 class="badge-name">{{ badge.name }}</h4>
+            <p class="badge-desc">{{ badge.description }}</p>
+            @if (ownedBadges()[badge.tokenId]) {
+              <div class="badge-qty">x{{ ownedBadges()[badge.tokenId] }} Owned</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>

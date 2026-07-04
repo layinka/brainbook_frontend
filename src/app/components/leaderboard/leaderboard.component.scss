@@ -1,0 +1,299 @@
+:host { display: block; }
+
+.leaderboard-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.leaderboard-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.leaderboard-back-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.leaderboard-title {
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  font-weight: 900;
+  margin: 0 0 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.leaderboard-subtitle {
+  color: var(--bb-text-secondary);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ── Filters Card ───────────────────────────────────────────────────────────── */
+.leaderboard-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+
+  .period-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.25rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tab-btn {
+    border: none;
+    background: none;
+    color: var(--bb-text-secondary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      color: var(--bb-text-primary);
+    }
+
+    &--active {
+      background: var(--bb-purple);
+      color: white !important;
+      box-shadow: var(--bb-glow-purple);
+    }
+  }
+
+  .category-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .filter-label {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--bb-text-muted);
+      text-transform: uppercase;
+    }
+
+    .filter-select {
+      background: var(--bb-bg-surface);
+      border: 1px solid var(--bb-border);
+      border-radius: 8px;
+      color: var(--bb-text-primary);
+      padding: 0.5rem 1rem;
+      outline: none;
+      font-family: var(--bb-font);
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 200px;
+      transition: all 0.2s;
+
+      &:focus {
+        border-color: var(--bb-purple-light);
+        box-shadow: var(--bb-glow-purple);
+      }
+    }
+  }
+}
+
+.leaderboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem;
+  color: var(--bb-text-secondary);
+}
+
+/* ── Rankings Table ─────────────────────────────────────────────────────────── */
+.rankings-container {
+  padding: 1.5rem;
+  background: var(--bb-grad-card);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1.5rem;
+}
+
+.rankings-header {
+  display: flex;
+  padding: 0 1rem 0.75rem;
+  border-bottom: 1px solid var(--bb-border);
+  color: var(--bb-text-muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+    transform: translateX(4px);
+  }
+
+  &--top3 {
+    background: linear-gradient(90deg, rgba(124, 58, 237, 0.05) 0%, transparent 100%);
+  }
+
+  &--current {
+    background: linear-gradient(90deg, rgba(236, 72, 153, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%) !important;
+    border-color: rgba(236, 72, 153, 0.4) !important;
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.05);
+
+    .display-name {
+      color: white;
+      font-weight: 800;
+    }
+  }
+}
+
+/* Columns widths sizing */
+.rank-col {
+  width: 12%;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+
+  .rank-trophy {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
+}
+
+.player-col {
+  width: 48%;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bb-purple-dark);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 0.85rem;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .display-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--bb-text-primary);
+  }
+}
+
+.tier-col {
+  width: 25%;
+  display: flex;
+  align-items: center;
+}
+
+.score-col {
+  width: 15%;
+  text-align: right;
+  font-weight: 800;
+  color: var(--bb-gold-light);
+  font-size: 1rem;
+}
+
+.rankings-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--bb-text-secondary);
+}
+
+/* ── Sticky User Rank ───────────────────────────────────────────────────────── */
+.sticky-user-row {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%);
+  border-color: rgba(236, 72, 153, 0.4);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.3);
+  position: sticky;
+  bottom: 0px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .row-label {
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--bb-text-secondary);
+  }
+
+  .rank-row {
+    margin: 0;
+  }
+}
+
+/* ── Mobile Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .leaderboard-filters {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+
+    .period-tabs {
+      justify-content: center;
+    }
+    
+    .category-filter {
+      justify-content: space-between;
+      .filter-select { min-width: 150px; flex: 1; }
+    }
+  }
+
+  .rank-col { width: 15%; }
+  .player-col { width: 45%; }
+  .tier-col { width: 20%; }
+  .score-col { width: 20%; }
+}
+
+@media (max-width: 480px) {
+  .leaderboard-page { padding: 1rem 0.5rem 2rem; }
+  .leaderboard-back-btn { position: relative; display: inline-flex; margin-bottom: 1rem; }
+  
+  .rankings-header {
+    .tier-col { display: none; }
+    .player-col { width: 65%; }
+  }
+  .rank-row {
+    padding: 0.65rem 0.5rem;
+    
+    .tier-col { display: none; }
+    .player-col { width: 65%; }
+    .score-col { font-size: 0.85rem; }
+  }
+
+  .sticky-user-row {
+    padding: 0.75rem;
+    .tier-col { display: none; }
+    .player-col { width: 65%; }
+  }
+}

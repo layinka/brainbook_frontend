@@ -1,0 +1,279 @@
+<!-- LOAD ERROR STATE -->
+@if (loadError()) {
+  <div class="qg-error">
+    <p>{{ loadError() }}</p>
+    <button class="bb-btn bb-btn--primary" (click)="goCategories()">← Back to Categories</button>
+  </div>
+}
+
+<!-- COUNTDOWN PHASE -->
+@if (phase() === 'countdown') {
+  <div class="qg-countdown">
+    <div class="qg-countdown__bg">
+      <img src="/images/background-sheet0.png" alt="" class="qg-countdown__bgimg" />
+    </div>
+    <div class="qg-countdown__inner">
+      <div class="qg-countdown__cat-name bb-anim-fade-in">{{ category()?.displayName }}</div>
+      <div class="qg-countdown__number" [@countdownAnim]="countdownValue()">
+        {{ countdownValue() }}
+      </div>
+      <div class="qg-countdown__label">Get Ready!</div>
+    </div>
+  </div>
+}
+
+<!-- PLAYING / ANSWERING PHASE -->
+@if (phase() === 'playing' || phase() === 'answering') {
+  <div class="qg-game">
+
+    <!-- Top Bar -->
+    <div class="qg-topbar bb-anim-fade-in">
+      <button class="qg-topbar__pause bb-btn bb-btn--ghost" (click)="pauseGame()" id="btn-pause">
+        ⏸
+      </button>
+
+      <div class="qg-topbar__stats">
+        <!-- Lives -->
+        <div class="bb-lives">
+          @for (alive of livesArray(); track $index) {
+            <span class="bb-lives__heart" [class.bb-lives__heart--lost]="!alive">❤️</span>
+          }
+        </div>
+
+        <!-- Score -->
+        <div class="bb-score">
+          <span class="bb-score__icon">🪙</span>
+          <span class="bb-score__value">{{ session()?.score ?? 0 }}</span>
+          @if (multiplier() > 1) {
+            <span class="bb-score__multiplier">×{{ multiplier() }}</span>
+          }
+        </div>
+
+        <!-- Streak -->
+        @if ((session()?.currentStreak ?? 0) >= 3) {
+          <div class="bb-streak">
+            <span class="bb-streak__fire">🔥</span>
+            <span class="bb-streak__count">{{ session()?.currentStreak }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="qg-progress">
+      <div class="qg-progress__info">
+        <span class="qg-progress__q">Q{{ (session()?.currentIndex ?? 0) + 1 }} / {{ session()?.questions?.length ?? 0 }}</span>
+        <span class="bb-badge" [class]="'bb-badge--' + (currentQ()?.difficulty ?? 'easy')">
+          {{ currentQ()?.difficulty }}
+        </span>
+      </div>
+      <div class="bb-progress">
+        <div class="bb-progress__fill" [style.width.%]="progress()"></div>
+      </div>
+    </div>
+
+    <!-- Timer Bar -->
+    <div class="qg-timer">
+      <div class="bb-timer__track">
+        <div
+          class="bb-timer__fill"
+          [class]="timerClass()"
+          [style.width.%]="timerPercent()"
+        ></div>
+      </div>
+      <span class="qg-timer__label" [class.qg-timer__label--danger]="timerPercent() <= 20">
+        {{ timeRem() }}s
+      </span>
+    </div>
+
+    <!-- Question Card -->
+    @if (currentQ(); as q) {
+      <div class="qg-question" [@questionAnim]="session()?.currentIndex">
+
+        <!-- Coin Pop -->
+        @if (coinPopVisible()) {
+          <div class="bb-coin-pop" style="top: 0; left: 50%">🪙 +{{ session()?.score }}</div>
+        }
+
+        <div class="qg-question__card bb-card">
+          <p class="qg-question__text">{{ q.text }}</p>
+
+          <!-- Hint -->
+          @if (showHint() && q.hint) {
+            <div class="qg-question__hint bb-anim-slide-up">
+              <span>💡</span> <em>{{ q.hint }}</em>
+            </div>
+          }
+        </div>
+
+        <!-- Answer Options -->
+        <div class="qg-options" [@optionsAnim]="session()?.currentIndex">
+          @for (opt of q.options; track $index; let i = $index) {
+            <button
+              class="bb-option"
+              [class]="'bb-option ' + getOptionClass(i)"
+              [class.bb-option--eliminated]="isOptionEliminated(i)"
+              [disabled]="isOptionDisabled(i)"
+              (click)="selectAnswer(i, $event)"
+              [id]="'opt-btn-' + i"
+            >
+              <span class="bb-option__letter">{{ OPTION_LETTERS[i] }}</span>
+              <span class="bb-option__text">{{ opt.text }}</span>
+              @if (phase() === 'answering' && opt.isCorrect) {
+                <span class="qg-opt-icon">✓</span>
+              }
+              @if (phase() === 'answering' && !opt.isCorrect && selectedIdx() === i) {
+                <span class="qg-opt-icon">✗</span>
+              }
+            </button>
+          }
+        </div>
+
+        <!-- Explanation after answering -->
+        @if (phase() === 'answering' && q.explanation) {
+          <div class="qg-explanation bb-anim-slide-up">
+            <span class="qg-explanation__icon">📚</span>
+            <p>{{ q.explanation }}</p>
+          </div>
+        }
+
+        <!-- Result banner -->
+        @if (phase() === 'answering') {
+          <div
+            class="qg-result-banner"
+            [class.qg-result-banner--correct]="lastCorrect()"
+            [class.qg-result-banner--wrong]="!lastCorrect()"
+            [@resultBanner]
+          >
+            @if (lastCorrect()) {
+              <span>🎉 Correct! +{{ currentQ()?.points }}</span>
+            } @else {
+              <span>😬 Wrong! Keep going</span>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Game Item Toolbar -->
+    <div class="qg-items">
+      <button
+        class="qg-item-btn"
+        (click)="useTimeFreeze()"
+        [disabled]="phase() !== 'playing' || getInventory().timeFreeze === 0"
+        title="Time Freeze (+5s)"
+        id="btn-item-freeze"
+      >
+        ⏳ <span class="qg-item-btn__count">{{ getInventory().timeFreeze }}</span>
+      </button>
+      <button
+        class="qg-item-btn"
+        (click)="useHint()"
+        [disabled]="phase() !== 'playing' || getInventory().hintReveal === 0 || showHint()"
+        title="Reveal Hint"
+        id="btn-item-hint"
+      >
+        💡 <span class="qg-item-btn__count">{{ getInventory().hintReveal }}</span>
+      </button>
+      <button
+        class="qg-item-btn"
+        (click)="useEliminate()"
+        [disabled]="phase() !== 'playing' || getInventory().eliminateOption === 0 || elimIdx() !== null"
+        title="Eliminate Wrong Answer"
+        id="btn-item-elim"
+      >
+        ❌ <span class="qg-item-btn__count">{{ getInventory().eliminateOption }}</span>
+      </button>
+    </div>
+  </div>
+}
+
+<!-- PAUSE OVERLAY -->
+@if (phase() === 'paused') {
+  <div class="qg-pause-overlay bb-glass">
+    <div class="qg-pause-panel bb-anim-bounce-in">
+      <h2 class="qg-pause-panel__title">⏸ Paused</h2>
+      <p class="qg-pause-panel__score">Score so far: <strong>{{ session()?.score ?? 0 }}</strong></p>
+      <div class="qg-pause-panel__actions">
+        <button class="bb-btn bb-btn--primary bb-btn--full" (click)="resumeGame()" id="btn-resume">▶ Resume</button>
+        <button class="bb-btn bb-btn--ghost bb-btn--full" (click)="quitGame()" id="btn-quit">🏠 Quit to Categories</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- GAME OVER STATE -->
+@if (phase() === 'gameover') {
+  <div class="qg-gameover bb-anim-fade-in">
+
+    @if (session()?.completionNftEarned) {
+      <!-- WIN SCREEN -->
+      <div class="qg-win">
+        <div class="qg-win__trophy bb-anim-bounce-in">
+          <img src="/images/calloutwintext-sheet0.png" alt="You Won!" class="qg-win__banner" />
+        </div>
+
+        <div class="qg-win__stats bb-card bb-anim-slide-up">
+          <div class="qg-stat">
+            <span class="qg-stat__label">Final Score</span>
+            <span class="qg-stat__value bb-text-gold">{{ session()?.score }}</span>
+          </div>
+          <div class="qg-stat">
+            <span class="qg-stat__label">Correct</span>
+            <span class="qg-stat__value" style="color:var(--bb-green-light)">{{ session()?.correctCount }} / {{ session()?.questions?.length }}</span>
+          </div>
+          <div class="qg-stat">
+            <span class="qg-stat__label">Best Streak</span>
+            <span class="qg-stat__value" style="color:var(--bb-orange)">🔥 {{ session()?.bestStreak }}</span>
+          </div>
+        </div>
+
+        <!-- Completion NFT earned! -->
+        @if (category()?.completionNft; as nft) {
+          <div class="qg-nft-earned bb-anim-bounce-in">
+            <p class="qg-nft-earned__label">🏅 NFT Earned!</p>
+            <div class="bb-nft-reveal">
+              <div class="bb-nft-reveal__card">
+                <span class="bb-nft-reveal__card-icon">🏆</span>
+                <span class="bb-nft-reveal__card-name">{{ nft.name }}</span>
+                <span class="bb-nft-reveal__card-badge">Category Champion</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="qg-gameover__actions">
+          <button class="bb-btn bb-btn--gold bb-btn--lg" (click)="playAgain()" id="btn-play-again">🔄 Play Again</button>
+          <button class="bb-btn bb-btn--ghost" (click)="goCategories()" id="btn-back-cats">📚 Categories</button>
+          <button class="bb-btn bb-btn--ghost" (click)="goHome()" id="btn-go-home">🏠 Home</button>
+        </div>
+      </div>
+
+    } @else {
+      <!-- LOSE SCREEN -->
+      <div class="qg-lose">
+        <img src="/images/calloutlosetext-sheet0.png" alt="Try Again" class="qg-lose__banner bb-anim-bounce-in" />
+
+        <div class="qg-lose__stats bb-card bb-anim-slide-up">
+          <div class="qg-stat">
+            <span class="qg-stat__label">Score</span>
+            <span class="qg-stat__value">{{ session()?.score }}</span>
+          </div>
+          <div class="qg-stat">
+            <span class="qg-stat__label">Reached</span>
+            <span class="qg-stat__value">Q{{ (session()?.currentIndex ?? 0) + 1 }}</span>
+          </div>
+          <div class="qg-stat">
+            <span class="qg-stat__label">Correct</span>
+            <span class="qg-stat__value" style="color:var(--bb-green-light)">{{ session()?.correctCount }}</span>
+          </div>
+        </div>
+
+        <div class="qg-gameover__actions">
+          <button class="bb-btn bb-btn--primary bb-btn--lg" (click)="playAgain()" id="btn-retry">🔄 Try Again</button>
+          <button class="bb-btn bb-btn--ghost" (click)="goCategories()" id="btn-back-cats-lose">📚 Categories</button>
+        </div>
+      </div>
+    }
+  </div>
+}

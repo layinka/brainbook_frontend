@@ -1,0 +1,82 @@
+<div class="cats-page">
+
+  <!-- Header -->
+  <div class="cats-header bb-anim-slide-up">
+    <button class="bb-btn bb-btn--ghost cats-back-btn" routerLink="/">
+      <span>←</span> Back
+    </button>
+    <h1 class="cats-title">
+      <span class="bb-text-gradient">Choose</span> a Category
+    </h1>
+    <p class="cats-subtitle">Select a topic and put your knowledge to the test</p>
+
+    <!-- Search -->
+    <div class="cats-search">
+      <span class="cats-search__icon">🔍</span>
+      <input
+        type="text"
+        class="cats-search__input"
+        placeholder="Search categories..."
+        [value]="searchQuery()"
+        (input)="onSearch($event)"
+        id="cat-search-input"
+      />
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="cats-loading">
+      <div class="bb-spinner"></div>
+      <p>Loading categories...</p>
+    </div>
+  }
+
+  <!-- Category Grid -->
+  @if (!loading()) {
+    <div class="cats-grid">
+      @for (cat of filteredCategories; track cat.category; let i = $index) {
+        <button
+          class="cat-chip"
+          [class.cat-chip--completed]="isCompleted(cat)"
+          (click)="selectCategory(cat)"
+          [style.animation-delay]="(i * 0.03) + 's'"
+          [id]="'cat-btn-' + cat.category"
+        >
+          <!-- Completion Crown -->
+          @if (isCompleted(cat)) {
+            <span class="cat-chip__crown" title="Category Completed!">👑</span>
+          }
+
+          <!-- Icon / Image -->
+          <div class="cat-chip__icon-wrap">
+            <img
+              [src]="'/images/' + cat.icon"
+              [alt]="cat.displayName"
+              class="cat-chip__icon"
+              loading="lazy"
+              (error)="$any($event.target).src='/images/generaknowledge-sheet0.png'"
+            />
+          </div>
+
+          <!-- Name -->
+          <span class="cat-chip__name">{{ cat.displayName }}</span>
+
+          <!-- Meta (Qs count / score) -->
+          <div class="cat-chip__meta">
+            <span class="cat-chip__badge">{{ cat.totalQuestions }} Qs</span>
+            @if (getBestScore(cat) > 0) {
+              <span class="cat-chip__badge cat-chip__badge--score">🏆 {{ getBestScore(cat) }}</span>
+            }
+          </div>
+        </button>
+      }
+
+      @if (filteredCategories.length === 0) {
+        <div class="cats-empty">
+          <p>🔍 No categories match "{{ searchQuery() }}"</p>
+        </div>
+      }
+    </div>
+  }
+</div>

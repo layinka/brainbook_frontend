@@ -1,0 +1,158 @@
+<div class="leaderboard-page">
+
+  <!-- Header -->
+  <div class="leaderboard-header bb-anim-slide-up">
+    <button class="bb-btn bb-btn--ghost leaderboard-back-btn" routerLink="/">
+      <span>←</span> Back
+    </button>
+    <h1 class="leaderboard-title">
+      <span class="bb-text-gradient">Champions</span> Board
+    </h1>
+    <p class="leaderboard-subtitle">Compete globally. Top 10/20/50 weekly qualifiers earn rare Tier badges!</p>
+  </div>
+
+  <!-- Filters Block -->
+  <div class="leaderboard-filters bb-card bb-anim-slide-up">
+    <!-- Period Tabs -->
+    <div class="period-tabs">
+      <button
+        class="tab-btn"
+        [class.tab-btn--active]="activePeriod() === 'weekly'"
+        (click)="setPeriod('weekly')"
+      >
+        Weekly
+      </button>
+      <button
+        class="tab-btn"
+        [class.tab-btn--active]="activePeriod() === 'monthly'"
+        (click)="setPeriod('monthly')"
+      >
+        Monthly
+      </button>
+      <button
+        class="tab-btn"
+        [class.tab-btn--active]="activePeriod() === 'alltime'"
+        (click)="setPeriod('alltime')"
+      >
+        All-Time
+      </button>
+    </div>
+
+    <!-- Category Dropdown Filter -->
+    <div class="category-filter">
+      <span class="filter-label">Filter:</span>
+      <select class="filter-select" (change)="onCategoryChange($event)" id="cat-filter-select">
+        <option value="">Global (All Topics)</option>
+        @for (cat of categories(); track cat.category) {
+          <option [value]="cat.category">{{ cat.displayName }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="leaderboard-loading">
+      <div class="bb-spinner"></div>
+      <p>Syncing rankings...</p>
+    </div>
+  } @else {
+    <!-- Rankings Table Container -->
+    <div class="rankings-container bb-card bb-anim-slide-up">
+      <div class="rankings-header">
+        <span class="rank-col">Rank</span>
+        <span class="player-col">Player</span>
+        <span class="tier-col">Tier Reward</span>
+        <span class="score-col">Score</span>
+      </div>
+
+      <div class="rankings-body">
+        @for (entry of leaderboardEntries(); track entry.userId; let i = $index) {
+          <div
+            class="rank-row"
+            [class.rank-row--current]="entry.userId === currentUserId()"
+            [class.rank-row--top3]="entry.rank <= 3"
+          >
+            <!-- Rank placement -->
+            <div class="rank-col font-weight-black">
+              @if (entry.rank === 1) {
+                <span class="rank-trophy rank-trophy--gold" title="1st Place">🥇</span>
+              } @else if (entry.rank === 2) {
+                <span class="rank-trophy rank-trophy--silver" title="2nd Place">🥈</span>
+              } @else if (entry.rank === 3) {
+                <span class="rank-trophy rank-trophy--bronze" title="3rd Place">🥉</span>
+              } @else {
+                #{{ entry.rank }}
+              }
+            </div>
+
+            <!-- Profile Info -->
+            <div class="player-col">
+              <div class="avatar">
+                {{ (entry.displayName || 'Anon')[0].toUpperCase() }}
+              </div>
+              <span class="display-name">{{ entry.displayName || 'Anonymous Player' }}</span>
+            </div>
+
+            <!-- Reward tier eligibility -->
+            <div class="tier-col">
+              @if (activePeriod() === 'weekly' && entry.rank <= 50) {
+                @if (entry.rank <= 10) {
+                  <span class="bb-badge bb-badge--gold">🛡️ Elite Brain</span>
+                } @else if (entry.rank <= 20) {
+                  <span class="bb-badge bb-badge--medium">⚔️ Sharp Mind</span>
+                } @else {
+                  <span class="bb-badge bb-badge--easy">⭐ Rising Star</span>
+                }
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </div>
+
+            <!-- Score -->
+            <div class="score-col score-val">
+              🪙 {{ entry.score | number }}
+            </div>
+          </div>
+        }
+
+        @if (leaderboardEntries().length === 0) {
+          <div class="rankings-empty">
+            <p>🏆 No scores recorded for this filter yet. Be the first!</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Sticky User Rank Row (If User not in Top 10) -->
+    @if (userRankEntry() && !isUserInVisibleList()) {
+      <div class="sticky-user-row bb-card bb-anim-slide-up">
+        <span class="row-label">Your Rank</span>
+        <div class="rank-row rank-row--current w-100">
+          <div class="rank-col">#{{ userRankEntry()?.rank }}</div>
+          <div class="player-col">
+            <div class="avatar font-weight-black">U</div>
+            <span class="display-name">{{ userRankEntry()?.displayName || 'You' }}</span>
+          </div>
+          <div class="tier-col">
+            @if (activePeriod() === 'weekly' && (userRankEntry()?.rank || 99) <= 50) {
+              @if ((userRankEntry()?.rank || 99) <= 10) {
+                <span class="bb-badge bb-badge--gold">🛡️ Elite Brain</span>
+              } @else if ((userRankEntry()?.rank || 99) <= 20) {
+                <span class="bb-badge bb-badge--medium">⚔️ Sharp Mind</span>
+              } @else {
+                <span class="bb-badge bb-badge--easy">⭐ Rising Star</span>
+              }
+            } @else {
+              <span class="text-muted">—</span>
+            }
+          </div>
+          <div class="score-col score-val">
+            🪙 {{ userRankEntry()?.score | number }}
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+</div>
