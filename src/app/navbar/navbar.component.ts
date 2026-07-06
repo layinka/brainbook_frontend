@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
 import { ALL_CHAINS, Web3Service } from '../services/web3';
 import { W3MCoreButtonComponentWrapperComponent } from '../w3-mcore-button-component-wrapper/w3-mcore-button-component-wrapper.component';
 import { AutoUnsubscribe } from '../auto-unsubscribe.decorator';
-import { SaveUpAuthService } from '../services/saveup-auth.service';
+import { SIWEAuthService } from '../services/siwe-auth.service';
 import { GameContractService } from '../services/game-contract.service';
 
 @Component({
@@ -28,7 +28,7 @@ export class NavbarComponent {
 
   private chainSubscription: Subscription | undefined = undefined;
 
-  public authService = inject(SaveUpAuthService);
+  public authService = inject(SIWEAuthService);
   private gameContract = inject(GameContractService);
 
   constructor(public w3s: Web3Service) {

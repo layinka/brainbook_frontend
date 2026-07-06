@@ -10,7 +10,7 @@ import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-export class SaveUpAuthService {
+export class SIWEAuthService {
   public readonly web3Service = inject(Web3Service);
   public readonly authService = inject(AuthService);
   public readonly siweService = inject(SiweService);
@@ -40,6 +40,16 @@ export class SaveUpAuthService {
         }
       }
     });
+  }
+
+  private getCookie(name: string): string | null {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      return decodeURIComponent(parts.pop()?.split(';').shift() || '');
+    }
+    return null;
   }
 
   /**
@@ -108,10 +118,17 @@ Issued At: ${issuedAt}`;
       // SIWE verify path), the Observable never completes and the UI hangs indefinitely.
       // TODO: Remove this workaround once ngx-better-auth properly handles SIWE session updates,
       // or when the siweClient() plugin is added to provideBetterAuth() plugins in app.config.ts.
+      let referrerCode = null;
+      try {
+        referrerCode = localStorage.getItem('brainbook_referrer_code') || this.getCookie('brainbook_referrer_code');
+      } catch (e) {
+        console.warn('Could not read referral code from storage/cookies:', e);
+      }
+
       const verifyResult: any = await firstValueFrom(
         this.http.post<{ success: boolean; user: any }>(
           `${environment.authUrl}/api/auth/siwe/verify`,
-          { message, signature, walletAddress, chainId },
+          { message, signature, walletAddress, chainId, referrerCode },
           { withCredentials: true }
         )
       );
@@ -119,6 +136,15 @@ Issued At: ${issuedAt}`;
       if (!verifyResult?.user) {
         console.error('[SIWE] Verification failed — no user in response');
         throw new Error('Verification failed');
+      }
+
+      // Success - clear stored referral code
+      if (referrerCode) {
+        try {
+          localStorage.removeItem('brainbook_referrer_code');
+        } catch (e) {}
+        // Clear cookie as well
+        document.cookie = "brainbook_referrer_code=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax; Secure";
       }
 
       console.log('[SIWE] Backend verification result data:', verifyResult.user);

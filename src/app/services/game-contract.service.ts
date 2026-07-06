@@ -7,6 +7,7 @@ import {
   BRAIN_BOOK_TOKEN_ABI,
   BRAIN_BOOK_NFT_ABI,
   BRAIN_BOOK_GAME_MANAGER_ABI,
+  BRAIN_BOOK_STAKING_ABI,
   ERC20_ABI
 } from '../abis';
 
@@ -201,6 +202,129 @@ export class GameContractService {
 
     await waitForTransactionReceipt(wagmiConfig, { hash });
     console.log('Token reward claim confirmed!');
+    return hash;
+  }
+
+  get stakingAddress(): `0x${string}` {
+    const chainId = this.w3s.chainId || environment.defaultChainId;
+    return environment.contracts[chainId]?.brainbookStaking as `0x${string}`;
+  }
+
+  async getStakedBalance(accountAddress?: string): Promise<string> {
+    const address = accountAddress || this.w3s.account$();
+    if (!address || !this.stakingAddress || this.stakingAddress === '0x0000000000000000000000000000000000000000') return '0.0';
+    try {
+      const balance = await readContract(wagmiConfig, {
+        address: this.stakingAddress,
+        abi: BRAIN_BOOK_STAKING_ABI,
+        functionName: 'balanceOf',
+        args: [address as `0x${string}`]
+      });
+      return formatEther(balance as bigint);
+    } catch (err) {
+      console.error('Error fetching staked balance:', err);
+      return '0.0';
+    }
+  }
+
+  async getTotalStaked(): Promise<string> {
+    if (!this.stakingAddress || this.stakingAddress === '0x0000000000000000000000000000000000000000') return '0.0';
+    try {
+      const total = await readContract(wagmiConfig, {
+        address: this.stakingAddress,
+        abi: BRAIN_BOOK_STAKING_ABI,
+        functionName: 'totalSupply'
+      });
+      return formatEther(total as bigint);
+    } catch (err) {
+      console.error('Error fetching total staked:', err);
+      return '0.0';
+    }
+  }
+
+  async getEarnedRewards(accountAddress?: string): Promise<string> {
+    const address = accountAddress || this.w3s.account$();
+    if (!address || !this.stakingAddress || this.stakingAddress === '0x0000000000000000000000000000000000000000') return '0.0';
+    try {
+      const earned = await readContract(wagmiConfig, {
+        address: this.stakingAddress,
+        abi: BRAIN_BOOK_STAKING_ABI,
+        functionName: 'earned',
+        args: [address as `0x${string}`]
+      });
+      return formatEther(earned as bigint);
+    } catch (err) {
+      console.error('Error fetching earned rewards:', err);
+      return '0.0';
+    }
+  }
+
+  async getStakingAllowance(accountAddress: string): Promise<bigint> {
+    if (!this.stakingAddress || this.stakingAddress === '0x0000000000000000000000000000000000000000') return 0n;
+    try {
+      const allowance = await readContract(wagmiConfig, {
+        address: this.tokenAddress,
+        abi: BRAIN_BOOK_TOKEN_ABI,
+        functionName: 'allowance',
+        args: [accountAddress as `0x${string}`, this.stakingAddress]
+      });
+      return allowance as bigint;
+    } catch (err) {
+      console.error('Error fetching allowance:', err);
+      return 0n;
+    }
+  }
+
+  async approveStaking(amountEth: string): Promise<string> {
+    const hash = await writeContract(wagmiConfig, {
+      address: this.tokenAddress,
+      abi: BRAIN_BOOK_TOKEN_ABI,
+      functionName: 'approve',
+      args: [this.stakingAddress, parseEther(amountEth)]
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash });
+    return hash;
+  }
+
+  async stake(amountEth: string): Promise<string> {
+    const hash = await writeContract(wagmiConfig, {
+      address: this.stakingAddress,
+      abi: BRAIN_BOOK_STAKING_ABI,
+      functionName: 'stake',
+      args: [parseEther(amountEth)]
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash });
+    return hash;
+  }
+
+  async withdrawStaking(amountEth: string): Promise<string> {
+    const hash = await writeContract(wagmiConfig, {
+      address: this.stakingAddress,
+      abi: BRAIN_BOOK_STAKING_ABI,
+      functionName: 'withdraw',
+      args: [parseEther(amountEth)]
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash });
+    return hash;
+  }
+
+  async getStakingReward(): Promise<string> {
+    const hash = await writeContract(wagmiConfig, {
+      address: this.stakingAddress,
+      abi: BRAIN_BOOK_STAKING_ABI,
+      functionName: 'getReward'
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash });
+    return hash;
+  }
+
+  async exitStaking(): Promise<string> {
+    const hash = await writeContract(wagmiConfig, {
+      address: this.stakingAddress,
+      abi: BRAIN_BOOK_STAKING_ABI,
+      functionName: 'exit'
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash });
     return hash;
   }
 }

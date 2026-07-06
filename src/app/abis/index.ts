@@ -2,6 +2,7 @@
 export { BRAIN_BOOK_TOKEN_ABI } from './BrainBookToken.abi';
 export { BRAIN_BOOK_NFT_ABI } from './BrainBookNFT.abi';
 export { BRAIN_BOOK_GAME_MANAGER_ABI } from './BrainBookGameManager.abi';
+export { BRAIN_BOOK_STAKING_ABI } from './BrainBookStaking.abi';
 
 // ERC20 ABI for basic token operations
 export const ERC20_ABI = [

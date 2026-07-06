@@ -1,7 +1,7 @@
 import { Component, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SaveUpAuthService } from '../../services/saveup-auth.service';
+import { SIWEAuthService } from '../../services/siwe-auth.service';
 import { AppToastService } from '../../services/app-toast.service';
 import { NgxSpinnerService, NgxSpinnerModule } from 'ngx-spinner';
 
@@ -13,19 +13,37 @@ import { NgxSpinnerService, NgxSpinnerModule } from 'ngx-spinner';
   imports: [CommonModule, FormsModule, NgxSpinnerModule]
 })
 export class AuthOverlayComponent {
-  public saveUpAuth = inject(SaveUpAuthService);
+  public saveUpAuth = inject(SIWEAuthService);
   private toastService = inject(AppToastService);
   private spinner = inject(NgxSpinnerService);
 
-  // Email form state
+  // Email and Referral form state
   emailInput = '';
   otpInput = '';
+  referralInput = '';
   otpSent = signal<boolean>(false);
   isLoading = signal<boolean>(false);
 
   private hasAttemptedAutoSignIn = false;
 
+  private getCookie(name: string): string | null {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      return decodeURIComponent(parts.pop()?.split(';').shift() || '');
+    }
+    return null;
+  }
+
   constructor() {
+    // Load pre-existing referral code from local storage or cookies
+    try {
+      this.referralInput = localStorage.getItem('brainbook_referrer_code') || this.getCookie('brainbook_referrer_code') || '';
+    } catch (e) {
+      console.warn('Could not read referral code from storage/cookies:', e);
+    }
+
     // If in MiniPay environment, automatically trigger SIWE when wallet connects
     effect(() => {
       const isConnected = this.walletConnected;
@@ -74,6 +92,9 @@ export class AuthOverlayComponent {
     this.isLoading.set(true);
     await this.spinner.show('siwe-spinner');
     try {
+      if (this.referralInput && this.referralInput.trim()) {
+        localStorage.setItem('brainbook_referrer_code', this.referralInput.trim());
+      }
       await this.saveUpAuth.signInWithEthereum();
       this.toastService.show('Success', 'Authenticated successfully via SIWE! 🚀', 4000, 'bg-success text-light');
     } catch (error: any) {

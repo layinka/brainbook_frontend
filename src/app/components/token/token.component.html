@@ -1,0 +1,181 @@
+<div class="container py-5 mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      
+      <!-- Header Banner -->
+      <div class="bb-card text-center mb-5 py-5 px-4 bb-anim-slide-up">
+        <h1 class="display-4 fw-bold bb-text-gold mb-3">🪙 $BRAINBOOK Token & Staking</h1>
+        <p class="lead text-light opacity-90 mx-auto" style="max-width: 700px;">
+          The utility engine of the BrainBook ecosystem. Stake your tokens to earn yield, view real-time market pricing on Uniswap V4, and power your play-to-earn experience.
+        </p>
+      </div>
+
+      <!-- Main Layout Grid -->
+      <div class="row g-4 mb-5">
+        
+        <!-- Left Side: Staking Dashboard -->
+        <div class="col-md-7">
+          <div class="bb-card p-4 h-100 bb-anim-slide-up" style="animation-delay: 0.1s;">
+            <h2 class="h3 fw-bold bb-text-gold mb-4">🥩 Staking Dashboard</h2>
+
+            @if (!w3s.account$()) {
+              <div class="text-center py-5">
+                <span class="fs-1 d-block mb-3">🔒</span>
+                <h4 class="text-light fw-bold mb-3">Wallet Not Connected</h4>
+                <p class="text-light opacity-75 mb-4">Please connect your Web3 wallet to manage your staking deposit.</p>
+                <div class="d-inline-block">
+                  <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
+                </div>
+              </div>
+            } @else {
+              <!-- Stats Row -->
+              <div class="row g-3 mb-4">
+                <div class="col-6">
+                  <div class="p-3 rounded text-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+                    <span class="text-muted small">Your Staked Balance</span>
+                    <h3 class="fw-bold text-light mt-1">{{ stakedBalance() }} <span class="fs-6">BRAIN</span></h3>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-3 rounded text-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+                    <span class="text-muted small">Total Pool Staked</span>
+                    <h3 class="fw-bold text-light mt-1">{{ totalStaked() }} <span class="fs-6">BRAIN</span></h3>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Unclaimed Rewards Card -->
+              <div class="p-4 rounded mb-4 d-flex justify-content-between align-items-center" style="background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.15);">
+                <div>
+                  <span class="text-warning small d-block">Accrued Staking Yield</span>
+                  <span class="fs-3 fw-bold text-warning">{{ earnedRewards() }} $BRAINBOOK</span>
+                </div>
+                <button class="bb-btn bb-btn--gold" [disabled]="loadingClaim() || earnedRewards() === '0.0'" (click)="claimRewards()">
+                  {{ loadingClaim() ? 'Claiming...' : 'Claim Yield' }}
+                </button>
+              </div>
+
+              <!-- Action Tabs (Stake / Unstake) -->
+              <div class="staking-actions">
+                <div class="d-flex gap-2 mb-3">
+                  <button class="flex-grow-1 py-2 btn btn-sm" [class.btn-warning]="activeTab === 'stake'" [class.btn-outline-secondary]="activeTab !== 'stake'" (click)="activeTab = 'stake'">
+                    Deposit Staking
+                  </button>
+                  <button class="flex-grow-1 py-2 btn btn-sm" [class.btn-warning]="activeTab === 'unstake'" [class.btn-outline-secondary]="activeTab !== 'unstake'" (click)="activeTab = 'unstake'">
+                    Withdraw Deposit
+                  </button>
+                </div>
+
+                @if (activeTab === 'stake') {
+                  <div class="stake-form p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="mb-3">
+                      <label class="form-label text-muted small">Amount to Stake (BRAINBOOK)</label>
+                      <div class="input-group">
+                        <input type="number" class="form-control bg-dark border-secondary text-light" placeholder="0.0" [(ngModel)]="stakeAmount" />
+                        <button class="btn btn-outline-secondary" type="button" (click)="setStakeMax()">Max</button>
+                      </div>
+                      <span class="text-muted small mt-1 d-block">Wallet Balance: {{ tokenBalance() }} $BRAINBOOK</span>
+                    </div>
+
+                    @if (needApprove()) {
+                      <button class="bb-btn bb-btn--primary w-100" [disabled]="loadingApprove() || !stakeAmount || stakeAmount <= 0" (click)="approveTokens()">
+                        {{ loadingApprove() ? 'Approving...' : 'Approve $BRAINBOOK Staking' }}
+                      </button>
+                    } @else {
+                      <button class="bb-btn bb-btn--gold w-100" [disabled]="loadingStake() || !stakeAmount || stakeAmount <= 0" (click)="stakeTokens()">
+                        {{ loadingStake() ? 'Depositing...' : 'Stake Tokens' }}
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <div class="unstake-form p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="mb-3">
+                      <label class="form-label text-muted small">Amount to Withdraw (BRAINBOOK)</label>
+                      <div class="input-group">
+                        <input type="number" class="form-control bg-dark border-secondary text-light" placeholder="0.0" [(ngModel)]="unstakeAmount" />
+                        <button class="btn btn-outline-secondary" type="button" (click)="setUnstakeMax()">Max</button>
+                      </div>
+                      <span class="text-muted small mt-1 d-block">Staked Deposit: {{ stakedBalance() }} $BRAINBOOK</span>
+                    </div>
+
+                    <button class="bb-btn bb-btn--ghost w-100" [disabled]="loadingUnstake() || !unstakeAmount || unstakeAmount <= 0" (click)="withdrawTokens()">
+                      {{ loadingUnstake() ? 'Withdrawing...' : 'Withdraw Staked Tokens' }}
+                    </button>
+                  </div>
+                }
+
+                <!-- Exit button -->
+                <button class="btn btn-outline-danger btn-sm w-100 mt-3" [disabled]="loadingExit()" (click)="exitStaking()">
+                  🚪 Exit Pool (Withdraw All & Claim)
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Right Side: Uniswap V4 Pool Info -->
+        <div class="col-md-5">
+          <div class="bb-card p-4 h-100 bb-anim-slide-up" style="animation-delay: 0.2s;">
+            <h2 class="h3 fw-bold bb-text-gold mb-3">🦄 Uniswap V4 Market</h2>
+            
+            <div class="uniswap-badge p-3 rounded text-center mb-4" style="background: rgba(255,0,127,0.05); border: 1px solid rgba(255,0,127,0.25);">
+              <span class="fs-2">🦄</span>
+              <h4 class="fw-bold text-light mt-2 mb-1">Uniswap V4 Concentrated Pool</h4>
+              <span class="badge bg-secondary">Active on CELO Sepolia</span>
+            </div>
+
+            <!-- Price Indicators -->
+            <div class="p-3 rounded mb-4" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+              <span class="text-muted small d-block">Current Exchange Rate</span>
+              <div class="d-flex justify-content-between align-items-center mt-1">
+                <span class="fw-bold text-light fs-4">1 $BRAIN</span>
+                <span class="fw-bold text-light fs-4">≈ {{ tokenPrice() }} cUSD</span>
+              </div>
+              <span class="text-muted small d-block mt-2">Pool Fee Tier: <strong>0.30% (3000 bps)</strong></span>
+            </div>
+
+            <!-- Bootstrapping guide preview -->
+            <h4 class="fw-bold text-light mb-3">🛠️ Liquidity Bootstrapping</h4>
+            <p class="text-light opacity-75 small">
+              Our token uses **Uniswap V4 Range Orders** to boot-strap liquidity with zero initial startup reserves.
+            </p>
+            <p class="text-light opacity-75 small">
+              Users provide single-sided `$BRAINBOOK` liquidity out-of-range, which automatically sells into cUSD/USDT as buyers demand the token.
+            </p>
+            
+            <a class="btn btn-outline-warning w-100 btn-sm" href="https://uniswap.org" target="_blank">
+              🔗 View Pool on Uniswap Info
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Mechanics breakdown -->
+      <div class="bb-card p-5 mb-5 bb-anim-slide-up">
+        <h2 class="h3 fw-bold bb-text-gold mb-4">⚙️ Token Mechanics & Circulation Loop</h2>
+        <div class="row g-4">
+          <div class="col-md-4">
+            <h4 class="fw-bold text-light h5 mb-2">📥 70% Play-to-Earn</h4>
+            <p class="text-light opacity-75 small mb-0">
+              70% of tokens spent on store item purchases are recycled straight back to the play-to-earn pool, creating a circular loop that extends emission lifetime indefinitely.
+            </p>
+          </div>
+          <div class="col-md-4">
+            <h4 class="fw-bold text-light h5 mb-2">🥩 20% Staking Yield</h4>
+            <p class="text-light opacity-75 small mb-0">
+              20% of store sales are sent directly to the Staking contract as rewards, funding a sustainable APY for users who lock their tokens.
+            </p>
+          </div>
+          <div class="col-md-4">
+            <h4 class="fw-bold text-light h5 mb-2">💻 10% Dev Allocation</h4>
+            <p class="text-light opacity-75 small mb-0">
+              10% of store sales route to the developer treasury wallet to fund ongoing code enhancements, server operations, and infrastructure scaling.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

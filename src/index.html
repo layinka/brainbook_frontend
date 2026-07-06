@@ -43,6 +43,26 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BrainBook">
+
+  <!-- Referral Tracking Script -->
+  <script>
+    (function() {
+      try {
+        var urlParams = new URLSearchParams(window.location.search);
+        var ref = urlParams.get('ref');
+        if (ref && ref.trim().length > 0) {
+          localStorage.setItem('brainbook_referrer_code', ref.trim());
+          // 180 Days expiry cookie
+          var d = new Date();
+          d.setTime(d.getTime() + (180 * 24 * 60 * 60 * 1000));
+          document.cookie = "brainbook_referrer_code=" + encodeURIComponent(ref.trim()) + "; expires=" + d.toUTCString() + "; path=/; SameSite=Lax; Secure";
+          console.log('Persisted referral code:', ref.trim());
+        }
+      } catch (e) {
+        console.error('Failed to parse referral code:', e);
+      }
+    })();
+  </script>
 </head>
 
 <body>

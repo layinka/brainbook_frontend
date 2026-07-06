@@ -1,71 +1,69 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
   QuizCategory, QuizQuestion, GameSession, GamePhase,
   MilestoneNft, GameItemUsage
 } from '../models/game.models';
-import { QUIZ_CONTENT_MAP } from '../quiz_content';
+import { environment } from '../../environments/environment';
 
 const QUESTIONS_PER_ROUND = 20; // Number of questions per game session
 const MAX_LIVES = 3;
 
 @Injectable({ providedIn: 'root' })
 export class QuizService {
+  private http = inject(HttpClient);
   private cache = new Map<string, QuizCategory>();
 
   constructor() {}
 
-  /** Load a category's quiz JSON (statically imported and compiled) */
+  /** Load a category's quiz data (fetch from backend) */
   async loadCategory(categoryKey: string): Promise<QuizCategory> {
     if (this.cache.has(categoryKey)) {
       return this.cache.get(categoryKey)!;
     }
-    const data = QUIZ_CONTENT_MAP[categoryKey];
-    if (!data) throw new Error(`Failed to load quiz: ${categoryKey}`);
     
-    // Deep clone to prevent direct state mutation of statically bundled JSON
-    const cloned = JSON.parse(JSON.stringify(data)) as QuizCategory;
-    this.cache.set(categoryKey, cloned);
-    return cloned;
+    const res = await this.http.get<any>(`${environment.apiUrl}/game/quiz/category/${categoryKey}`, { withCredentials: true }).toPromise();
+    if (!res || !res.success) {
+      throw new Error(`Failed to load category: ${categoryKey}`);
+    }
+
+    const categoryData: QuizCategory = {
+      category: res.category.category,
+      displayName: res.category.displayName,
+      icon: res.category.icon,
+      description: res.category.description,
+      totalQuestions: res.category.totalQuestions,
+      completionNft: res.category.completionNft,
+      questions: res.questions || []
+    };
+
+    this.cache.set(categoryKey, categoryData);
+    return categoryData;
   }
 
-  /** Load all category manifests (icons, names, totalQuestions only — not full question data) */
+  /** Load all category manifests from backend database */
   async loadAllCategoryManifests(): Promise<Partial<QuizCategory>[]> {
-    const keys = this.getCategoryKeys();
-    const manifests: Partial<QuizCategory>[] = [];
-    for (const key of keys) {
-      try {
-        const cat = await this.loadCategory(key);
-        manifests.push({
+    try {
+      const res = await this.http.get<any>(`${environment.apiUrl}/game/quiz/categories`, { withCredentials: true }).toPromise();
+      if (res && res.success && res.categories) {
+        return res.categories.map((cat: any) => ({
           category: cat.category,
           displayName: cat.displayName,
           icon: cat.icon,
           description: cat.description,
           totalQuestions: cat.totalQuestions,
-          completionNft: cat.completionNft,
-        });
-      } catch {
-        console.warn(`Could not load category: ${key}`);
+          completionNft: cat.completionNft
+        }));
       }
+    } catch (err) {
+      console.error('Error fetching all categories manifests:', err);
     }
-    return manifests;
+    return [];
   }
 
-  /** Pick a shuffled subset of questions for a round */
-  prepareRound(category: QuizCategory, count = QUESTIONS_PER_ROUND): QuizQuestion[] {
-    const shuffled = [...category.questions].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, Math.min(count, shuffled.length));
-  }
-
-  getCategoryKeys(): string[] {
-    return [
-      'africa', 'basicmath', 'bible', 'cars', 'coffee',
-      'countriesineurope', 'finishthemovietitle', 'gameofthrones',
-      'generalknowledge', 'generalmath', 'grammar', 'historytrivia',
-      'howimetyourmother', 'internetculture', 'namethecountry',
-      'namethesoccerplayer', 'riddles', 'simpsons', 'soccer',
-      'thefamilyguy', 'thewalkingdead', 'worddefinition',
-    ];
+  /** Pick all questions in a topic shuffled */
+  prepareRound(category: QuizCategory): QuizQuestion[] {
+    return [...category.questions].sort(() => Math.random() - 0.5);
   }
 
   /** Calculate streak multiplier: 1x base, 2x at 5, 3x at 10 */

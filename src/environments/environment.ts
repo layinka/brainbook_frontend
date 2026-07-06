@@ -7,6 +7,7 @@ export interface BrainBookContracts {
   brainbookToken: string;      // ERC-20 BRAINBOOK token
   brainbookNFT: string;        // ERC-1155 BrainBookNFT (achievements + game items)
   brainbookGameManager: string; // BrainBookGameManager orchestrator
+  brainbookStaking: string;     // BrainBookStaking rewards lockup
 }
 
 export interface FeeCurrencyOption {
@@ -23,18 +24,21 @@ const ALL_CONTRACTS: Record<number, BrainBookContracts> = {
     brainbookToken: '0x0000000000000000000000000000000000000000', // Set after local deploy
     brainbookNFT: '0x0000000000000000000000000000000000000000', // Set after local deploy
     brainbookGameManager: '0x0000000000000000000000000000000000000000', // Set after local deploy
+    brainbookStaking: '0x0000000000000000000000000000000000000000', // Set after local deploy
   },
   // Celo Alfajores Testnet (Chain ID: 44787)
   44787: {
     brainbookToken: '0x0000000000000000000000000000000000000000', // Set after deploy
     brainbookNFT: '0x0000000000000000000000000000000000000000', // Set after deploy
     brainbookGameManager: '0x0000000000000000000000000000000000000000', // Set after deploy
+    brainbookStaking: '0x0000000000000000000000000000000000000000', // Set after deploy
   },
   // Celo Mainnet (Chain ID: 42220)
   42220: {
     brainbookToken: '0x0000000000000000000000000000000000000000', // Set after mainnet deploy
     brainbookNFT: '0x0000000000000000000000000000000000000000', // Set after mainnet deploy
     brainbookGameManager: '0x0000000000000000000000000000000000000000', // Set after mainnet deploy
+    brainbookStaking: '0x0000000000000000000000000000000000000000', // Set after mainnet deploy
   },
 }
 

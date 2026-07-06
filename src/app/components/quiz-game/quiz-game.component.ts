@@ -1,10 +1,15 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { trigger, state, style, animate, transition, stagger, query, keyframes } from '@angular/animations';
 import { GameStateService, QuizService } from '../../services/game-state.service';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { SoundService } from '../../services/sound.service';
+import { AppToastService } from '../../services/app-toast.service';
+import { Web3Service } from '../../services/web3';
+import { GameContractService } from '../../services/game-contract.service';
+import { environment } from '../../../environments/environment';
 import { QuizCategory, QuizQuestion } from '../../models/game.models';
 import confetti from 'canvas-confetti';
 
@@ -65,6 +70,10 @@ export class QuizGameComponent implements OnInit, OnDestroy {
   private quizService = inject(QuizService);
   private ls = inject(LocalStorageService);
   private sound = inject(SoundService);
+  private http = inject(HttpClient);
+  private toast = inject(AppToastService);
+  public w3s = inject(Web3Service);
+  private gameContract = inject(GameContractService);
 
   category = signal<QuizCategory | null>(null);
   loadError = signal('');
@@ -72,6 +81,15 @@ export class QuizGameComponent implements OnInit, OnDestroy {
   scorePopCoords = signal<{ x: number; y: number } | null>(null);
   scorePopAmount = signal(0);
   coinPopVisible = signal(false);
+
+  // Claimable rewards state
+  tokensEarned = signal<number>(0);
+  tokenSignature = signal<string>('');
+  nftSignature = signal<string>('');
+  claimingTokens = signal<boolean>(false);
+  claimingNft = signal<boolean>(false);
+  tokenClaimed = signal<boolean>(false);
+  nftClaimed = signal<boolean>(false);
 
   readonly OPTION_LETTERS = ['A', 'B', 'C'];
   readonly MAX_LIVES = 3;
@@ -212,6 +230,9 @@ export class QuizGameComponent implements OnInit, OnDestroy {
       if (won) {
         this.ls.markCategoryCompleted(sess.category);
       }
+
+      // Submit session to backend database and generate signatures
+      void this.submitSessionToBackend();
     }
   }
 
@@ -306,4 +327,82 @@ export class QuizGameComponent implements OnInit, OnDestroy {
   }
 
   getInventory() { return this.ls.getInventory(); }
+
+  async submitSessionToBackend(): Promise<void> {
+    const sess = this.gs.session();
+    if (!sess) return;
+
+    this.tokensEarned.set(0);
+    this.tokenSignature.set('');
+    this.nftSignature.set('');
+    this.tokenClaimed.set(false);
+    this.nftClaimed.set(false);
+
+    const payload = {
+      category: sess.category,
+      score: sess.score,
+      correctCount: sess.correctCount,
+      wrongCount: sess.wrongCount,
+      totalQuestions: sess.questions.length,
+      timeTaken: Math.round((Date.now() - sess.startedAt) / 1000),
+      streakReached: sess.bestStreak,
+      gameItemsUsed: sess.gameItemsUsed.map(item => ({
+        itemId: item.itemId,
+        itemName: item.itemName,
+        usedAtQuestion: item.usedAtQuestion
+      }))
+    };
+
+    try {
+      const res = await this.http.post<any>(`${environment.apiUrl}/game/sessions`, payload, { withCredentials: true }).toPromise();
+      if (res && res.success) {
+        this.tokensEarned.set(res.tokenReward || 0);
+        this.tokenSignature.set(res.tokenSignature || '');
+        this.nftSignature.set(res.nftSignature || '');
+      }
+    } catch (err) {
+      console.error('Error submitting session to backend:', err);
+    }
+  }
+
+  async claimSessionTokens(): Promise<void> {
+    if (!this.w3s.account$()) {
+      this.toast.error('Wallet Disconnected', 'Please connect your wallet first.');
+      return;
+    }
+    
+    this.claimingTokens.set(true);
+    try {
+      const amountInWei = BigInt(Math.round(this.tokensEarned() * 10000)) * (10n ** 14n);
+      await this.gameContract.claimTokenReward(amountInWei, this.tokenSignature());
+      this.toast.show('Claim Successful!', `${this.tokensEarned()} $BRAINBOOK claimed to wallet!`, undefined, 'bg-success text-light');
+      this.tokenClaimed.set(true);
+    } catch (err: any) {
+      console.error('Token claim failed:', err);
+      this.toast.error('Claim Failed', err?.message || 'Transaction rejected.');
+    } finally {
+      this.claimingTokens.set(false);
+    }
+  }
+
+  async claimSessionNft(): Promise<void> {
+    const cat = this.category();
+    if (!cat || !cat.completionNft) return;
+    if (!this.w3s.account$()) {
+      this.toast.error('Wallet Disconnected', 'Please connect your wallet first.');
+      return;
+    }
+
+    this.claimingNft.set(true);
+    try {
+      await this.gameContract.claimAchievement(cat.completionNft.tokenId, 1, this.nftSignature());
+      this.toast.show('Claim Successful!', `${cat.completionNft.name} badge minted to wallet!`, undefined, 'bg-success text-light');
+      this.nftClaimed.set(true);
+    } catch (err: any) {
+      console.error('NFT claim failed:', err);
+      this.toast.error('Claim Failed', err?.message || 'Transaction rejected.');
+    } finally {
+      this.claimingNft.set(false);
+    }
+  }
 }

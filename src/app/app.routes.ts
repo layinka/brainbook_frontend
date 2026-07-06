@@ -31,6 +31,22 @@ export const routes: Routes = [
     loadComponent: () => import('./components/daily-rewards/daily-rewards.component').then(m => m.DailyRewardsComponent),
   },
   {
+    path: 'how-to-play',
+    loadComponent: () => import('./components/how-to-play/how-to-play.component').then(m => m.HowToPlayComponent),
+  },
+  {
+    path: 'token',
+    loadComponent: () => import('./components/token/token.component').then(m => m.TokenComponent),
+  },
+  {
+    path: 'rewards',
+    loadComponent: () => import('./components/rewards/rewards.component').then(m => m.RewardsComponent),
+  },
+  {
+    path: 'referrals',
+    loadComponent: () => import('./components/referrals/referrals.component').then(m => m.ReferralsComponent),
+  },
+  {
     path: '**',
     redirectTo: ''
   }

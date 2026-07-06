@@ -14,7 +14,15 @@
         Please sign a secure, gasless message with your wallet to prove ownership and authenticate your session on Save-Up.
       </p>
 
-      <div class="wallet-info-badge">
+      <div class="form-group mb-3 text-start">
+        <label for="referralCode" class="form-label" style="font-size: 0.85rem; color: #a0aec0; margin-bottom: 0.25rem; display: block;">Referral Code (Optional)</label>
+        <div class="input-with-icon" style="position: relative;">
+          <i class="bi bi-person-plus" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #8892b0;"></i>
+          <input type="text" id="referralCode" name="referralCode" class="form-control" [(ngModel)]="referralInput" placeholder="Enter referral code" [disabled]="isLoading()" style="padding-left: 2.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; width: 100%; border-radius: 8px; height: 42px;">
+        </div>
+      </div>
+
+      <div class="wallet-info-badge mb-3">
         <i class="bi bi-wallet2"></i>
         <span>{{ saveUpAuth.web3Service.account$() | slice:0:6 }}...{{ saveUpAuth.web3Service.account$() | slice:-4 }}</span>
       </div>

@@ -5,6 +5,7 @@ import { Web3Service } from '../../services/web3';
 import { GameContractService } from '../../services/game-contract.service';
 import { AdService } from '../../services/ad.service';
 import { AppToastService } from '../../services/app-toast.service';
+import { LocalStorageService, ItemInventory } from '../../services/local-storage.service';
 import { W3MCoreButtonComponentWrapperComponent } from '../../w3-mcore-button-component-wrapper/w3-mcore-button-component-wrapper.component';
 
 interface StoreItem {
@@ -27,26 +28,34 @@ export class StoreComponent implements OnInit {
   private gameContract = inject(GameContractService);
   adService = inject(AdService);
   private toast = inject(AppToastService);
+  private localStorage = inject(LocalStorageService);
+
+  // Mapping from ERC1155 token IDs to local storage inventory keys
+  private itemMappings: Record<number, keyof ItemInventory> = {
+    1000: 'timeFreeze',
+    1001: 'hintReveal',
+    1002: 'eliminateOption'
+  };
 
   readonly storeItems: StoreItem[] = [
     {
       id: 1000,
       name: 'Time Freeze',
-      price: 50,
+      price: 5,
       icon: '⏳',
       description: 'Freezes the question timer for 5 seconds to give you more thinking time.'
     },
     {
       id: 1001,
       name: 'Hint Reveal',
-      price: 30,
+      price: 3,
       icon: '💡',
       description: 'Reveals the hidden text clue for the current question.'
     },
     {
       id: 1002,
       name: 'Eliminate Option',
-      price: 40,
+      price: 4,
       icon: '❌',
       description: 'Deletes one wrong answer option from the three choices.'
     }
@@ -103,9 +112,20 @@ export class StoreComponent implements OnInit {
       const balances = await this.gameContract.getItemBalancesBatch(itemIds, account);
       
       const counts: Record<number, number> = {};
+      const currentLocal = this.localStorage.getInventory();
+
       this.storeItems.forEach((item, index) => {
-        counts[item.id] = balances[index] || 0;
+        const itemBal = balances[index] || 0;
+        counts[item.id] = itemBal;
+
+        // Sync blockchain balance to local storage mirror
+        const key = this.itemMappings[item.id];
+        if (key) {
+          currentLocal[key] = itemBal;
+        }
       });
+
+      this.localStorage.updateInventory(currentLocal);
       this.ownedCounts.set(counts);
     } catch (err) {
       console.error('Error refreshing store balances:', err);
@@ -145,6 +165,12 @@ export class StoreComponent implements OnInit {
     try {
       await this.gameContract.purchaseGameItem(itemId, qty);
       
+      // Update local storage mirror
+      const key = this.itemMappings[itemId];
+      if (key) {
+        this.localStorage.addItem(key, qty);
+      }
+
       this.toast.show('Purchase Successful!', `Acquired ${qty}x ${item.name}!`, undefined, 'bg-success text-light');
       
       // Reset selected quantity to 1
@@ -168,7 +194,13 @@ export class StoreComponent implements OnInit {
     if (!item) return;
 
     this.adService.showRewardedAd(() => {
-      // Mock awarding 1 free item in UI inventory (or later backend call)
+      // Award item in local storage mirror
+      const key = this.itemMappings[itemId];
+      if (key) {
+        this.localStorage.addItem(key, 1);
+      }
+
+      // Update UI state count
       const currentCounts = this.ownedCounts();
       const updatedCount = (currentCounts[itemId] || 0) + 1;
       this.ownedCounts.set({

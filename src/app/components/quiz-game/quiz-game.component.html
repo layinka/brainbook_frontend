@@ -242,6 +242,31 @@
           </div>
         }
 
+        <!-- Claim Rewards Actions -->
+        @if (tokensEarned() > 0 && tokenSignature()) {
+          <div class="qg-rewards-claim bb-card bb-anim-slide-up" style="margin-top: 1.5rem; margin-bottom: 1.5rem; padding: 1.2rem; text-align: center; border: 2px solid var(--bb-gold);">
+            <p style="margin-bottom: 0.8rem; font-weight: bold;">🎉 On-Chain Rewards Claimable!</p>
+            <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-bottom: 0.5rem;">
+              @if (!tokenClaimed()) {
+                <button class="bb-btn bb-btn--gold" [disabled]="claimingTokens()" (click)="claimSessionTokens()">
+                  {{ claimingTokens() ? 'Claiming...' : 'Claim ' + tokensEarned().toFixed(1) + ' $BRAINBOOK' }}
+                </button>
+              } @else {
+                <span style="color:var(--bb-green-light); font-weight: bold;">✓ Tokens Claimed</span>
+              }
+
+              @if (session()?.completionNftEarned && nftSignature() && !nftClaimed()) {
+                <button class="bb-btn bb-btn--gold" [disabled]="claimingNft()" (click)="claimSessionNft()">
+                  {{ claimingNft() ? 'Claiming...' : 'Claim ' + category()?.completionNft?.name }}
+                </button>
+              } @else if (session()?.completionNftEarned && nftClaimed()) {
+                <span class="bb-text-gold" style="font-weight: bold;">✓ Badge Claimed</span>
+              }
+            </div>
+            <p style="font-size: 0.75rem; opacity: 0.7; margin-bottom: 0;">Mints rewards directly into your connected Web3 Wallet</p>
+          </div>
+        }
+
         <div class="qg-gameover__actions">
           <button class="bb-btn bb-btn--gold bb-btn--lg" (click)="playAgain()" id="btn-play-again">🔄 Play Again</button>
           <button class="bb-btn bb-btn--ghost" (click)="goCategories()" id="btn-back-cats">📚 Categories</button>
@@ -268,6 +293,23 @@
             <span class="qg-stat__value" style="color:var(--bb-green-light)">{{ session()?.correctCount }}</span>
           </div>
         </div>
+
+        <!-- Claim Rewards Actions -->
+        @if (tokensEarned() > 0 && tokenSignature()) {
+          <div class="qg-rewards-claim bb-card bb-anim-slide-up" style="margin-top: 1.5rem; margin-bottom: 1.5rem; padding: 1.2rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.15);">
+            <p style="margin-bottom: 0.8rem; font-weight: bold;">🎉 Play-to-Earn Rewards Ready!</p>
+            <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-bottom: 0.5rem;">
+              @if (!tokenClaimed()) {
+                <button class="bb-btn bb-btn--gold" [disabled]="claimingTokens()" (click)="claimSessionTokens()">
+                  {{ claimingTokens() ? 'Claiming...' : 'Claim ' + tokensEarned().toFixed(1) + ' $BRAINBOOK' }}
+                </button>
+              } @else {
+                <span style="color:var(--bb-green-light); font-weight: bold;">✓ Tokens Claimed</span>
+              }
+            </div>
+            <p style="font-size: 0.75rem; opacity: 0.7; margin-bottom: 0;">Mint earned question tokens directly to your connected wallet</p>
+          </div>
+        }
 
         <div class="qg-gameover__actions">
           <button class="bb-btn bb-btn--primary bb-btn--lg" (click)="playAgain()" id="btn-retry">🔄 Try Again</button>
