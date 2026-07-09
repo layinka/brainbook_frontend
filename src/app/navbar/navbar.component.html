@@ -1,24 +1,31 @@
 <header class="bb-navbar-header">
-  <nav class="navbar navbar-expand-md navbar-dark py-2">
+  <nav class="navbar navbar-expand-xl navbar-dark py-2">
     <div class="container-fluid px-4">
       <a href="/" [routerLink]="'/'" class="navbar-brand brand-logo d-flex align-items-center gap-2">
         <span class="brand-emoji">🧠</span>
         <span class="brand-text">Brain<span class="brand-text-gold">Book</span></span>
       </a>
-      <button class="navbar-toggler border-0" type="button" (click)="isMenuCollapsed = !isMenuCollapsed"
-        data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02"
-        aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+      <div class="d-flex align-items-center gap-2 ms-auto d-xl-none">
+        @if (!w3s.hideConnectWalletForMiniPay) {
+        <div class="wallet-connection">
+          <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
+        </div>
+        }
+        <button class="navbar-toggler border-0" type="button" (click)="isMenuCollapsed = !isMenuCollapsed"
+          data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02"
+          aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
       <div class="collapse navbar-collapse" [ngbCollapse]="isMenuCollapsed" id="navbarTogglerDemo02">
-        <ul class="navbar-nav me-auto mb-2 mb-md-0 gap-1 ms-md-4">
-          <!-- <li class="nav-item">
-            <a class="nav-link nav-link-custom" routerLink="/" [routerLinkActiveOptions]="{exact: true}" (click)="isMenuCollapsed = true"
-              routerLinkActive="active">
+        <ul class="navbar-nav me-auto mb-2 mb-xl-0 gap-1 ms-xl-4">
+          <li class="nav-item d-xl-none">
+            <a class="nav-link nav-link-custom" routerLink="/" [routerLinkActiveOptions]="{exact: true}"
+              (click)="isMenuCollapsed = true" routerLinkActive="active">
               🏠 Home
             </a>
-          </li> -->
-          <li class="nav-item">
+          </li>
+          <li class="nav-item d-xl-none">
             <a class="nav-link nav-link-custom" routerLink="/categories" (click)="isMenuCollapsed = true"
               routerLinkActive="active">
               📚 Categories
@@ -36,7 +43,7 @@
               🛒 Store
             </a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item d-xl-none">
             <a class="nav-link nav-link-custom" routerLink="/daily-rewards" (click)="isMenuCollapsed = true"
               routerLinkActive="active">
               🎁 Daily Login
@@ -54,13 +61,15 @@
               🤝 Referrals
             </a>
           </li>
+          @if (isDevelopment) {
           <li class="nav-item">
             <a class="nav-link nav-link-custom d-flex align-items-center gap-1" routerLink="/token"
               (click)="isMenuCollapsed = true" routerLinkActive="active">
               <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm"> Token
             </a>
           </li>
-          <li class="nav-item">
+          }
+          <li class="nav-item d-xl-none">
             <a class="nav-link nav-link-custom" routerLink="/how-to-play" (click)="isMenuCollapsed = true"
               routerLinkActive="active">
               ❓ How to Play
@@ -110,7 +119,7 @@
 
           <!-- Wallet Connection -->
           @if (!w3s.hideConnectWalletForMiniPay) {
-          <div class="wallet-connection">
+          <div class="wallet-connection d-none d-xl-block">
             <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
           </div>
           }

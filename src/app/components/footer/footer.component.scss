@@ -1,0 +1,125 @@
+.bb-footer {
+  background: rgba(10, 10, 26, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(124, 58, 237, 0.15);
+  padding: 2.5rem 0 1.5rem;
+  font-family: var(--bb-font);
+  color: var(--bb-text-secondary);
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.footer-brand {
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  transition: transform 0.2s ease;
+  display: inline-flex;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+.brand-emoji {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.5));
+}
+
+.brand-text {
+  background: var(--bb-grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  &-gold {
+    background: var(--bb-grad-gold);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+.brand-description {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.footer-badges {
+  .badge {
+    padding: 0.4rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+
+    &-celo {
+      background: rgba(53, 208, 127, 0.1);
+      color: #35d07f;
+      border: 1px solid rgba(53, 208, 127, 0.2);
+    }
+
+    &-gamefi {
+      background: rgba(124, 58, 237, 0.1);
+      color: var(--bb-purple-light);
+      border: 1px solid rgba(124, 58, 237, 0.2);
+    }
+  }
+}
+
+.footer-title {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.footer-links {
+  li {
+    margin-bottom: 0.75rem;
+  }
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  &:hover {
+    color: #fff;
+    transform: translateX(4px);
+  }
+}
+
+.footer-divider {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.copyright-text {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.network-status-text {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+}

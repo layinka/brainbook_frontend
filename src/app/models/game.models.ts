@@ -34,6 +34,7 @@ export interface QuizCategory {
   description: string;
   totalQuestions: number;
   completionNft: CompletionNft;
+  isFeatured?: boolean;
   questions: QuizQuestion[];
 }
 

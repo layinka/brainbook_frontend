@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -45,6 +45,25 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
   pendingSignature = '';
 
   private countdownInterval: any;
+
+  constructor() {
+    // Reactively refresh rewards or clear states on wallet disconnect
+    effect(() => {
+      const account = this.w3s.account$();
+      if (account) {
+        void this.fetchRewardsState();
+      } else {
+        this.canClaim.set(false);
+        this.currentDay.set(1);
+        this.currentStreak.set(0);
+        this.secondsUntilNextClaim.set(0);
+        this.loading.set(false);
+        if (this.countdownInterval) {
+          clearInterval(this.countdownInterval);
+        }
+      }
+    });
+  }
 
   ngOnInit(): void {
     void this.fetchRewardsState();

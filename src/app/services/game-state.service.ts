@@ -52,7 +52,8 @@ export class QuizService {
           icon: cat.icon,
           description: cat.description,
           totalQuestions: cat.totalQuestions,
-          completionNft: cat.completionNft
+          completionNft: cat.completionNft,
+          isFeatured: cat.isFeatured
         }));
       }
     } catch (err) {

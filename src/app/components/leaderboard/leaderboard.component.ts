@@ -34,6 +34,20 @@ export class LeaderboardComponent implements OnInit {
   currentUserId = signal<string>('');
   loading = signal<boolean>(true);
 
+  formatDisplayName(displayName: string, walletAddress?: string): string {
+    const name = displayName || '';
+    const isDefaultOrEmpty = !name || name === 'Anonymous Player' || name === 'Player' || name === 'You';
+    const isWalletAddress = name.startsWith('0x') && name.length === 42;
+
+    if (isDefaultOrEmpty || isWalletAddress) {
+      const address = walletAddress || name || this.w3s.account$();
+      if (address && address.startsWith('0x') && address.length === 42) {
+        return `${address.slice(0, 8)}...${address.slice(-4)}`;
+      }
+    }
+    return displayName || 'Anonymous Player';
+  }
+
   ngOnInit(): void {
     void this.loadCategoriesAndRankings();
   }
@@ -73,7 +87,7 @@ export class LeaderboardComponent implements OnInit {
 
         const mapped: LeaderboardEntry[] = res.leaderboard.map((entry: any, index: number) => ({
           userId: entry.userId,
-          displayName: entry.displayName || 'Anonymous Player',
+          displayName: this.formatDisplayName(entry.displayName, entry.walletAddress),
           score: entry.score || 0,
           rank: entry.rank || (index + 1)
         }));
@@ -90,7 +104,7 @@ export class LeaderboardComponent implements OnInit {
             if (pRes && pRes.profile) {
               this.userRankEntry.set({
                 userId: myId,
-                displayName: pRes.profile.displayName || 'You',
+                displayName: this.formatDisplayName(pRes.profile.displayName),
                 score: pRes.profile.totalScore || 0,
                 rank: 99 // Default placement indicator
               });

@@ -81,6 +81,9 @@ export class ProfileComponent implements OnInit {
       } else {
         this.ownedItems.set({ 1000: 0, 1001: 0, 1002: 0 });
         this.ownedBadges.set({});
+        this.profile.set(null);
+        this.accuracy.set(0);
+        this.newName = '';
       }
     });
   }

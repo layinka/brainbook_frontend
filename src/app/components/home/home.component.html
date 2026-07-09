@@ -80,7 +80,7 @@
     </div>
 
     <div class="row g-2">
-      @for (cat of CATEGORIES_PREVIEW; track cat.key) {
+      @for (cat of categoriesPreview(); track cat.key) {
       <div class="col-4 col-sm-3 col-md-2">
         <button class="home__cat-chip w-100" (click)="play(cat.key)" [id]="'home-cat-' + cat.key">
           <span class="home__cat-chip__emoji">{{ cat.emoji }}</span>

@@ -54,9 +54,12 @@
   padding: 0.5rem 0.85rem !important;
   border-radius: var(--bb-radius-sm);
   transition: all 0.2s ease;
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   align-items: center;
   gap: 0.25rem;
+  white-space: nowrap !important;
 
   &:hover {
     color: var(--bb-text-primary) !important;
@@ -131,7 +134,20 @@
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(168, 85, 247, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .nav-link-custom {
+    font-size: 0.82rem;
+    padding: 0.4rem 0.55rem !important;
+  }
+  .brand-text {
+    font-size: 1.2rem;
+  }
+  .navbar-right {
+    gap: 0.5rem !important;
+  }
+}
+
+@media (max-width: 1199.98px) {
   .navbar-collapse {
     background: rgba(10, 10, 26, 0.95);
     border: 1px solid rgba(124, 58, 237, 0.2);
@@ -151,6 +167,8 @@
     padding-top: 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     width: 100%;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.75rem !important;
   }
 }

@@ -9,4 +9,8 @@
   <main class="bb-main">
     <router-outlet />
   </main>
+
+  @if (!web3Service.isMiniPay) {
+    <app-footer></app-footer>
+  }
 </div>

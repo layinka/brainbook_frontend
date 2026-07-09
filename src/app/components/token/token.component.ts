@@ -149,7 +149,23 @@ export class TokenComponent implements OnInit, OnDestroy {
       const chainId = this.w3s.chainId$();
       this.refreshPrices();
       this.initSwapDex();
-      if (account) this.fetchStats();
+      if (account) {
+        this.fetchStats();
+      } else {
+        // Clear all user balance and staking details on disconnect
+        this.tokenBalance.set('0.0');
+        this.stakedBalance.set('0.0');
+        this.totalStaked.set('0.0');
+        this.earnedRewards.set('0.0');
+        this.allowance.set(0n);
+        this.lpTokenBalance.set('0.0');
+        this.lpStakedBalance.set('0.0');
+        this.lpTotalStaked.set('0.0');
+        this.lpEarnedRewards.set('0.0');
+        this.lpAllowance.set(0n);
+        this.lpTokenSymbol.set('cUSD-LP');
+        this.lpTokenAddress.set('');
+      }
     });
   }
 

@@ -22,80 +22,76 @@
       </div>
     </div>
     @if (!w3s.account$()) {
-      <div class="store-wallet-cta">
-        <p>Connect your wallet to purchase and manage game items.</p>
-        <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
-      </div>
+    <div class="store-wallet-cta">
+      <p>Connect your wallet to purchase and manage game items.</p>
+      <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
+    </div>
     } @else {
-      <div class="store-wallet-address text-truncate">
-        <span>Address:</span> {{ w3s.account$() }}
-      </div>
+    <div class="store-wallet-address text-truncate">
+      <span>Address:</span> {{ w3s.account$() }}
+    </div>
     }
   </div>
 
   <!-- Items Grid -->
   <div class="store-grid bb-anim-slide-up">
     @for (item of storeItems; track item.id) {
-      <div class="item-card bb-card" [class.item-card--loading]="purchasingItemId() === item.id">
-        <!-- Quantity owned badge -->
-        <div class="item-owned-badge" title="Quantity in inventory">
-          🎒 {{ ownedCounts()[item.id] || 0 }} Owned
-        </div>
-
-        <!-- Visual Icon -->
-        <div class="item-icon-wrap">
-          <span class="item-icon">{{ item.icon }}</span>
-          <div class="item-glow"></div>
-        </div>
-
-        <!-- Info -->
-        <div class="item-details">
-          <h3 class="item-name">{{ item.name }}</h3>
-          <p class="item-desc">{{ item.description }}</p>
-        </div>
-
-        <!-- Action / Price -->
-        <div class="item-action">
-          <div class="item-price d-flex align-items-center gap-1">
-            <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm m-0">
-            <span class="price-val">{{ item.price }}</span>
-          </div>
-
-          @if (w3s.account$()) {
-            <div class="quantity-selector">
-              <button class="qty-btn" (click)="adjustQuantity(item.id, -1)" [disabled]="quantities()[item.id] <= 1">-</button>
-              <span class="qty-val">{{ quantities()[item.id] || 1 }}</span>
-              <button class="qty-btn" (click)="adjustQuantity(item.id, 1)">+</button>
-            </div>
-
-            <button
-              class="bb-btn bb-btn--primary w-100 buy-btn"
-              [disabled]="purchasingItemId() !== null"
-              (click)="buyItem(item.id)"
-            >
-              @if (purchasingItemId() === item.id) {
-                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                Processing...
-              } @else {
-                Buy for {{ item.price * quantities()[item.id] }}
-              }
-            </button>
-
-            <!-- Free claim via Ad (if ads enabled) -->
-            @if (adService.isAdsEnabled()) {
-              <button
-                class="bb-btn bb-btn--ghost w-100 ad-btn mt-2"
-                [disabled]="purchasingItemId() !== null || adService.isAdPlaying()"
-                (click)="claimFreeWithAd(item.id)"
-              >
-                📺 Claim 1 Free (Watch Ad)
-              </button>
-            }
-          @} @else {
-            <button class="bb-btn bb-btn--ghost w-100" disabled>Connect Wallet to Buy</button>
-          }
-        </div>
+    <div class="item-card bb-card" [class.item-card--loading]="purchasingItemId() === item.id">
+      <!-- Quantity owned badge -->
+      <div class="item-owned-badge" title="Quantity in inventory">
+        🎒 {{ ownedCounts()[item.id] || 0 }} Owned
       </div>
+
+      <!-- Visual Icon -->
+      <div class="item-icon-wrap">
+        <span class="item-icon">{{ item.icon }}</span>
+        <div class="item-glow"></div>
+      </div>
+
+      <!-- Info -->
+      <div class="item-details">
+        <h3 class="item-name">{{ item.name }}</h3>
+        <p class="item-desc">{{ item.description }}</p>
+      </div>
+
+      <!-- Action / Price -->
+      <div class="item-action">
+        <div class="item-price d-flex align-items-center gap-1">
+          <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm m-0">
+          <span class="price-val">{{ item.price }}</span>
+        </div>
+
+        @if (w3s.account$()) {
+        <div class="quantity-selector">
+          <button class="qty-btn" (click)="adjustQuantity(item.id, -1)"
+            [disabled]="quantities()[item.id] <= 1">-</button>
+          <span class="qty-val">{{ quantities()[item.id] || 1 }}</span>
+          <button class="qty-btn" (click)="adjustQuantity(item.id, 1)">+</button>
+        </div>
+
+        <button class="bb-btn bb-btn--primary w-100 buy-btn" [disabled]="purchasingItemId() !== null"
+          (click)="buyItem(item.id)">
+          @if (purchasingItemId() === item.id) {
+          <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          Processing...
+          } @else {
+          Buy for {{ item.price * quantities()[item.id] }}
+          <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm m-0">
+          }
+        </button>
+
+        <!-- Free claim via Ad (if ads enabled) -->
+        @if (adService.isAdsEnabled()) {
+        <button class="bb-btn bb-btn--ghost w-100 ad-btn mt-2"
+          [disabled]="purchasingItemId() !== null || adService.isAdPlaying()" (click)="claimFreeWithAd(item.id)">
+          📺 Claim 1 Free (Watch Ad)
+        </button>
+        }
+        @} @else {
+        <button class="bb-btn bb-btn--ghost w-100" disabled>Connect Wallet to Buy</button>
+        }
+      </div>
+    </div>
     }
   </div>
 

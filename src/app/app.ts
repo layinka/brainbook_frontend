@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from "./navbar/navbar.component";
+import { FooterComponent } from "./components/footer/footer.component";
 import { Web3Service } from './services/web3';
 import { ToastsComponent } from './toasts/toasts.component';
 import { AuthOverlayComponent } from './components/auth-overlay/auth-overlay.component';
@@ -9,7 +10,7 @@ import { LocalStorageService } from './services/local-storage.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent, ToastsComponent, AuthOverlayComponent],
+  imports: [RouterOutlet, NavbarComponent, FooterComponent, ToastsComponent, AuthOverlayComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
