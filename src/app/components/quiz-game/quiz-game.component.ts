@@ -112,6 +112,13 @@ export class QuizGameComponent implements OnInit, OnDestroy {
     return Math.round((this.gs.timeRemaining() / q.timeLimit) * 100);
   });
 
+  sessionEarnedTokens = computed(() => {
+    const sess = this.session();
+    if (!sess) return 0;
+    const qAnswered = sess.correctCount + sess.wrongCount;
+    return parseFloat((qAnswered * 0.1).toFixed(1));
+  });
+
   timerClass = computed(() => {
     const pct = this.timerPercent();
     if (pct <= 20) return 'bb-timer__fill--danger';
@@ -373,10 +380,30 @@ export class QuizGameComponent implements OnInit, OnDestroy {
     
     this.claimingTokens.set(true);
     try {
-      const amountInWei = BigInt(Math.round(this.tokensEarned() * 10000)) * (10n ** 14n);
-      await this.gameContract.claimTokenReward(amountInWei, this.tokenSignature());
-      this.toast.show('Claim Successful!', `${this.tokensEarned()} $BRAINBOOK claimed to wallet!`, undefined, 'bg-success text-light');
+      // 1. Fetch EIP-712 signature from backend for all unclaimed game rewards
+      const claimRes = await this.http.post<any>(`${environment.apiUrl}/game/rewards/claim`, {}, { withCredentials: true }).toPromise();
+      
+      if (!claimRes || !claimRes.success || !claimRes.signature) {
+        throw new Error(claimRes?.error || 'Failed to acquire signature from game vault.');
+      }
+      
+      const claimAmount = parseFloat(claimRes.amount);
+      const signature = claimRes.signature;
+      
+      // 2. Call contract using BigInt scaling or parseEther
+      const amountInWei = BigInt(Math.round(claimAmount * 10000)) * (10n ** 14n);
+      await this.gameContract.claimTokenReward(amountInWei, signature);
+
+      // 3. Confirm claim on the backend database
+      try {
+        await this.http.post<any>(`${environment.apiUrl}/game/rewards/confirm-claim`, { signature }, { withCredentials: true }).toPromise();
+      } catch (confirmErr) {
+        console.warn('Backend confirmation failed (retrying should show as claimed once resolved):', confirmErr);
+      }
+      
+      this.toast.show('Claim Successful!', `${claimAmount} BRAINBOOK claimed to wallet!`, undefined, 'bg-success text-light');
       this.tokenClaimed.set(true);
+      this.tokensEarned.set(0); // reset
     } catch (err: any) {
       console.error('Token claim failed:', err);
       this.toast.error('Claim Failed', err?.message || 'Transaction rejected.');

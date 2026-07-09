@@ -110,8 +110,9 @@
             </div>
 
             <!-- Score -->
-            <div class="score-col score-val">
-              🪙 {{ entry.score | number }}
+            <div class="score-col score-val d-flex align-items-center gap-1 justify-content-end">
+              <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm m-0">
+              {{ entry.score | number }}
             </div>
           </div>
         }
@@ -147,8 +148,9 @@
               <span class="text-muted">—</span>
             }
           </div>
-          <div class="score-col score-val">
-            🪙 {{ userRankEntry()?.score | number }}
+          <div class="score-col score-val d-flex align-items-center gap-1 justify-content-end">
+            <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm m-0">
+            {{ userRankEntry()?.score | number }}
           </div>
         </div>
       </div>

@@ -41,12 +41,18 @@
         </div>
 
         <!-- Score -->
-        <div class="bb-score">
+        <div class="bb-score d-flex align-items-center gap-1">
           <span class="bb-score__icon">🪙</span>
           <span class="bb-score__value">{{ session()?.score ?? 0 }}</span>
           @if (multiplier() > 1) {
             <span class="bb-score__multiplier">×{{ multiplier() }}</span>
           }
+        </div>
+
+        <!-- Token Rewards Earned -->
+        <div class="bb-token-earned d-flex align-items-center gap-1" style="background: rgba(255, 255, 255, 0.08); padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.15);">
+          <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm m-0" style="width: 14px; height: 14px;">
+          <span class="text-warning fw-bold" style="font-size: 0.85rem; line-height: 1;">+{{ sessionEarnedTokens() }}</span>
         </div>
 
         <!-- Streak -->
@@ -243,7 +249,7 @@
         }
 
         <!-- Claim Rewards Actions -->
-        @if (tokensEarned() > 0 && tokenSignature()) {
+        @if (tokensEarned() > 0) {
           <div class="qg-rewards-claim bb-card bb-anim-slide-up" style="margin-top: 1.5rem; margin-bottom: 1.5rem; padding: 1.2rem; text-align: center; border: 2px solid var(--bb-gold);">
             <p style="margin-bottom: 0.8rem; font-weight: bold;">🎉 On-Chain Rewards Claimable!</p>
             <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-bottom: 0.5rem;">
@@ -295,7 +301,7 @@
         </div>
 
         <!-- Claim Rewards Actions -->
-        @if (tokensEarned() > 0 && tokenSignature()) {
+        @if (tokensEarned() > 0) {
           <div class="qg-rewards-claim bb-card bb-anim-slide-up" style="margin-top: 1.5rem; margin-bottom: 1.5rem; padding: 1.2rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.15);">
             <p style="margin-bottom: 0.8rem; font-weight: bold;">🎉 Play-to-Earn Rewards Ready!</p>
             <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-bottom: 0.5rem;">

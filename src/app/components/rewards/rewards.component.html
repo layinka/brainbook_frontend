@@ -4,18 +4,48 @@
       <div class="bb-card text-center mb-5 py-5 px-4 bb-anim-slide-up">
         <h1 class="display-4 fw-bold bb-text-gold mb-3">🏅 Rewards & Achievements</h1>
         <p class="lead text-light opacity-90 mx-auto" style="max-width: 700px;">
-          Learn how you can earn `$BRAINBOOK` tokens and collect exclusive milestone achievements on Celo & Base. All token rewards and NFTs are claimable directly to your connected Web3 wallet.
+          Learn how you can earn `$BRAINBOOK` tokens and collect exclusive milestone achievements on Celo & Base. All
+          token rewards and NFTs are claimable directly to your connected Web3 wallet.
         </p>
       </div>
 
+      <!-- Play-to-Earn Rewards Vault Card -->
+      <div
+        class="bb-card p-4 mb-4 text-start d-flex flex-column flex-md-row align-items-center justify-content-between gap-4 bb-anim-slide-up"
+        style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(236, 72, 153, 0.05) 100%); border: 1px solid rgba(245, 158, 11, 0.25);">
+        <div class="d-flex align-items-center gap-3">
+          <div class="d-flex align-items-center justify-content-center bg-dark rounded-circle"
+            style="width: 54px; height: 54px; border: 1px solid rgba(245, 158, 11, 0.3);">
+            <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="m-0"
+              style="width: 32px; height: 32px; object-fit: contain;">
+          </div>
+          <div>
+            <h3 class="h4 fw-bold text-light mb-1">Your Game Rewards Vault</h3>
+            <p class="text-light opacity-75 mb-0" style="font-size: 0.95rem;">
+              Total Earned: <strong class="text-white">{{ totalEarned() | number:'1.0-2' }} BRAINBOOK</strong> |
+              Unclaimed: <strong class="text-warning">{{ unclaimedTokens() | number:'1.0-2' }} BRAINBOOK</strong>
+            </p>
+          </div>
+        </div>
+        <div>
+          <button class="bb-btn bb-btn--gold px-4 py-2 text-nowrap" [disabled]="unclaimedTokens() <= 0 || claiming()"
+            (click)="claimRewards()">
+            {{ claiming() ? 'Claiming...' : 'Claim Unclaimed' }}
+          </button>
+        </div>
+      </div>
+
       <!-- Motivating Referral Snapshot Banner -->
-      <div class="bb-card p-4 mb-5 text-start d-flex flex-column flex-md-row align-items-center justify-content-between gap-4 bb-anim-slide-up" style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.25) 0%, rgba(236, 72, 153, 0.15) 100%); border: 1px solid rgba(167, 139, 250, 0.35);">
+      <div
+        class="bb-card p-4 mb-5 text-start d-flex flex-column flex-md-row align-items-center justify-content-between gap-4 bb-anim-slide-up"
+        style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.25) 0%, rgba(236, 72, 153, 0.15) 100%); border: 1px solid rgba(167, 139, 250, 0.35);">
         <div class="d-flex align-items-center gap-3">
           <span class="display-5">🤝</span>
           <div>
             <h3 class="h4 fw-bold text-light mb-1">Invite Friends & Earn Double!</h3>
             <p class="text-light opacity-75 mb-0" style="font-size: 0.95rem;">
-              Get <strong>5.0 BRAINBOOK</strong> + 1 power-up for every signup. Refer more than 25 users to unlock <strong>double rewards (10.0 BRAINBOOK)</strong>!
+              Get <strong>5.0 BRAINBOOK</strong> + 1 power-up for every signup. Refer more than 25 users to unlock
+              <strong>double rewards (10.0 BRAINBOOK)</strong>!
             </p>
           </div>
         </div>
@@ -28,8 +58,11 @@
 
       <!-- Core Rewards List -->
       <div class="bb-card p-5 mb-5 bb-anim-slide-up">
-        <h2 class="h3 fw-bold bb-text-gold mb-4">🪙 Core P2E Token Payouts</h2>
-        
+        <h2 class="h3 fw-bold bb-text-gold mb-4 d-flex align-items-center gap-2">
+          <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo">
+          Core P2E Token Payouts
+        </h2>
+
         <div class="table-responsive">
           <table class="table table-borderless text-light align-middle fs-5">
             <thead>
@@ -42,18 +75,18 @@
             <tbody>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td class="py-3">💡 Correct Answer</td>
-                <td class="py-3 fw-bold text-success">+0.1 $BRAINBOOK</td>
+                <td class="py-3 fw-bold text-success">+{{ rewardsConfig.correctAnswer }} BRAINBOOK</td>
                 <td class="py-3 text-light opacity-75">Plus score streak multipliers</td>
               </tr>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td class="py-3">🏁 Complete Topic (All Questions)</td>
-                <td class="py-3 fw-bold text-success">+5.0 $BRAINBOOK</td>
-                <td class="py-3 text-warning">🏅 Topic Aficionado NFT Badge</td>
+                <td class="py-3 fw-bold text-success">+{{ rewardsConfig.topicCompletion | number:'1.1-2' }} BRAINBOOK</td>
+                <td class="py-3 text-warning">🏅 {{ rewardsConfig.topicCompletionNftName }}</td>
               </tr>
               <tr>
                 <td class="py-3">🎁 7-Day Login Streak</td>
-                <td class="py-3 fw-bold text-success">+15.0 $BRAINBOOK (Cumulative)</td>
-                <td class="py-3 text-warning">🛡️ Weekly Warrior NFT Badge</td>
+                <td class="py-3 fw-bold text-success">+15.0 BRAINBOOK (Cumulative)</td>
+                <td class="py-3 text-warning">🛡️ {{ rewardsConfig.weeklyWarriorNftName }}</td>
               </tr>
             </tbody>
           </table>
@@ -68,81 +101,54 @@
         </p>
 
         <div class="row g-3 justify-content-center">
-          <div class="col-6 col-md-3 col-lg-2">
-            <div class="daily-item text-center p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
-              <span class="d-block text-muted small">Day 1</span>
-              <span class="d-block fs-3 my-2">🪙</span>
-              <span class="fw-bold text-light">1 $BRAIN</span>
+          @for (day of rewardsConfig.dailyCalendar; track day.dayNumber) {
+            <div class="col-6 col-md-3 col-lg-2">
+              <div class="daily-item text-center p-3 rounded"
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                <span class="d-block text-muted small">Day {{ day.dayNumber }}</span>
+                <span class="d-block fs-3 my-2 d-flex justify-content-center align-items-center" style="height: 36px;">
+                  @if (day.type === 'token') {
+                    <img src="/BRAINBOOK.png" alt="BRAINBOOK" class="coin-logo m-0">
+                  } @else {
+                    {{ day.icon }}
+                  }
+                </span>
+                <span class="fw-bold" [class.text-light]="day.type === 'token'" [class.text-warning]="day.type !== 'token'">
+                  {{ day.rewardText }}
+                </span>
+              </div>
             </div>
-          </div>
-          <div class="col-6 col-md-3 col-lg-2">
-            <div class="daily-item text-center p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
-              <span class="d-block text-muted small">Day 2</span>
-              <span class="d-block fs-3 my-2">🪙</span>
-              <span class="fw-bold text-light">2 $BRAIN</span>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 col-lg-2">
-            <div class="daily-item text-center p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
-              <span class="d-block text-muted small">Day 3</span>
-              <span class="d-block fs-3 my-2">⏳</span>
-              <span class="fw-bold text-warning">Time Freeze</span>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 col-lg-2">
-            <div class="daily-item text-center p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
-              <span class="d-block text-muted small">Day 4</span>
-              <span class="d-block fs-3 my-2">🪙</span>
-              <span class="fw-bold text-light">4 $BRAIN</span>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 col-lg-2">
-            <div class="daily-item text-center p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
-              <span class="d-block text-muted small">Day 5</span>
-              <span class="d-block fs-3 my-2">💡</span>
-              <span class="fw-bold text-warning">Hint Reveal</span>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 col-lg-2">
-            <div class="daily-item text-center p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
-              <span class="d-block text-muted small">Day 6</span>
-              <span class="d-block fs-3 my-2">🪙</span>
-              <span class="fw-bold text-light">8 $BRAIN</span>
-            </div>
-          </div>
-          <div class="col-6 col-md-3 col-lg-2">
-            <div class="daily-item text-center p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
-              <span class="d-block text-muted small">Day 7</span>
-              <span class="d-block fs-3 my-2">🛡️</span>
-              <span class="fw-bold text-warning">Warrior NFT</span>
-            </div>
-          </div>
+          }
         </div>
       </div>
 
       <!-- Milestone Badges Grid -->
       <div class="bb-card p-5 mb-5 bb-anim-slide-up">
         <h2 class="h3 fw-bold bb-text-gold mb-4">🏆 Milestone Achievements</h2>
-        
+
         <div class="row g-4">
           <div class="col-md-6">
-            <div class="d-flex gap-3 p-4 rounded h-100" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+            <div class="d-flex gap-3 p-4 rounded h-100"
+              style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
               <span class="display-4">🎖️</span>
               <div>
                 <h4 class="fw-bold text-light mb-1">GK Halfway Hero</h4>
                 <span class="badge bg-secondary mb-2">Token ID: 101</span>
-                <p class="text-light opacity-75 mb-0">Awarded for reaching question 50 in the General Knowledge category in a single session.</p>
+                <p class="text-light opacity-75 mb-0">Awarded for reaching question 50 in the General Knowledge category
+                  in a single session.</p>
               </div>
             </div>
           </div>
 
           <div class="col-md-6">
-            <div class="d-flex gap-3 p-4 rounded h-100" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+            <div class="d-flex gap-3 p-4 rounded h-100"
+              style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
               <span class="display-4">👑</span>
               <div>
                 <h4 class="fw-bold text-light mb-1">Elite Brain</h4>
                 <span class="badge bg-secondary mb-2">Token ID: 301</span>
-                <p class="text-light opacity-75 mb-0">Awarded to top 10 ranked players on the weekly calculation high-scores leaderboard.</p>
+                <p class="text-light opacity-75 mb-0">Awarded to top 10 ranked players on the weekly calculation
+                  high-scores leaderboard.</p>
               </div>
             </div>
           </div>

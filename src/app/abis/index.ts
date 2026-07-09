@@ -3,6 +3,11 @@ export { BRAIN_BOOK_TOKEN_ABI } from './BrainBookToken.abi';
 export { BRAIN_BOOK_NFT_ABI } from './BrainBookNFT.abi';
 export { BRAIN_BOOK_GAME_MANAGER_ABI } from './BrainBookGameManager.abi';
 export { BRAIN_BOOK_STAKING_ABI } from './BrainBookStaking.abi';
+export { BRAIN_BOOK_STAKING_ABI as BRAIN_BOOK_LIQUIDITY_MINING_ABI } from './BrainBookStaking.abi';
+export { UNISWAP_V3_ROUTER_ABI } from './UniswapV3Router.abi';
+export { UNISWAP_V4_POOL_MANAGER_ABI } from './UniswapV4PoolManager.abi';
+export { UNISWAP_V4_UNIVERSAL_ROUTER_ABI } from './UniswapV4UniversalRouter.abi';
+
 
 // ERC20 ABI for basic token operations
 export const ERC20_ABI = [

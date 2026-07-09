@@ -64,8 +64,12 @@
         <div class="day-label">Day {{ day.dayNumber }}</div>
 
         <!-- Reward representation -->
-        <div class="reward-graphic">
-          <span class="reward-icon">{{ day.icon }}</span>
+        <div class="reward-graphic d-flex justify-content-center align-items-center" style="height: 60px;">
+          @if (day.icon === '🧠' || day.icon === '🪙' || day.icon === '💰') {
+            <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-lg m-0">
+          } @else {
+            <span class="reward-icon">{{ day.icon }}</span>
+          }
           @if (day.dayNumber === 7) {
             <span class="reward-nft-badge">NFT</span>
           }

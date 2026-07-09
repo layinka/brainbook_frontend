@@ -1,176 +1,712 @@
-<div class="container py-5 mt-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-10">
-      
-      <!-- Header Banner -->
-      <div class="bb-card text-center mb-5 py-5 px-4 bb-anim-slide-up">
-        <h1 class="display-4 fw-bold bb-text-gold mb-3">🪙 $BRAINBOOK Token & Staking</h1>
-        <p class="lead text-light opacity-90 mx-auto" style="max-width: 700px;">
-          The utility engine of the BrainBook ecosystem. Stake your tokens to earn yield, view real-time market pricing on Uniswap V4, and power your play-to-earn experience.
-        </p>
+<div class="token-page container-fluid px-3 px-lg-4 py-4 mt-4">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!--  HEADER + LIVE PRICE TICKER                                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="token-header bb-card mb-4 px-4 pt-4 pb-3 bb-anim-slide-up">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <img src="/BRAINBOOK.png" alt="BRAINBOOK" class="coin-logo-xl bb-pulse">
+        <div>
+          <h1 class="h2 fw-bold bb-text-gold mb-0">$BRAINBOOK</h1>
+          <p class="text-muted small mb-0">GameFi Utility Token · Celo + Ethereum</p>
+        </div>
       </div>
 
-      <!-- Main Layout Grid -->
-      <div class="row g-4 mb-5">
-        
-        <!-- Left Side: Staking Dashboard -->
-        <div class="col-md-7">
-          <div class="bb-card p-4 h-100 bb-anim-slide-up" style="animation-delay: 0.1s;">
-            <h2 class="h3 fw-bold bb-text-gold mb-4">🥩 Staking Dashboard</h2>
+      <!-- Live Price Display -->
+      <div class="price-badge">
+        @if (priceLoading()) {
+        <div class="price-skeleton"></div>
+        } @else if (aggregatedPrice()) {
+        <div class="text-center">
+          <span class="text-muted small d-block">Average Market Price</span>
+          <div class="price-value bb-text-gold fw-bold">${{ aggregatedPrice()!.averagePrice }}</div>
+          <span class="text-muted" style="font-size:0.7rem;">
+            per BRAINBOOK · updated {{ aggregatedPrice()!.lastUpdated | date:'HH:mm:ss' }}
+            <button class="btn btn-sm p-0 ms-1 text-muted" (click)="refreshPrices()" title="Refresh">↻</button>
+          </span>
+        </div>
+        }
+      </div>
+    </div>
 
-            @if (!w3s.account$()) {
-              <div class="text-center py-5">
-                <span class="fs-1 d-block mb-3">🔒</span>
-                <h4 class="text-light fw-bold mb-3">Wallet Not Connected</h4>
-                <p class="text-light opacity-75 mb-4">Please connect your Web3 wallet to manage your staking deposit.</p>
-                <div class="d-inline-block">
-                  <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
-                </div>
-              </div>
+    <!-- Per-Source Price Ticker Row -->
+    <div class="price-sources-row">
+      @if (priceLoading()) {
+      <span class="text-muted small">Fetching live prices across DEXes…</span>
+      } @else if (aggregatedPrice()) {
+      @for (src of aggregatedPrice()!.sources; track src.dex + src.chain) {
+      <div class="price-source-chip" [class.no-pool]="src.status === 'no-pool'" [class.error]="src.status === 'error'">
+        <span>{{ priceSourceStatusIcon(src.status) }}</span>
+        <span class="fw-bold">{{ src.dex }}</span>
+        <span class="text-muted">· {{ src.chain }}</span>
+        <span class="protocol-badge">{{ src.protocol === 'uniswap-v3' ? 'V3' : 'V4' }}</span>
+        @if (src.status === 'ok') {
+        <span class="text-warning fw-bold">${{ src.price }}</span>
+        } @else if (src.status === 'no-pool') {
+        <span class="text-muted fst-italic">Pool pending</span>
+        } @else {
+        <span class="text-danger fst-italic">Unavailable</span>
+        }
+      </div>
+      }
+      }
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!--  SECTION NAVIGATION TABS                                               -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-nav mb-4 bb-anim-slide-up" style="animation-delay:0.05s;">
+    <button class="section-nav-btn" [class.active]="activeSection === 'trade'" (click)="activeSection = 'trade'"
+      id="nav-trade">
+      <span class="nav-icon">💱</span> Trade & Markets
+    </button>
+    <button class="section-nav-btn" [class.active]="activeSection === 'stake'" (click)="activeSection = 'stake'"
+      id="nav-stake">
+      <span class="nav-icon">🥩</span> Earn Yield
+    </button>
+    <button class="section-nav-btn" [class.active]="activeSection === 'tokenomics'"
+      (click)="activeSection = 'tokenomics'" id="nav-tokenomics">
+      <span class="nav-icon">📊</span> Tokenomics
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!--  SECTION 1: TRADE & MARKETS                                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  @if (activeSection === 'trade') {
+  <div class="animate-fade-in">
+    <div class="row g-4">
+
+      <!-- Swap Widget (Left) -->
+      <div class="col-lg-6">
+        <div class="bb-card p-4 h-100 bb-anim-slide-up" style="animation-delay:0.1s;">
+          <h2 class="h5 fw-bold text-light mb-1 d-flex align-items-center gap-2">
+            <span>💱</span> Swap Tokens Here
+          </h2>
+          <p class="text-muted small mb-4">Exchange BRAINBOOK for stablecoins directly on-chain via V3 or V4 DEXes.</p>
+
+          <!-- Step Guide -->
+          <div class="step-guide mb-4">
+            <div class="step" [class.step-done]="!!w3s.account$()">
+              <span class="step-num">1</span>
+              <span>Connect wallet</span>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step" [class.step-done]="!!selectedSwapDex() && !!swapAmount && parseAmount(swapAmount) > 0">
+              <span class="step-num">2</span>
+              <span>Enter amount</span>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step" [class.step-done]="swapAllowanceSufficient()">
+              <span class="step-num">3</span>
+              <span>Approve</span>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step" [class.step-done]="!!swapTxHash()">
+              <span class="step-num">4</span>
+              <span>Swap</span>
+            </div>
+          </div>
+
+          @if (!w3s.account$()) {
+          <div class="wallet-prompt text-center py-4">
+            <span class="fs-2 d-block mb-2">🔒</span>
+            <p class="text-muted mb-3">Connect your wallet to swap tokens</p>
+            <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
+          </div>
+          } @else {
+
+          <!-- DEX Selector -->
+          <div class="mb-3">
+            <label class="form-label text-muted small">Select Exchange</label>
+            @if (enabledDexesForCurrentChain.length === 0) {
+            <div class="alert-soft text-muted text-center p-3 rounded small">
+              No enabled DEXes on the connected chain. Switch to Celo or check back soon.
+            </div>
             } @else {
-              <!-- Stats Row -->
-              <div class="row g-3 mb-4">
-                <div class="col-6">
-                  <div class="p-3 rounded text-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
-                    <span class="text-muted small">Your Staked Balance</span>
-                    <h3 class="fw-bold text-light mt-1">{{ stakedBalance() }} <span class="fs-6">BRAIN</span></h3>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="p-3 rounded text-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
-                    <span class="text-muted small">Total Pool Staked</span>
-                    <h3 class="fw-bold text-light mt-1">{{ totalStaked() }} <span class="fs-6">BRAIN</span></h3>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Unclaimed Rewards Card -->
-              <div class="p-4 rounded mb-4 d-flex justify-content-between align-items-center" style="background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.15);">
-                <div>
-                  <span class="text-warning small d-block">Accrued Staking Yield</span>
-                  <span class="fs-3 fw-bold text-warning">{{ earnedRewards() }} $BRAINBOOK</span>
-                </div>
-                <button class="bb-btn bb-btn--gold" [disabled]="loadingClaim() || earnedRewards() === '0.0'" (click)="claimRewards()">
-                  {{ loadingClaim() ? 'Claiming...' : 'Claim Yield' }}
-                </button>
-              </div>
-
-              <!-- Action Tabs (Stake / Unstake) -->
-              <div class="staking-actions">
-                <div class="d-flex gap-2 mb-3">
-                  <button class="flex-grow-1 py-2 btn btn-sm" [class.btn-warning]="activeTab === 'stake'" [class.btn-outline-secondary]="activeTab !== 'stake'" (click)="activeTab = 'stake'">
-                    Deposit Staking
-                  </button>
-                  <button class="flex-grow-1 py-2 btn btn-sm" [class.btn-warning]="activeTab === 'unstake'" [class.btn-outline-secondary]="activeTab !== 'unstake'" (click)="activeTab = 'unstake'">
-                    Withdraw Deposit
-                  </button>
-                </div>
-
-                @if (activeTab === 'stake') {
-                  <div class="stake-form p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-                    <div class="mb-3">
-                      <label class="form-label text-muted small">Amount to Stake (BRAINBOOK)</label>
-                      <div class="input-group">
-                        <input type="number" class="form-control bg-dark border-secondary text-light" placeholder="0.0" [(ngModel)]="stakeAmount" />
-                        <button class="btn btn-outline-secondary" type="button" (click)="setStakeMax()">Max</button>
-                      </div>
-                      <span class="text-muted small mt-1 d-block">Wallet Balance: {{ tokenBalance() }} $BRAINBOOK</span>
-                    </div>
-
-                    @if (needApprove()) {
-                      <button class="bb-btn bb-btn--primary w-100" [disabled]="loadingApprove() || !stakeAmount || stakeAmount <= 0" (click)="approveTokens()">
-                        {{ loadingApprove() ? 'Approving...' : 'Approve $BRAINBOOK Staking' }}
-                      </button>
-                    } @else {
-                      <button class="bb-btn bb-btn--gold w-100" [disabled]="loadingStake() || !stakeAmount || stakeAmount <= 0" (click)="stakeTokens()">
-                        {{ loadingStake() ? 'Depositing...' : 'Stake Tokens' }}
-                      </button>
-                    }
-                  </div>
-                } @else {
-                  <div class="unstake-form p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-                    <div class="mb-3">
-                      <label class="form-label text-muted small">Amount to Withdraw (BRAINBOOK)</label>
-                      <div class="input-group">
-                        <input type="number" class="form-control bg-dark border-secondary text-light" placeholder="0.0" [(ngModel)]="unstakeAmount" />
-                        <button class="btn btn-outline-secondary" type="button" (click)="setUnstakeMax()">Max</button>
-                      </div>
-                      <span class="text-muted small mt-1 d-block">Staked Deposit: {{ stakedBalance() }} $BRAINBOOK</span>
-                    </div>
-
-                    <button class="bb-btn bb-btn--ghost w-100" [disabled]="loadingUnstake() || !unstakeAmount || unstakeAmount <= 0" (click)="withdrawTokens()">
-                      {{ loadingUnstake() ? 'Withdrawing...' : 'Withdraw Staked Tokens' }}
-                    </button>
-                  </div>
-                }
-
-                <!-- Exit button -->
-                <button class="btn btn-outline-danger btn-sm w-100 mt-3" [disabled]="loadingExit()" (click)="exitStaking()">
-                  🚪 Exit Pool (Withdraw All & Claim)
-                </button>
-              </div>
+            <div class="dex-selector-row">
+              @for (dex of enabledDexesForCurrentChain; track dex.id) {
+              <button class="dex-pill" [class.active]="selectedSwapDex()?.id === dex.id" (click)="selectSwapDex(dex)">
+                <span>{{ dex.logoEmoji }}</span>
+                <span class="fw-semibold">{{ dex.name }}</span>
+                <span class="dex-proto-tag">{{ dex.protocol === 'uniswap-v3' ? 'V3' : 'V4' }}</span>
+              </button>
+              }
+            </div>
             }
           </div>
-        </div>
 
-        <!-- Right Side: Uniswap V4 Pool Info -->
-        <div class="col-md-5">
-          <div class="bb-card p-4 h-100 bb-anim-slide-up" style="animation-delay: 0.2s;">
-            <h2 class="h3 fw-bold bb-text-gold mb-3">🦄 Uniswap V4 Market</h2>
-            
-            <div class="uniswap-badge p-3 rounded text-center mb-4" style="background: rgba(255,0,127,0.05); border: 1px solid rgba(255,0,127,0.25);">
-              <span class="fs-2">🦄</span>
-              <h4 class="fw-bold text-light mt-2 mb-1">Uniswap V4 Concentrated Pool</h4>
-              <span class="badge bg-secondary">Active on CELO Sepolia</span>
-            </div>
-
-            <!-- Price Indicators -->
-            <div class="p-3 rounded mb-4" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
-              <span class="text-muted small d-block">Current Exchange Rate</span>
-              <div class="d-flex justify-content-between align-items-center mt-1">
-                <span class="fw-bold text-light fs-4">1 $BRAIN</span>
-                <span class="fw-bold text-light fs-4">≈ {{ tokenPrice() }} cUSD</span>
+          @if (selectedSwapDex()) {
+          <!-- Direction Toggle -->
+          <div class="direction-toggle mb-3">
+            <div class="d-flex align-items-center gap-2 p-2">
+              <div class="flex-grow-1 text-center">
+                <span class="text-muted small d-block">You pay</span>
+                <strong class="text-light">{{ swapTokenInSymbol }}</strong>
               </div>
-              <span class="text-muted small d-block mt-2">Pool Fee Tier: <strong>0.30% (3000 bps)</strong></span>
+              <button class="flip-btn" (click)="flipSwapDirection()" title="Flip direction">⇄</button>
+              <div class="flex-grow-1 text-center">
+                <span class="text-muted small d-block">You receive</span>
+                <strong class="text-light">{{ swapTokenOutSymbol }}</strong>
+              </div>
             </div>
-
-            <!-- Bootstrapping guide preview -->
-            <h4 class="fw-bold text-light mb-3">🛠️ Liquidity Bootstrapping</h4>
-            <p class="text-light opacity-75 small">
-              Our token uses **Uniswap V4 Range Orders** to boot-strap liquidity with zero initial startup reserves.
-            </p>
-            <p class="text-light opacity-75 small">
-              Users provide single-sided `$BRAINBOOK` liquidity out-of-range, which automatically sells into cUSD/USDT as buyers demand the token.
-            </p>
-            
-            <a class="btn btn-outline-warning w-100 btn-sm" href="https://uniswap.org" target="_blank">
-              🔗 View Pool on Uniswap Info
-            </a>
           </div>
-        </div>
 
+          <!-- Amount Input -->
+          <div class="mb-3">
+            <label class="form-label text-muted small">Amount ({{ swapTokenInSymbol }})</label>
+            <input type="number" class="form-control bg-dark border-secondary text-light" placeholder="0.0"
+              [(ngModel)]="swapAmount" (ngModelChange)="onSwapAmountChange()" />
+            @if (swapEstimatedOut()) {
+            <div class="estimated-out mt-2 p-2 rounded">
+              <span class="text-muted small">≈ You receive: </span>
+              <strong class="text-warning">{{ swapEstimatedOut() }} {{ swapTokenOutSymbol }}</strong>
+              <span class="text-muted small ms-2">(after {{ selectedSwapDex()!.feeTier / 10000 }}% fee + {{ swapSlippage
+                }}% slippage)</span>
+            </div>
+            }
+          </div>
+
+          <!-- Slippage Config -->
+          <div class="mb-3">
+            <button class="btn btn-link btn-sm text-muted p-0 d-flex align-items-center gap-1"
+              (click)="showSlippageConfig = !showSlippageConfig">
+              ⚙️ Slippage: {{ swapSlippage }}% {{ showSlippageConfig ? '▲' : '▼' }}
+            </button>
+            @if (showSlippageConfig) {
+            <div class="slippage-config mt-2 p-3 rounded action-form-bg">
+              <label class="form-label text-muted small mb-2">Max Slippage Tolerance</label>
+              <div class="d-flex gap-2 flex-wrap">
+                @for (preset of [0.1, 0.5, 1, 2, 5]; track preset) {
+                <button class="btn btn-sm slippage-preset" [class.active]="swapSlippage === preset"
+                  (click)="swapSlippage = preset; onSwapAmountChange()">{{ preset }}%</button>
+                }
+                <input type="number"
+                  class="form-control form-control-sm bg-dark border-secondary text-light slippage-custom"
+                  placeholder="Custom %" [(ngModel)]="swapSlippage" (ngModelChange)="onSwapAmountChange()" step="0.1"
+                  min="0.01" max="50" />
+              </div>
+            </div>
+            }
+          </div>
+
+          <!-- Error / TX hash -->
+          @if (swapError()) {
+          <div class="alert-error p-3 rounded mb-3 small">⚠️ {{ swapError() }}</div>
+          }
+          @if (swapTxHash()) {
+          <div class="alert-success p-3 rounded mb-3 small">
+            ✅ Swap successful!
+            <a [href]="'https://celoscan.io/tx/' + swapTxHash()" target="_blank" class="text-warning ms-1 small">View Tx
+              ↗</a>
+          </div>
+          }
+
+          <!-- Action Buttons -->
+          @if (!swapAllowanceSufficient() && swapAmount && parseAmount(swapAmount) > 0) {
+          <button class="bb-btn bb-btn--primary w-100 mb-2" [disabled]="swapApproveLoading()" (click)="approveSwap()"
+            id="btn-approve-swap">
+            {{ swapApproveLoading() ? 'Approving…' : 'Step 3: Approve ' + swapTokenInSymbol }}
+          </button>
+          }
+          <button class="bb-btn bb-btn--gold w-100"
+            [disabled]="swapLoading() || !swapAmount || parseAmount(swapAmount) <= 0 || (!swapAllowanceSufficient() && swapDirection === 'sell')"
+            (click)="executeSwap()" id="btn-execute-swap">
+            {{ swapLoading() ? 'Swapping…' : 'Step 4: Swap ' + swapTokenInSymbol + ' → ' + swapTokenOutSymbol }}
+          </button>
+          }
+          }
+        </div>
       </div>
 
-      <!-- Mechanics breakdown -->
-      <div class="bb-card p-5 mb-5 bb-anim-slide-up">
-        <h2 class="h3 fw-bold bb-text-gold mb-4">⚙️ Token Mechanics & Circulation Loop</h2>
-        <div class="row g-4">
-          <div class="col-md-4">
-            <h4 class="fw-bold text-light h5 mb-2">📥 70% Play-to-Earn</h4>
-            <p class="text-light opacity-75 small mb-0">
-              70% of tokens spent on store item purchases are recycled straight back to the play-to-earn pool, creating a circular loop that extends emission lifetime indefinitely.
-            </p>
+      <!-- DEX Directory (Right) -->
+      <div class="col-lg-6">
+        <div class="bb-card p-4 h-100 bb-anim-slide-up" style="animation-delay:0.2s;">
+          <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
+            <h2 class="h5 fw-bold text-light mb-0 d-flex align-items-center gap-2">
+              <span>🏪</span> Where to Trade
+            </h2>
+            <span class="badge bg-secondary-dark text-muted">{{ dexRegistry.length }} Exchanges Listed</span>
           </div>
-          <div class="col-md-4">
-            <h4 class="fw-bold text-light h5 mb-2">🥩 20% Staking Yield</h4>
-            <p class="text-light opacity-75 small mb-0">
-              20% of store sales are sent directly to the Staking contract as rewards, funding a sustainable APY for users who lock their tokens.
-            </p>
+          <p class="text-muted small mb-4">Supported exchanges where you can buy, sell, or provide liquidity for
+            BRAINBOOK.</p>
+
+          <!-- DEX Cards -->
+          <div class="dex-directory">
+            @for (dex of pagedDexes; track dex.id) {
+            <div class="dex-card" [class.dex-disabled]="!dex.enabled">
+              <div class="dex-card-header">
+                <div class="dex-logo-circle">{{ dex.logoEmoji }}</div>
+                <div class="flex-grow-1 min-w-0">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="fw-bold text-light">{{ dex.name }}</span>
+                    <span class="protocol-badge-lg">{{ dex.protocol === 'uniswap-v3' ? 'Uniswap V3' : 'Uniswap V4'
+                      }}</span>
+                    @if (!dex.enabled) {
+                    <span class="badge coming-soon-badge">Coming Soon</span>
+                    } @else {
+                    <span class="badge active-badge">Active</span>
+                    }
+                  </div>
+                  <div class="text-muted small">{{ dex.chain }} · {{ dex.pairName }} · {{ dex.feeTier / 10000 }}% fee
+                  </div>
+                </div>
+              </div>
+
+              <div class="dex-card-body">
+                <div class="dex-price-col">
+                  <span class="text-muted" style="font-size:0.7rem;">LIVE PRICE</span>
+                  @if (dex.enabled && aggregatedPrice()) {
+                  @for (src of aggregatedPrice()!.sources; track src.dex + src.chain) {
+                  @if (src.dex === dex.name && src.chain === dex.chain) {
+                  @if (src.status === 'ok') {
+                  <span class="text-warning fw-bold">${{ src.price }}</span>
+                  } @else if (src.status === 'no-pool') {
+                  <span class="text-muted fst-italic small">Pool pending</span>
+                  } @else {
+                  <span class="text-danger small">Unavailable</span>
+                  }
+                  }
+                  }
+                  } @else {
+                  <span class="text-muted small">—</span>
+                  }
+                </div>
+                @if (dex.enabled) {
+                <a [href]="dex.swapUrl" target="_blank" class="bb-btn bb-btn--ghost btn-sm dex-trade-btn">
+                  Trade ↗
+                </a>
+                } @else {
+                <span class="text-muted small fst-italic">Launching soon</span>
+                }
+              </div>
+            </div>
+            }
           </div>
-          <div class="col-md-4">
-            <h4 class="fw-bold text-light h5 mb-2">💻 10% Dev Allocation</h4>
-            <p class="text-light opacity-75 small mb-0">
-              10% of store sales route to the developer treasury wallet to fund ongoing code enhancements, server operations, and infrastructure scaling.
+
+          <!-- Pagination -->
+          @if (totalDexPages > 1) {
+          <div class="dex-pagination mt-3 d-flex align-items-center justify-content-between">
+            <button class="btn btn-sm btn-outline-secondary" [disabled]="dexPage === 0" (click)="prevDexPage()">←
+              Prev</button>
+            <span class="text-muted small">{{ dexPage + 1 }} / {{ totalDexPages }}</span>
+            <button class="btn btn-sm btn-outline-secondary" [disabled]="dexPage === totalDexPages - 1"
+              (click)="nextDexPage()">Next →</button>
+          </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!--  SECTION 2: EARN YIELD (STAKING)                                       -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  @if (activeSection === 'stake') {
+  <div class="animate-fade-in">
+    <div class="row g-4">
+
+      <!-- Staking Dashboard -->
+      <div class="col-lg-8">
+        <div class="bb-card p-4 bb-anim-slide-up" style="animation-delay:0.1s;">
+          <!-- Mode Switcher -->
+          <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+              <h2 class="h5 fw-bold text-light mb-0">🥩 Yield Staking</h2>
+              <p class="text-muted small mb-0">Stake tokens or LP positions to earn $BRAINBOOK yield.</p>
+            </div>
+            <div class="mode-switcher">
+              <button class="mode-btn" [class.active]="stakingMode === 'single'"
+                (click)="stakingMode = 'single'">Single-Sided</button>
+              <button class="mode-btn" [class.active]="stakingMode === 'lp'" (click)="stakingMode = 'lp'">LP Token
+                (Ubeswap)</button>
+            </div>
+          </div>
+
+          @if (!w3s.account$()) {
+          <div class="wallet-prompt text-center py-5">
+            <span class="fs-1 d-block mb-3">🔒</span>
+            <h4 class="text-light fw-bold mb-3">Wallet Not Connected</h4>
+            <p class="text-muted mb-4">Connect your wallet to stake and earn yield.</p>
+            <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
+          </div>
+          } @else {
+
+          <!-- SINGLE-SIDED STAKING -->
+          @if (stakingMode === 'single') {
+          <div class="animate-fade-in">
+            <!-- Step Guide -->
+            <div class="step-guide mb-4">
+              <div class="step"><span class="step-num">1</span><span>Hold $BRAINBOOK</span></div>
+              <div class="step-arrow">→</div>
+              <div class="step"><span class="step-num">2</span><span>Approve spending</span></div>
+              <div class="step-arrow">→</div>
+              <div class="step"><span class="step-num">3</span><span>Stake tokens</span></div>
+              <div class="step-arrow">→</div>
+              <div class="step"><span class="step-num">4</span><span>Claim yield anytime</span></div>
+            </div>
+
+            <p class="text-muted small mb-4">
+              Deposit $BRAINBOOK to earn passive yield funded by <strong class="text-warning">20%</strong> of all
+              in-game store purchases.
+              Your tokens remain in your control — withdraw anytime.
+            </p>
+
+            <!-- Stats -->
+            <div class="row g-3 mb-4">
+              <div class="col-6 col-md-3">
+                <div class="stat-tile text-center p-3 rounded">
+                  <span class="text-muted" style="font-size:0.7rem;">YOUR STAKE</span>
+                  <div class="fw-bold text-light">{{ stakedBalance() }}</div>
+                  <span class="text-muted small">BRAINBOOK</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="stat-tile text-center p-3 rounded">
+                  <span class="text-muted" style="font-size:0.7rem;">TOTAL POOL</span>
+                  <div class="fw-bold text-light">{{ totalStaked() }}</div>
+                  <span class="text-muted small">BRAINBOOK</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="stat-tile text-center p-3 rounded">
+                  <span class="text-muted" style="font-size:0.7rem;">WALLET BAL</span>
+                  <div class="fw-bold text-light">{{ tokenBalance() }}</div>
+                  <span class="text-muted small">BRAINBOOK</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="stat-tile stat-tile--gold text-center p-3 rounded">
+                  <span class="text-muted" style="font-size:0.7rem;">EARNED YIELD</span>
+                  <div class="fw-bold text-warning">{{ earnedRewards() }}</div>
+                  <button class="btn btn-sm btn-warning btn-xs mt-1 px-2 py-0"
+                    [disabled]="loadingClaim() || earnedRewards() === '0.00'" (click)="claimRewards()">
+                    {{ loadingClaim() ? '…' : 'Claim' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stake / Unstake Tabs -->
+            <div class="tab-row mb-3">
+              <button class="tab-btn" [class.active]="activeTab === 'stake'" (click)="activeTab = 'stake'">📥
+                Deposit</button>
+              <button class="tab-btn" [class.active]="activeTab === 'unstake'" (click)="activeTab = 'unstake'">📤
+                Withdraw</button>
+            </div>
+
+            @if (activeTab === 'stake') {
+            <div class="action-form-bg p-3 rounded">
+              <label class="form-label text-muted small">Amount to stake</label>
+              <div class="input-group mb-2">
+                <input type="number" class="form-control bg-dark border-secondary text-light" placeholder="0.0"
+                  [(ngModel)]="stakeAmount" />
+                <button class="btn btn-outline-secondary" type="button" (click)="setStakeMax()">Max</button>
+              </div>
+              <div class="text-muted small mb-3">Balance: {{ tokenBalance() }} $BRAINBOOK</div>
+              @if (needApprove()) {
+              <button class="bb-btn bb-btn--primary w-100" [disabled]="loadingApprove()" (click)="approveTokens()">
+                {{ loadingApprove() ? 'Approving…' : 'Step 2: Approve $BRAINBOOK' }}
+              </button>
+              } @else {
+              <button class="bb-btn bb-btn--gold w-100" [disabled]="loadingStake() || !stakeAmount || stakeAmount <= 0"
+                (click)="stakeTokens()">
+                {{ loadingStake() ? 'Staking…' : 'Step 3: Stake Tokens' }}
+              </button>
+              }
+            </div>
+            } @else {
+            <div class="action-form-bg p-3 rounded">
+              <label class="form-label text-muted small">Amount to withdraw</label>
+              <div class="input-group mb-2">
+                <input type="number" class="form-control bg-dark border-secondary text-light" placeholder="0.0"
+                  [(ngModel)]="unstakeAmount" />
+                <button class="btn btn-outline-secondary" type="button" (click)="setUnstakeMax()">Max</button>
+              </div>
+              <div class="text-muted small mb-3">Staked: {{ stakedBalance() }} $BRAINBOOK</div>
+              <button class="bb-btn bb-btn--ghost w-100"
+                [disabled]="loadingUnstake() || !unstakeAmount || unstakeAmount <= 0" (click)="withdrawTokens()">
+                {{ loadingUnstake() ? 'Withdrawing…' : 'Withdraw Tokens' }}
+              </button>
+            </div>
+            }
+
+            <button class="btn btn-outline-danger btn-sm w-100 mt-3" [disabled]="loadingExit()" (click)="exitStaking()">
+              🚪 Exit Pool — Withdraw All & Claim Yield
+            </button>
+          </div>
+          }
+
+          <!-- LP TOKEN STAKING -->
+          @if (stakingMode === 'lp') {
+          <div class="animate-fade-in">
+            <!-- Step Guide -->
+            <div class="step-guide mb-4">
+              <div class="step"><span class="step-num">1</span><span>Add liquidity on Ubeswap</span></div>
+              <div class="step-arrow">→</div>
+              <div class="step"><span class="step-num">2</span><span>Get LP tokens</span></div>
+              <div class="step-arrow">→</div>
+              <div class="step"><span class="step-num">3</span><span>Approve + Stake LP</span></div>
+              <div class="step-arrow">→</div>
+              <div class="step"><span class="step-num">4</span><span>Earn boosted yield</span></div>
+            </div>
+
+            <p class="text-muted small mb-4">
+              First, provide liquidity to <strong>BRAINBOOK/cUSD</strong> on
+              <a href="https://ubeswap.org" target="_blank" class="text-warning">Ubeswap V3 ↗</a>,
+              then stake your <strong>{{ lpTokenSymbol() }}</strong> tokens here for boosted $BRAINBOOK rewards.
+            </p>
+
+            <!-- Stats -->
+            <div class="row g-3 mb-4">
+              <div class="col-6 col-md-3">
+                <div class="stat-tile text-center p-3 rounded">
+                  <span class="text-muted" style="font-size:0.7rem;">YOUR LP STAKE</span>
+                  <div class="fw-bold text-light">{{ lpStakedBalance() }}</div>
+                  <span class="text-muted small">{{ lpTokenSymbol() }}</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="stat-tile text-center p-3 rounded">
+                  <span class="text-muted" style="font-size:0.7rem;">TOTAL LP POOL</span>
+                  <div class="fw-bold text-light">{{ lpTotalStaked() }}</div>
+                  <span class="text-muted small">{{ lpTokenSymbol() }}</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="stat-tile text-center p-3 rounded">
+                  <span class="text-muted" style="font-size:0.7rem;">WALLET LP</span>
+                  <div class="fw-bold text-light">{{ lpTokenBalance() }}</div>
+                  <span class="text-muted small">{{ lpTokenSymbol() }}</span>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="stat-tile stat-tile--orange text-center p-3 rounded">
+                  <span class="text-muted" style="font-size:0.7rem;">LP YIELD</span>
+                  <div class="fw-bold text-orange">{{ lpEarnedRewards() }}</div>
+                  <button class="btn btn-sm btn-xs mt-1 px-2 py-0" style="background:#fd7e14;color:#fff;"
+                    [disabled]="loadingLpClaim() || lpEarnedRewards() === '0.0000'" (click)="claimLpRewards()">
+                    {{ loadingLpClaim() ? '…' : 'Claim' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stake / Unstake Tabs -->
+            <div class="tab-row mb-3">
+              <button class="tab-btn" [class.active-orange]="activeLpTab === 'stake'" (click)="activeLpTab = 'stake'">📥
+                Deposit LP</button>
+              <button class="tab-btn" [class.active-orange]="activeLpTab === 'unstake'"
+                (click)="activeLpTab = 'unstake'">📤 Withdraw LP</button>
+            </div>
+
+            @if (activeLpTab === 'stake') {
+            <div class="action-form-bg p-3 rounded">
+              <label class="form-label text-muted small">Amount to stake ({{ lpTokenSymbol() }})</label>
+              <div class="input-group mb-2">
+                <input type="number" class="form-control bg-dark border-secondary text-light" placeholder="0.0"
+                  [(ngModel)]="stakeLpAmount" />
+                <button class="btn btn-outline-secondary" type="button" (click)="setStakeLpMax()">Max</button>
+              </div>
+              <div class="text-muted small mb-3">LP Balance: {{ lpTokenBalance() }} {{ lpTokenSymbol() }}</div>
+              @if (needLpApprove()) {
+              <button class="bb-btn bb-btn--primary w-100" [disabled]="loadingLpApprove()" (click)="approveLpTokens()">
+                {{ loadingLpApprove() ? 'Approving…' : 'Step 3a: Approve ' + lpTokenSymbol() }}
+              </button>
+              } @else {
+              <button class="bb-btn bb-btn--orange w-100"
+                [disabled]="loadingLpStake() || !stakeLpAmount || stakeLpAmount <= 0" (click)="stakeLpTokens()">
+                {{ loadingLpStake() ? 'Staking…' : 'Step 3b: Stake LP Tokens' }}
+              </button>
+              }
+            </div>
+            } @else {
+            <div class="action-form-bg p-3 rounded">
+              <label class="form-label text-muted small">Amount to withdraw ({{ lpTokenSymbol() }})</label>
+              <div class="input-group mb-2">
+                <input type="number" class="form-control bg-dark border-secondary text-light" placeholder="0.0"
+                  [(ngModel)]="unstakeLpAmount" />
+                <button class="btn btn-outline-secondary" type="button" (click)="setUnstakeLpMax()">Max</button>
+              </div>
+              <div class="text-muted small mb-3">Staked: {{ lpStakedBalance() }} {{ lpTokenSymbol() }}</div>
+              <button class="bb-btn bb-btn--ghost w-100"
+                [disabled]="loadingLpUnstake() || !unstakeLpAmount || unstakeLpAmount <= 0"
+                (click)="withdrawLpTokens()">
+                {{ loadingLpUnstake() ? 'Withdrawing…' : 'Withdraw LP Tokens' }}
+              </button>
+            </div>
+            }
+
+            <button class="btn btn-outline-danger btn-sm w-100 mt-3" [disabled]="loadingLpExit()"
+              (click)="exitLpStaking()">
+              🚪 Exit LP Pool — Withdraw All & Claim Yield
+            </button>
+          </div>
+          }
+          }
+        </div>
+      </div>
+
+      <!-- Staking Info Sidebar -->
+      <div class="col-lg-4">
+        <div class="bb-card p-4 bb-anim-slide-up" style="animation-delay:0.2s;">
+          <h3 class="h6 fw-bold bb-text-gold mb-3">How Yield Works</h3>
+          <div class="info-step mb-3">
+            <div class="info-step-icon text-warning">📥</div>
+            <div>
+              <div class="fw-semibold text-light small">20% of Store Sales → Stakers</div>
+              <div class="text-muted" style="font-size:0.75rem;">Every in-game item purchase splits 20% into the staking
+                reward contract, continuously topping up yield.</div>
+            </div>
+          </div>
+          <div class="info-step mb-3">
+            <div class="info-step-icon text-info">🥩</div>
+            <div>
+              <div class="fw-semibold text-light small">No lockup period</div>
+              <div class="text-muted" style="font-size:0.75rem;">Withdraw your stake at any time. Rewards accrue
+                per-block and can be claimed independently.</div>
+            </div>
+          </div>
+          <div class="info-step mb-3">
+            <div class="info-step-icon text-orange">🌾</div>
+            <div>
+              <div class="fw-semibold text-light small">LP Staking = Boosted APY</div>
+              <div class="text-muted" style="font-size:0.75rem;">LP stakers receive the same reward stream but typically
+                earn more per dollar due to concentrated liquidity incentives.</div>
+            </div>
+          </div>
+          <div class="info-step">
+            <div class="info-step-icon text-success">♻️</div>
+            <div>
+              <div class="fw-semibold text-light small">Circular token flow</div>
+              <div class="text-muted" style="font-size:0.75rem;">Rewards are paid in $BRAINBOOK — which can be restaked,
+                used in-game, or swapped, creating a compounding flywheel.</div>
+            </div>
+          </div>
+
+          <hr class="border-secondary my-3">
+          <div class="text-center">
+            <span class="text-muted small">Current Market Price</span>
+            <div class="h4 fw-bold bb-text-gold mb-0">${{ tokenPrice() }}</div>
+            <span class="text-muted small">per BRAINBOOK · avg across DEXes</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!--  SECTION 3: TOKENOMICS                                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  @if (activeSection === 'tokenomics') {
+  <div class="animate-fade-in">
+    <div class="row g-4">
+
+      <!-- Supply Allocation -->
+      <div class="col-lg-6">
+        <div class="bb-card p-4 bb-anim-slide-up" style="animation-delay:0.1s;">
+          <h2 class="h5 fw-bold bb-text-gold mb-1">📊 Supply Allocation</h2>
+          <p class="text-muted small mb-4">Fixed total supply: <strong>1,000,000,000 (1 Billion) $BRAINBOOK</strong></p>
+
+          <div class="allocation-item mb-3">
+            <div class="d-flex justify-content-between text-light small mb-1">
+              <span>🎮 Play-to-Earn Rewards Pool</span>
+              <strong class="text-warning">60% <span class="text-muted">(600M)</span></strong>
+            </div>
+            <div class="progress" style="height:8px;border-radius:99px;">
+              <div class="progress-bar bg-warning" style="width:60%;"></div>
+            </div>
+            <p class="text-muted mt-1" style="font-size:0.72rem;">Distributed to players as game rewards for quiz
+              victories and daily engagement.</p>
+          </div>
+
+          <div class="allocation-item mb-3">
+            <div class="d-flex justify-content-between text-light small mb-1">
+              <span>🥩 Staking & Liquidity Pools</span>
+              <strong class="text-info">20% <span class="text-muted">(200M)</span></strong>
+            </div>
+            <div class="progress" style="height:8px;border-radius:99px;">
+              <div class="progress-bar bg-info" style="width:20%;"></div>
+            </div>
+            <p class="text-muted mt-1" style="font-size:0.72rem;">Funds the staking reward contract and provides initial
+              liquidity for DEX pools.</p>
+          </div>
+
+          <div class="allocation-item mb-3">
+            <div class="d-flex justify-content-between text-light small mb-1">
+              <span>💻 Developer Reserve (2–4yr Vesting)</span>
+              <strong class="text-danger">10% <span class="text-muted">(100M)</span></strong>
+            </div>
+            <div class="progress" style="height:8px;border-radius:99px;">
+              <div class="progress-bar bg-danger" style="width:10%;"></div>
+            </div>
+            <p class="text-muted mt-1" style="font-size:0.72rem;">Team allocation subject to a 2–4 year vesting
+              schedule, aligned with long-term success.</p>
+          </div>
+
+          <div class="allocation-item">
+            <div class="d-flex justify-content-between text-light small mb-1">
+              <span>🚀 Marketing & Ecosystem</span>
+              <strong class="text-success">10% <span class="text-muted">(100M)</span></strong>
+            </div>
+            <div class="progress" style="height:8px;border-radius:99px;">
+              <div class="progress-bar bg-success" style="width:10%;"></div>
+            </div>
+            <p class="text-muted mt-1" style="font-size:0.72rem;">Grants, partnerships, influencer campaigns, and
+              community growth initiatives.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Token Mechanics Loop -->
+      <div class="col-lg-6">
+        <div class="bb-card p-4 bb-anim-slide-up" style="animation-delay:0.2s;">
+          <h2 class="h5 fw-bold bb-text-gold mb-1">⚙️ Circulation Loop</h2>
+          <p class="text-muted small mb-4">
+            Every in-game store purchase recycles tokens back into the ecosystem, extending the reward pool's life
+            indefinitely.
+          </p>
+
+          <!-- Loop diagram cards -->
+          <div class="loop-card mb-3">
+            <div class="loop-card-icon bg-warning-soft">📥</div>
+            <div>
+              <div class="fw-bold text-warning small">70% → Play-to-Earn Pool</div>
+              <p class="text-muted mb-0" style="font-size:0.75rem;">Routed back to the P2E rewards contract — directly
+                sustaining trivia game rewards and engagement incentives.</p>
+            </div>
+          </div>
+
+          <div class="loop-card mb-3">
+            <div class="loop-card-icon bg-info-soft">🥩</div>
+            <div>
+              <div class="fw-bold text-info small">20% → Staking Reward Pool</div>
+              <p class="text-muted mb-0" style="font-size:0.75rem;">Funds continuous APY for BRAINBOOK stakers and LP
+                providers, paid out per-block.</p>
+            </div>
+          </div>
+
+          <div class="loop-card">
+            <div class="loop-card-icon bg-danger-soft">💻</div>
+            <div>
+              <div class="fw-bold text-danger small">10% → Developer Treasury</div>
+              <p class="text-muted mb-0" style="font-size:0.75rem;">Funds server infrastructure, smart contract
+                maintenance, security audits, and feature development.</p>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 rounded"
+            style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);">
+            <div class="text-warning small fw-bold mb-1">🔄 The Flywheel Effect</div>
+            <p class="text-muted mb-0" style="font-size:0.75rem;">
+              More players → more purchases → more rewards recycled → higher staking APY → more BRAINBOOK staked →
+              higher price floor → more players attracted.
             </p>
           </div>
         </div>
@@ -178,4 +714,6 @@
 
     </div>
   </div>
+  }
+
 </div>

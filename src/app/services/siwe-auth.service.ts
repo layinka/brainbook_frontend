@@ -24,6 +24,12 @@ export class SIWEAuthService {
       const currentWallet = this.web3Service.account$();
       const currentSession = this.authService.session();
 
+      // Prevent signing out during initialization / reconnection
+      const status = wagmiConfig.state.status;
+      if (status === 'connecting' || status === 'reconnecting') {
+        return;
+      }
+
       if (currentSession && currentSession.user) {
         // The walletAddress is stored in session.user.walletAddress (or similar custom field)
         const sessionWallet = currentSession.user.walletAddress;
@@ -33,8 +39,8 @@ export class SIWEAuthService {
             console.log('Wallet address mismatch. Signing out session.');
             void this.signOut();
           }
-        } else if (!currentWallet) {
-          // If wallet disconnected, clear Better-Auth session
+        } else if (!currentWallet && status === 'disconnected') {
+          // If wallet explicitly disconnected, clear Better-Auth session
           console.log('Wallet disconnected. Signing out session.');
           void this.signOut();
         }

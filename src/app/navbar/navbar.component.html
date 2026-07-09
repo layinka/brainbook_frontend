@@ -12,12 +12,12 @@
       </button>
       <div class="collapse navbar-collapse" [ngbCollapse]="isMenuCollapsed" id="navbarTogglerDemo02">
         <ul class="navbar-nav me-auto mb-2 mb-md-0 gap-1 ms-md-4">
-          <li class="nav-item">
+          <!-- <li class="nav-item">
             <a class="nav-link nav-link-custom" routerLink="/" [routerLinkActiveOptions]="{exact: true}" (click)="isMenuCollapsed = true"
               routerLinkActive="active">
               🏠 Home
             </a>
-          </li>
+          </li> -->
           <li class="nav-item">
             <a class="nav-link nav-link-custom" routerLink="/categories" (click)="isMenuCollapsed = true"
               routerLinkActive="active">
@@ -55,9 +55,9 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link nav-link-custom" routerLink="/token" (click)="isMenuCollapsed = true"
-              routerLinkActive="active">
-              🪙 Token
+            <a class="nav-link nav-link-custom d-flex align-items-center gap-1" routerLink="/token"
+              (click)="isMenuCollapsed = true" routerLinkActive="active">
+              <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm"> Token
             </a>
           </li>
           <li class="nav-item">
@@ -84,25 +84,28 @@
 
           @if (w3s.account$()) {
           <div class="balance-badge">
-            <span class="badge balance-indicator">🪙 {{ tokenBalance() }}</span>
+            <span class="badge balance-indicator d-flex align-items-center gap-1">
+              <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm m-0">
+              {{ tokenBalance() }}
+            </span>
           </div>
           }
 
           <!-- Better-Auth Status Badges -->
           @if (authService.authService.isLoggedIn()) {
-            @if (authService.authService.session()?.user?.emailVerified) {
-              <div class="auth-status-badge">
-                <span class="badge bg-success-glow" title="Wallet and Email authenticated">
-                  Verified
-                </span>
-              </div>
-            } @else {
-              <div class="auth-status-badge">
-                <span class="badge bg-warning-glow" title="Email verification pending">
-                  Verify Email
-                </span>
-              </div>
-            }
+          @if (authService.authService.session()?.user?.emailVerified) {
+          <div class="auth-status-badge">
+            <span class="badge bg-success-glow" title="Wallet and Email authenticated">
+              Verified
+            </span>
+          </div>
+          } @else {
+          <div class="auth-status-badge">
+            <span class="badge bg-warning-glow" title="Email verification pending">
+              Verify Email
+            </span>
+          </div>
+          }
           }
 
           <!-- Wallet Connection -->

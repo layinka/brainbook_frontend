@@ -29,9 +29,9 @@ export const ALL_CHAINS: AppKitNetwork[] = [hardhat, celo, celoSepolia, coreDao,
 const projectId = environment.walletConnectProjectId;
 
 const metadata = {
-  name: 'save-up',
-  description: 'Save Up',
-  url: 'https://saveup.app', // url must match your domain & subdomain
+  name: 'brain-book',
+  description: 'Brain Book',
+  url: 'https://brain-book.app', // url must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/37784886']
 }
 
@@ -79,7 +79,7 @@ export interface MiniPayWriteOptions {
   feeCurrency?: Address;
 }
 
-const FEE_CURRENCY_STORAGE_KEY = 'saveup.feeCurrency.address';
+const FEE_CURRENCY_STORAGE_KEY = 'brainbook.feeCurrency.address';
 
 
 @Injectable({

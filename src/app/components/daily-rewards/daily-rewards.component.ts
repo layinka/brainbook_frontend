@@ -29,15 +29,7 @@ export class DailyRewardsComponent implements OnInit, OnDestroy {
   private sound = inject(SoundService);
   private http = inject(HttpClient);
 
-  readonly calendarDays: CalendarDay[] = [
-    { dayNumber: 1, rewardText: '10 Tokens', icon: '🪙' },
-    { dayNumber: 2, rewardText: '20 Tokens', icon: '🪙' },
-    { dayNumber: 3, rewardText: '30 Tokens', icon: '🪙' },
-    { dayNumber: 4, rewardText: '40 Tokens', icon: '🪙' },
-    { dayNumber: 5, rewardText: '50 Tokens', icon: '🪙' },
-    { dayNumber: 6, rewardText: '100 Tokens', icon: '💰' },
-    { dayNumber: 7, rewardText: 'Weekly Warrior NFT', icon: '🛡️' }
-  ];
+  readonly calendarDays: CalendarDay[] = environment.rewards.dailyCalendar;
 
   // Component states
   loading = signal(true);

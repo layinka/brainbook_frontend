@@ -96,7 +96,7 @@ export class AuthOverlayComponent {
         localStorage.setItem('brainbook_referrer_code', this.referralInput.trim());
       }
       await this.saveUpAuth.signInWithEthereum();
-      this.toastService.show('Success', 'Authenticated successfully via SIWE! 🚀', 4000, 'bg-success text-light');
+      this.toastService.show('Success', 'Authenticated successfully! 🚀', 4000, 'bg-success text-light');
     } catch (error: any) {
       console.error(error);
       this.toastService.error('Authentication Failed', error.message || 'Signature request rejected or invalid.');

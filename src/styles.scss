@@ -596,3 +596,34 @@ html, body {
 }
 
 .modal-backdrop { background: rgba(0,0,0,0.7); }
+
+/* ── Coin Logo Styles ── */
+.coin-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.coin-logo-lg {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.coin-logo-sm {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+.coin-logo-inline {
+  width: 1.2em;
+  height: 1.2em;
+  object-fit: contain;
+  vertical-align: -0.2em;
+  margin-right: 0.25em;
+  display: inline-block;
+}
