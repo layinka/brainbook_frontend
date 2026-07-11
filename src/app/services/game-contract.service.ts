@@ -450,13 +450,17 @@ export class GameContractService {
     }
 
     try {
+      console.log(`Minting achievement NFT ${tokenId} via GameManager...`);
+      // Call the GameManager contract, not the NFT contract directly
+      // The GameManager validates the signature and then mints the NFT
       const hash = await this.w3s.writeContractWithMiniPay({
-        address: this.nftAddress,
-        abi: BRAIN_BOOK_NFT_ABI,
-        functionName: 'mintItem',
-        args: [this.w3s.account$(), BigInt(tokenId), BigInt(1)]
+        address: this.managerAddress,
+        abi: BRAIN_BOOK_GAME_MANAGER_ABI,
+        functionName: 'claimAchievement',
+        args: [BigInt(tokenId), BigInt(1), signature as `0x${string}`]
       });
 
+      console.log('Achievement NFT mint transaction submitted:', hash);
       return hash;
     } catch (error: any) {
       console.error('Error minting achievement NFT:', error);

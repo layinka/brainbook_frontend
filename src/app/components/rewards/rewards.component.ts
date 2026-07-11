@@ -119,18 +119,23 @@ export class RewardsComponent implements OnInit {
       const amountWei = BigInt(Math.round(claimAmount * 10000)) * (10n ** 14n);
       const txHash = await this.gameContract.claimTokenReward(amountWei, signature);
 
-      // 3. Confirm claim on the backend database
+      // 3. Confirm claim on the backend database - MUST succeed before refreshing
       try {
-        await this.http.post<any>(`${environment.apiUrl}/game/rewards/confirm-claim`, { signature }, { withCredentials: true }).toPromise();
-      } catch (confirmErr) {
-        console.warn('Backend confirmation failed:', confirmErr);
+        const confirmRes = await this.http.post<any>(`${environment.apiUrl}/game/rewards/confirm-claim`, { signature }, { withCredentials: true }).toPromise();
+        if (!confirmRes || !confirmRes.success) {
+          throw new Error('Backend confirmation returned failure');
+        }
+      } catch (confirmErr: any) {
+        console.error('Backend confirmation failed:', confirmErr);
+        this.toast.error('Confirmation Failed', 'Transaction succeeded but backend sync failed. Please refresh the page.');
+        throw confirmErr; // Re-throw to prevent showing success message
       }
 
       this.toast.show('Claim Confirmed', `${claimAmount} BRAINBOOK has been minted to your wallet!`, 5000, 'bg-success text-light');
 
-      // 4. Clear unclaimed amount and refresh balances
+      // 4. Clear unclaimed amount and refresh balances - only after successful confirmation
       this.unclaimedTokens.set(0);
-      this.fetchRewardStats();
+      await this.fetchRewardStats(); // Wait for refresh to complete
     } catch (err: any) {
       console.error('Claiming rewards failed:', err);
       this.toast.error('Claim Failed', err?.message || 'Transaction could not be completed.');

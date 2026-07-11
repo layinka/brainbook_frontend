@@ -9,6 +9,7 @@ import { SoundService } from '../../services/sound.service';
 import { AppToastService } from '../../services/app-toast.service';
 import { Web3Service } from '../../services/web3';
 import { GameContractService } from '../../services/game-contract.service';
+import { SIWEAuthService } from '../../services/siwe-auth.service';
 import { environment } from '../../../environments/environment';
 import { QuizCategory, QuizQuestion } from '../../models/game.models';
 import confetti from 'canvas-confetti';
@@ -74,6 +75,7 @@ export class QuizGameComponent implements OnInit, OnDestroy {
   private toast = inject(AppToastService);
   public w3s = inject(Web3Service);
   private gameContract = inject(GameContractService);
+  private siweAuth = inject(SIWEAuthService);
 
   category = signal<QuizCategory | null>(null);
   loadError = signal('');
@@ -240,6 +242,9 @@ export class QuizGameComponent implements OnInit, OnDestroy {
 
       // Submit session to backend database and generate signatures
       void this.submitSessionToBackend();
+      
+      // Check NFT eligibility and notify user of any unminted eligible NFTs
+      void this.checkAndNotifyNFTEligibility();
     }
   }
 
@@ -369,6 +374,62 @@ export class QuizGameComponent implements OnInit, OnDestroy {
       }
     } catch (err) {
       console.error('Error submitting session to backend:', err);
+    }
+  }
+
+  async checkAndNotifyNFTEligibility(): Promise<void> {
+    // Don't check if wallet not connected
+    if (!this.w3s.account$()) return;
+
+    try {
+      // 1. Get OG cutoff date from backend
+      const cutoffRes = await this.http.get<any>(`${environment.apiUrl}/game/nft-rewards/og-cutoff-date`).toPromise();
+      if (!cutoffRes || !cutoffRes.success) {
+        console.warn('Failed to get OG cutoff date');
+        return;
+      }
+
+      const ogCutoffDate = new Date(cutoffRes.ogCutoffDate);
+      
+      // 2. Check ownership from blockchain
+      const [ogOwned, firstPlayOwned] = await Promise.all([
+        this.gameContract.checkNFTOwnership(1), // OG NFT token ID
+        this.gameContract.checkNFTOwnership(2)  // First Play NFT token ID
+      ]);
+
+      // 3. Check OG eligibility - user must be created before cutoff date
+      const session = this.siweAuth.authService.session();
+      const userCreatedAt = session?.user?.createdAt ? new Date(session.user.createdAt) : null;
+      const ogEligible = userCreatedAt && userCreatedAt < ogCutoffDate;
+
+      // 4. First Play eligibility - user just finished a game, so they're eligible
+      const firstPlayEligible = true;
+
+      // 5. Show celebratory notifications for unminted eligible NFTs
+      if (ogEligible && !ogOwned) {
+        setTimeout(() => {
+          this.toast.show(
+            '🏆 OG Badge Available!', 
+            'You\'re eligible for the exclusive OG NFT badge! Visit the Rewards page to claim it.', 
+            8000, 
+            'bg-warning text-dark'
+          );
+        }, 2000); // Delay to not overlap with game completion toasts
+      }
+
+      if (firstPlayEligible && !firstPlayOwned) {
+        setTimeout(() => {
+          this.toast.show(
+            '🎮 First Play Badge Available!', 
+            'Congratulations on completing your first game! Claim your First Play NFT badge on the Rewards page.', 
+            8000, 
+            'bg-info text-light'
+          );
+        }, ogEligible && !ogOwned ? 4000 : 2000); // Stagger if both notifications needed
+      }
+    } catch (err) {
+      console.error('Error checking NFT eligibility:', err);
+      // Silently fail - don't interrupt the user's game experience
     }
   }
 
