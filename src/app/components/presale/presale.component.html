@@ -1,0 +1,218 @@
+<div class="presale-page">
+  <div class="container py-5">
+    
+    <!-- Header -->
+    <div class="presale-header text-center mb-5 bb-anim-slide-up">
+      <button class="bb-btn bb-btn--ghost back-btn" routerLink="/">
+        <span>←</span> Back Home
+      </button>
+      <h1 class="display-4 fw-black">
+        <span class="bb-text-gradient">Public Presale</span>
+      </h1>
+      <p class="lead text-secondary max-width-600 mx-auto">
+        Acquire $BRAINBOOK early. Raised funds directly seed liquidity and sustain the game's reward loop.
+      </p>
+    </div>
+
+    <!-- Presale Widget Grid -->
+    <div class="row g-4 justify-content-center">
+      
+      <!-- Left side: The Purchase Card -->
+      <div class="col-lg-6">
+        <div class="bb-card p-4 h-100 bb-anim-slide-up" style="animation-delay: 0.1s;">
+          
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="h5 fw-bold bb-text-gold m-0">🪙 Seed Purchase</h3>
+            @if (isPaused()) {
+              <span class="badge bg-danger">Paused</span>
+            } @else if (presaleEnded()) {
+              <span class="badge bg-secondary">Ended</span>
+            } @else if (!presaleStarted()) {
+              <span class="badge bg-warning">Upcoming</span>
+            } @else {
+              <span class="badge bg-success active-pulse">Active</span>
+            }
+          </div>
+
+          <!-- Disconnected State -->
+          @if (!w3s.account$()) {
+            <div class="connect-prompt text-center py-5">
+              <div class="connect-icon">👛</div>
+              <h4 class="h6 fw-bold text-light mt-3 mb-2">Wallet Disconnected</h4>
+              <p class="text-muted small mb-4">Connect your wallet using Celo or Alfajores network to purchase tokens.</p>
+              <button class="bb-btn bb-btn--purple px-4" (click)="w3s.appKit.open()">
+                Connect Wallet
+              </button>
+            </div>
+          } @else if (loading()) {
+            <div class="text-center py-5 text-secondary">
+              <div class="bb-spinner mx-auto mb-3"></div>
+              <p class="small">Syncing presale state...</p>
+            </div>
+          } @else {
+            <!-- Buy Form -->
+            <div class="buy-form">
+              <div class="info-row mb-4">
+                <div class="info-item">
+                  <span class="info-label">Your cUSD Balance</span>
+                  <span class="info-value text-light">{{ userCusdBalance() | number:'1.2-2' }} cUSD</span>
+                </div>
+                <div class="info-item text-end">
+                  <span class="info-label">Presale Price</span>
+                  <span class="info-value text-warning">1 BRAINBOOK = {{ tokenPriceInCusd() }} cUSD</span>
+                </div>
+              </div>
+
+              <!-- Input group -->
+              <div class="input-block mb-4">
+                <label for="cusd-amount" class="form-label text-muted small fw-bold uppercase">Amount to spend (cUSD)</label>
+                <div class="amount-input-wrapper">
+                  <input 
+                    type="number" 
+                    id="cusd-amount"
+                    class="form-control amount-input" 
+                    [(ngModel)]="buyAmountCusd" 
+                    placeholder="Enter cUSD amount"
+                    min="1"
+                    [disabled]="buying() || approving() || isPaused() || presaleEnded() || !presaleStarted()"
+                  />
+                  <span class="input-denom">cUSD</span>
+                </div>
+              </div>
+
+              <!-- Estimated Outcome -->
+              <div class="estimate-block mb-4 p-3 rounded bg-white-02 border-white-05">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted small">You will receive:</span>
+                  <span class="estimated-value text-warning fw-black">
+                    <img src="/BRAINBOOK.png" alt="BRAINBOOK Logo" class="coin-logo-sm m-0 me-1" />
+                    {{ estimatedTokens() | number }} $BRAINBOOK
+                  </span>
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="action-buttons d-flex flex-column gap-3">
+                @if (!isAllowanceSufficient()) {
+                  <button 
+                    class="bb-btn bb-btn--orange w-100 py-3 fw-bold" 
+                    [disabled]="approving() || buying() || isPaused() || presaleEnded() || !presaleStarted() || buyAmountCusd() <= 0"
+                    (click)="approveCusd()"
+                  >
+                    @if (approving()) {
+                      <div class="bb-spinner spinner-border-sm me-2"></div> Approving cUSD...
+                    } @else {
+                      🔑 Approve cUSD Spend
+                    }
+                  </button>
+                } @else {
+                  <button 
+                    class="bb-btn bb-btn--purple w-100 py-3 fw-bold" 
+                    [disabled]="buying() || isPaused() || presaleEnded() || !presaleStarted() || buyAmountCusd() <= 0 || buyAmountCusd() > (parseFloat(userCusdBalance()) || 0)"
+                    (click)="buyPresaleTokens()"
+                  >
+                    @if (buying()) {
+                      <div class="bb-spinner spinner-border-sm me-2"></div> Executing Swap...
+                    } @else {
+                      ⚡ Buy $BRAINBOOK
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Right side: Presale Stats & Tokenomics -->
+      <div class="col-lg-6">
+        <div class="bb-card p-4 h-100 bb-anim-slide-up" style="animation-delay: 0.2s;">
+          <h3 class="h5 fw-bold bb-text-gold mb-4">📈 Raising Progress</h3>
+
+          <!-- Raised Progress Metrics -->
+          <div class="progress-details mb-4">
+            <div class="d-flex justify-content-between align-items-end mb-2">
+              <div>
+                <span class="text-muted small block">Total Raised</span>
+                <span class="display-6 fw-black text-light">{{ totalCusdRaised() | number:'1.2-2' }} cUSD</span>
+              </div>
+              <div class="text-end">
+                <span class="text-muted small block">Hardcap Target</span>
+                <span class="h5 fw-bold text-secondary">{{ hardcap() | number }} cUSD</span>
+              </div>
+            </div>
+            
+            <div class="progress mb-2" style="height:12px; border-radius:99px; background: rgba(255,255,255,0.05); overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+              <div 
+                class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+                role="progressbar" 
+                [style.width.%]="percentageRaised()"
+                [attr.aria-valuenow]="percentageRaised()" 
+                aria-valuemin="0" 
+                aria-valuemax="100"
+              ></div>
+            </div>
+            
+            <div class="d-flex justify-content-between text-muted small mt-1">
+              <span>{{ percentageRaised() | number:'1.1-1' }}% Completed</span>
+              <span>{{ totalTokensSold() | number }} / 50,000,000 $BRAINBOOK Sold</span>
+            </div>
+          </div>
+
+          <hr class="border-white-10 my-4" />
+
+          <!-- Allocation Breakdown -->
+          <h4 class="h6 fw-bold text-light mb-3">💼 Presale Capital Allocation</h4>
+          
+          <div class="distribution-list">
+            
+            <!-- Liquidity Seeding -->
+            <div class="dist-item mb-3">
+              <div class="d-flex justify-content-between small text-light fw-bold mb-1">
+                <span>🌊 DEX Liquidity Seeding (Uniswap V3/V4)</span>
+                <span class="text-info">70%</span>
+              </div>
+              <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05);">
+                <div class="progress-bar bg-info" style="width: 70%;"></div>
+              </div>
+              <p class="text-muted small mt-1 mb-0" style="font-size:0.75rem;">
+                Locked to create the initial BRAINBOOK/cUSD pool and enable trading with low price impact.
+              </p>
+            </div>
+
+            <!-- Treasury / Game Loop -->
+            <div class="dist-item mb-3">
+              <div class="d-flex justify-content-between small text-light fw-bold mb-1">
+                <span>🏛️ Game Treasury & Staking Reserve</span>
+                <span class="text-warning">20%</span>
+              </div>
+              <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05);">
+                <div class="progress-bar bg-warning" style="width: 20%;"></div>
+              </div>
+              <p class="text-muted small mt-1 mb-0" style="font-size:0.75rem;">
+                Secures future Trivia Play-to-Earn rewards and daily calendar bonus pools.
+              </p>
+            </div>
+
+            <!-- Dev Team Allocation -->
+            <div class="dist-item">
+              <div class="d-flex justify-content-between small text-light fw-bold mb-1">
+                <span>💻 Developer Team Allocation (4yr Vesting)</span>
+                <span class="text-danger">10%</span>
+              </div>
+              <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05);">
+                <div class="progress-bar bg-danger" style="width: 10%;"></div>
+              </div>
+              <p class="text-muted small mt-1 mb-0" style="font-size:0.75rem;">
+                Vested linearly monthly over 4 years to align the development team with long-term ecosystem growth.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

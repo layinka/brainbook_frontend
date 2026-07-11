@@ -1,6 +1,7 @@
 // Export all contract ABIs
 export { BRAIN_BOOK_TOKEN_ABI } from './BrainBookToken.abi';
 export { BRAIN_BOOK_NFT_ABI } from './BrainBookNFT.abi';
+export { BRAIN_BOOK_PRESALE_ABI } from './BrainBookPresale.abi';
 export { BRAIN_BOOK_GAME_MANAGER_ABI } from './BrainBookGameManager.abi';
 export { BRAIN_BOOK_STAKING_ABI } from './BrainBookStaking.abi';
 export { BRAIN_BOOK_STAKING_ABI as BRAIN_BOOK_LIQUIDITY_MINING_ABI } from './BrainBookStaking.abi';

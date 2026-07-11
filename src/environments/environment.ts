@@ -10,6 +10,8 @@ export interface BrainBookContracts {
   brainbookStaking: string;     // BrainBookStaking rewards lockup
   brainbookLiquidityMining: string; // BrainBookLiquidityMining rewards lockup
   ubeswapPool: string;          // Ubeswap V3 BRAINBOOK/cUSD pool — for TWAP price oracle
+  brainbookPresale?: string;
+  cusdToken?: string;
 }
 
 // ─── DEX Registry Types ──────────────────────────────────────────────────────
@@ -175,6 +177,8 @@ const ALL_CONTRACTS: Record<number, BrainBookContracts> = {
     brainbookStaking: '0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9',     // Set after local deploy
     brainbookLiquidityMining: '0xdc64a140aa3e981100a9beca4e685f962f0cf6c9', // Set after local deploy
     ubeswapPool: '0x0000000000000000000000000000000000000000',          // No pool on local — fallback price used
+    brainbookPresale: '0x0165878a594ca255338adfa4d48449f69242eb8f',
+    cusdToken: '0xa513e6e4b8714193b1666b6ec097ac2c2cbd08ab',
   },
   // Celo Alfajores Testnet (Chain ID: 44787)
   44787: {
@@ -184,6 +188,8 @@ const ALL_CONTRACTS: Record<number, BrainBookContracts> = {
     brainbookStaking: '0x0000000000000000000000000000000000000000',     // Set after deploy
     brainbookLiquidityMining: '0x0000000000000000000000000000000000000000', // Set after deploy
     ubeswapPool: '0x0000000000000000000000000000000000000000',          // Set after Ubeswap V3 pool creation
+    brainbookPresale: '0x0000000000000000000000000000000000000000',
+    cusdToken: '0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1',
   },
   // Celo Mainnet (Chain ID: 42220)
   42220: {
@@ -193,6 +199,8 @@ const ALL_CONTRACTS: Record<number, BrainBookContracts> = {
     brainbookStaking: '0x0000000000000000000000000000000000000000',     // Set after mainnet deploy
     brainbookLiquidityMining: '0x0000000000000000000000000000000000000000', // Set after mainnet deploy
     ubeswapPool: '0x0000000000000000000000000000000000000000',          // Set after Ubeswap V3 BRAINBOOK/cUSD pool creation
+    brainbookPresale: '0x0000000000000000000000000000000000000000',
+    cusdToken: '0x765DE816845861e75A25fCA122bb6898B8B1282a',
   },
 };
 
@@ -230,6 +238,9 @@ export const environment = {
 
   // Default chain: Celo Alfajores for dev/testing
   defaultChainId: 44787,
+
+  // Celo attribution code for Proof of Ship
+  celoAttributionCode: 'celo_brainbook',
 
   // Game config
   questionsPerRound: 20,

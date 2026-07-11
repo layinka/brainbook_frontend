@@ -13,6 +13,7 @@ import { AppKitNetwork, celo, celoSepolia, hardhat, mainnet } from '@reown/appki
 import { getAccount, readContract, multicall } from '@wagmi/core';
 
 import { environment } from '../../environments/environment';
+import { toDataSuffix } from '@celo/attribution-tags';
 import { BehaviorSubject } from 'rxjs';
 // import ROUTER_ABI from '../../assets/abis/router.json';
 import { Address, createPublicClient, erc20Abi, FallbackTransport, getContract, http, formatUnits } from 'viem';
@@ -287,6 +288,20 @@ export class Web3Service {
     options?: MiniPayWriteOptions
   ) {
     const normalizedRequest = await this.applyMiniPayTransactionOverrides(request, options);
+
+    // Append Celo Attribution Tag
+    const code = environment.celoAttributionCode;
+    if (code) {
+      try {
+        const suffix = toDataSuffix(code);
+        if (suffix) {
+          (normalizedRequest as any).dataSuffix = suffix;
+        }
+      } catch (err) {
+        console.warn('[Attribution] Failed to generate data suffix in web3.ts:', err);
+      }
+    }
+
     return writeContract(wagmiAdapter.wagmiConfig, normalizedRequest);
   }
 

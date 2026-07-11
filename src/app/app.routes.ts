@@ -47,6 +47,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/referrals/referrals.component').then(m => m.ReferralsComponent),
   },
   {
+    path: 'presale',
+    loadComponent: () => import('./components/presale/presale.component').then(m => m.PresaleComponent),
+  },
+  {
     path: '**',
     redirectTo: ''
   }

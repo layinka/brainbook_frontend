@@ -47,7 +47,7 @@
 
   <!-- Referral Tracking Script -->
   <script>
-    (function() {
+    (function () {
       try {
         var urlParams = new URLSearchParams(window.location.search);
         var ref = urlParams.get('ref');
@@ -63,6 +63,16 @@
         console.error('Failed to parse referral code:', e);
       }
     })();
+  </script>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-LRHKXQ00TG"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-LRHKXQ00TG');
   </script>
 </head>
 

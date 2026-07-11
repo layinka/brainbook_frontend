@@ -27,6 +27,7 @@
     "@angular/forms": "^20.1.0",
     "@angular/platform-browser": "^20.1.0",
     "@angular/router": "^20.1.0",
+    "@celo/attribution-tags": "^0.3.0",
     "@ng-bootstrap/ng-bootstrap": "^19.0.1",
     "@ng-icons/bootstrap-icons": "^32.1.0",
     "@ng-icons/core": "^32.1.0",

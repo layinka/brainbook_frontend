@@ -61,7 +61,14 @@
               🤝 Referrals
             </a>
           </li>
+
           @if (isDevelopment) {
+          <li class="nav-item">
+            <a class="nav-link nav-link-custom" routerLink="/presale" (click)="isMenuCollapsed = true"
+              routerLinkActive="active">
+              🚀 Presale
+            </a>
+          </li>
           <li class="nav-item">
             <a class="nav-link nav-link-custom d-flex align-items-center gap-1" routerLink="/token"
               (click)="isMenuCollapsed = true" routerLinkActive="active">

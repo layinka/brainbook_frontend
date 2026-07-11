@@ -60,6 +60,10 @@ export class RewardsComponent implements OnInit {
   }
 
   async claimRewards(): Promise<void> {
+    this.toast.show('Coming Soon', 'Token claims are temporarily disabled. Stay tuned!', undefined, 'bg-info text-light');
+    return;
+
+    /*
     if (this.unclaimedTokens() <= 0 || this.claiming()) return;
 
     if (!this.w3s.account$()) {
@@ -105,5 +109,6 @@ export class RewardsComponent implements OnInit {
     } finally {
       this.claiming.set(false);
     }
+    */
   }
 }

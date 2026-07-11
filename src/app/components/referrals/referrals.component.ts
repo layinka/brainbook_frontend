@@ -201,6 +201,10 @@ export class ReferralsComponent implements OnInit {
   }
 
   async claimRewards(): Promise<void> {
+    this.toast.show('Coming Soon', 'Token claims are temporarily disabled. Stay tuned!', undefined, 'bg-info text-light');
+    return;
+
+    /*
     if (this.unclaimedTokens() <= 0 || this.claiming()) return;
 
     this.sound.play('click');
@@ -243,5 +247,6 @@ export class ReferralsComponent implements OnInit {
     } finally {
       this.claiming.set(false);
     }
+    */
   }
 }

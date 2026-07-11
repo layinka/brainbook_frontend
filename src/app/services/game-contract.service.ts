@@ -1,11 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { readContract, writeContract, waitForTransactionReceipt } from '@wagmi/core';
+import { readContract, writeContract as wagmiWriteContract, waitForTransactionReceipt } from '@wagmi/core';
 import { formatEther, parseEther, encodeAbiParameters, parseAbiParameters } from 'viem';
+import { toDataSuffix } from '@celo/attribution-tags';
 import { environment, DEX_REGISTRY, DexEntry } from '../../environments/environment';
 import { Web3Service, wagmiConfig } from './web3';
 import {
   BRAIN_BOOK_TOKEN_ABI,
   BRAIN_BOOK_NFT_ABI,
+  BRAIN_BOOK_PRESALE_ABI,
   BRAIN_BOOK_GAME_MANAGER_ABI,
   BRAIN_BOOK_STAKING_ABI,
   BRAIN_BOOK_LIQUIDITY_MINING_ABI,
@@ -88,6 +90,27 @@ const UNISWAP_V3_POOL_ABI = [
 
 /** Fallback price shown when no pool is configured or the TWAP call fails (pre-launch) */
 const FALLBACK_PRICE_USD = '0.001';
+
+/**
+ * Custom writeContract wrapper to automatically append Celo Attribution Tag
+ * for Proof of Ship qualification.
+ */
+async function writeContract(config: any, args: any): Promise<`0x${string}`> {
+  const code = environment.celoAttributionCode;
+  let suffix: `0x${string}` | undefined;
+  if (code) {
+    try {
+      suffix = toDataSuffix(code);
+    } catch (err) {
+      console.warn('[Attribution] Failed to generate data suffix:', err);
+    }
+  }
+
+  return wagmiWriteContract(config, {
+    ...args,
+    ...(suffix && { dataSuffix: suffix })
+  } as any);
+}
 
 @Injectable({
   providedIn: 'root'
@@ -1004,6 +1027,182 @@ export class GameContractService {
       abi: UNISWAP_V4_UNIVERSAL_ROUTER_ABI,
       functionName: 'execute',
       args: [commands, [swapInput], deadline]
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash });
+    return hash;
+  }
+
+  get presaleAddress(): `0x${string}` {
+    const chainId = this.w3s.chainId || environment.defaultChainId;
+    return (environment.contracts[chainId]?.brainbookPresale || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+  }
+
+  get cusdTokenAddress(): `0x${string}` {
+    const chainId = this.w3s.chainId || environment.defaultChainId;
+    return (environment.contracts[chainId]?.cusdToken || '0x0000000000000000000000000000000000000000') as `0x${string}`;
+  }
+
+  async getPresaleRaised(): Promise<string> {
+    if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return '0.0';
+    try {
+      const raised = await readContract(wagmiConfig, {
+        address: this.presaleAddress,
+        abi: BRAIN_BOOK_PRESALE_ABI,
+        functionName: 'totalCusdRaised'
+      });
+      return formatEther(raised as bigint);
+    } catch (err) {
+      console.error('Error reading totalCusdRaised:', err);
+      return '0.0';
+    }
+  }
+
+  async getPresaleSold(): Promise<string> {
+    if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return '0.0';
+    try {
+      const sold = await readContract(wagmiConfig, {
+        address: this.presaleAddress,
+        abi: BRAIN_BOOK_PRESALE_ABI,
+        functionName: 'totalTokensSold'
+      });
+      return formatEther(sold as bigint);
+    } catch (err) {
+      console.error('Error reading totalTokensSold:', err);
+      return '0.0';
+    }
+  }
+
+  async getPresalePrice(): Promise<string> {
+    if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return '0.01';
+    try {
+      const price = await readContract(wagmiConfig, {
+        address: this.presaleAddress,
+        abi: BRAIN_BOOK_PRESALE_ABI,
+        functionName: 'tokenPriceInCusd'
+      });
+      return formatEther(price as bigint);
+    } catch (err) {
+      console.error('Error reading tokenPriceInCusd:', err);
+      return '0.01';
+    }
+  }
+
+  async getPresaleHardcap(): Promise<string> {
+    if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return '500000';
+    try {
+      const cap = await readContract(wagmiConfig, {
+        address: this.presaleAddress,
+        abi: BRAIN_BOOK_PRESALE_ABI,
+        functionName: 'hardcap'
+      });
+      return formatEther(cap as bigint);
+    } catch (err) {
+      console.error('Error reading hardcap:', err);
+      return '500000';
+    }
+  }
+
+  async getPresalePaused(): Promise<boolean> {
+    if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return false;
+    try {
+      const paused = await readContract(wagmiConfig, {
+        address: this.presaleAddress,
+        abi: BRAIN_BOOK_PRESALE_ABI,
+        functionName: 'paused'
+      });
+      return paused as boolean;
+    } catch (err) {
+      console.error('Error reading paused:', err);
+      return false;
+    }
+  }
+
+  async getPresaleStartTime(): Promise<number> {
+    if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return 0;
+    try {
+      const time = await readContract(wagmiConfig, {
+        address: this.presaleAddress,
+        abi: BRAIN_BOOK_PRESALE_ABI,
+        functionName: 'startTime'
+      });
+      return Number(time);
+    } catch (err) {
+      console.error('Error reading startTime:', err);
+      return 0;
+    }
+  }
+
+  async getPresaleEndTime(): Promise<number> {
+    if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return 0;
+    try {
+      const time = await readContract(wagmiConfig, {
+        address: this.presaleAddress,
+        abi: BRAIN_BOOK_PRESALE_ABI,
+        functionName: 'endTime'
+      });
+      return Number(time);
+    } catch (err) {
+      console.error('Error reading endTime:', err);
+      return 0;
+    }
+  }
+
+  async getCusdBalance(accountAddress?: string): Promise<string> {
+    const address = accountAddress || this.w3s.account$();
+    if (!address || this.cusdTokenAddress === '0x0000000000000000000000000000000000000000') return '0.0';
+    try {
+      const balance = await readContract(wagmiConfig, {
+        address: this.cusdTokenAddress,
+        abi: ERC20_ABI,
+        functionName: 'balanceOf',
+        args: [address as `0x${string}`]
+      });
+      return formatEther(balance as bigint);
+    } catch (err) {
+      console.error('Error reading cUSD balance:', err);
+      return '0.0';
+    }
+  }
+
+  async getCusdAllowance(accountAddress: string): Promise<string> {
+    if (this.cusdTokenAddress === '0x0000000000000000000000000000000000000000' || this.presaleAddress === '0x0000000000000000000000000000000000000000') return '0.0';
+    try {
+      const allowance = await readContract(wagmiConfig, {
+        address: this.cusdTokenAddress,
+        abi: ERC20_ABI,
+        functionName: 'allowance',
+        args: [accountAddress as `0x${string}`, this.presaleAddress]
+      });
+      return formatEther(allowance as bigint);
+    } catch (err) {
+      console.error('Error reading cUSD allowance:', err);
+      return '0.0';
+    }
+  }
+
+  async approveCusdForPresale(amountEth: string): Promise<string> {
+    if (this.cusdTokenAddress === '0x0000000000000000000000000000000000000000' || this.presaleAddress === '0x0000000000000000000000000000000000000000') {
+      throw new Error('Contract not configured');
+    }
+    const hash = await writeContract(wagmiConfig, {
+      address: this.cusdTokenAddress,
+      abi: ERC20_ABI,
+      functionName: 'approve',
+      args: [this.presaleAddress, parseEther(amountEth)]
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash });
+    return hash;
+  }
+
+  async buyPresaleTokens(amountEth: string): Promise<string> {
+    if (this.presaleAddress === '0x0000000000000000000000000000000000000000') {
+      throw new Error('Contract not configured');
+    }
+    const hash = await writeContract(wagmiConfig, {
+      address: this.presaleAddress,
+      abi: BRAIN_BOOK_PRESALE_ABI,
+      functionName: 'buyTokens',
+      args: [parseEther(amountEth)]
     });
     await waitForTransactionReceipt(wagmiConfig, { hash });
     return hash;
