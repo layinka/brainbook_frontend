@@ -1,7 +1,22 @@
-:root{
-    --w3m-color-fg-1: rgb(176, 179, 193);
-}
-
-.w3m-color-primary {
-    color: rgb(176, 179, 193) !important;
+.web3-onboard-wrapper {
+  .address-badge {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
   }
+
+  .chain-badge {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+  }
+
+  button {
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  }
+}

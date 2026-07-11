@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { readContract, writeContract as wagmiWriteContract, waitForTransactionReceipt } from '@wagmi/core';
-import { formatEther, parseEther, encodeAbiParameters, parseAbiParameters } from 'viem';
+import { readContract, writeContract as wagmiWriteContract, waitForTransactionReceipt, signMessage } from '@web3-onboard/wagmi';
+import { formatEther, parseEther, encodeAbiParameters, parseAbiParameters, Address } from 'viem';
 import { toDataSuffix } from '@celo/attribution-tags';
 import { environment, DEX_REGISTRY, DexEntry } from '../../environments/environment';
-import { Web3Service, wagmiConfig } from './web3';
+import { Web3Service } from './web3';
 import {
   BRAIN_BOOK_TOKEN_ABI,
   BRAIN_BOOK_NFT_ABI,
@@ -138,6 +138,19 @@ export class GameContractService {
     return environment.contracts[chainId]?.ubeswapPool as `0x${string}`;
   }
 
+  /**
+   * Helper to get wagmi config with error handling
+   * Returns as 'any' to work around type incompatibility between
+   * @wagmi/core v2 (used by web3-onboard) and v3 (in dependencies)
+   */
+  private getWagmi(): any {
+    const config = this.w3s.getWagmiConfig();
+    if (!config) {
+      throw new Error('Wagmi config not available. Please connect your wallet first.');
+    }
+    return config;
+  }
+
   // ─── Ubeswap V3 TWAP Price Oracle ─────────────────────────────────────────
   /**
    * Fetches the live BRAINBOOK/cUSD price from the Ubeswap V3 pool.
@@ -163,9 +176,15 @@ export class GameContractService {
       return FALLBACK_PRICE_USD;
     }
 
+    const wagmiConfig = this.w3s.getWagmiConfig();
+    if (!wagmiConfig) {
+      console.warn('[PriceOracle] Wagmi config not available');
+      return FALLBACK_PRICE_USD;
+    }
+
     try {
       // Determine token ordering in the pool (BRAINBOOK may be token0 or token1)
-      const token0 = await readContract(wagmiConfig, {
+      const token0 = await readContract(this.getWagmi(), {
         address: poolAddr,
         abi: UNISWAP_V3_POOL_ABI,
         functionName: 'token0'
@@ -176,7 +195,7 @@ export class GameContractService {
       // ── Attempt 1: 30-minute TWAP ─────────────────────────────────────────
       try {
         const TWAP_SECONDS = 1800; // 30 minutes
-        const observations = await readContract(wagmiConfig, {
+        const observations = await readContract(this.getWagmi(), {
           address: poolAddr,
           abi: UNISWAP_V3_POOL_ABI,
           functionName: 'observe',
@@ -199,7 +218,7 @@ export class GameContractService {
       }
 
       // ── Attempt 2: Spot price from slot0 ──────────────────────────────────
-      const slot0Result = await readContract(wagmiConfig, {
+      const slot0Result = await readContract(this.getWagmi(), {
         address: poolAddr,
         abi: UNISWAP_V3_POOL_ABI,
         functionName: 'slot0'
@@ -230,8 +249,11 @@ export class GameContractService {
     const address = accountAddress || this.w3s.account$();
     if (!address) return '0.0';
 
+    const wagmiConfig = this.w3s.getWagmiConfig();
+    if (!wagmiConfig) return '0.0';
+
     try {
-      const balance = await readContract(wagmiConfig, {
+      const balance = await readContract(this.getWagmi(), {
         address: this.tokenAddress,
         abi: BRAIN_BOOK_TOKEN_ABI,
         functionName: 'balanceOf',
@@ -252,7 +274,7 @@ export class GameContractService {
     if (!address) return 0;
 
     try {
-      const balance = await readContract(wagmiConfig, {
+      const balance = await readContract(this.getWagmi(), {
         address: this.nftAddress,
         abi: BRAIN_BOOK_NFT_ABI,
         functionName: 'balanceOf',
@@ -276,7 +298,7 @@ export class GameContractService {
       const accounts = tokenIds.map(() => address as `0x${string}`);
       const ids = tokenIds.map(id => BigInt(id));
 
-      const balances = await readContract(wagmiConfig, {
+      const balances = await readContract(this.getWagmi(), {
         address: this.nftAddress,
         abi: BRAIN_BOOK_NFT_ABI,
         functionName: 'balanceOfBatch',
@@ -295,7 +317,7 @@ export class GameContractService {
    */
   async getItemPrice(itemId: number): Promise<string> {
     try {
-      const price = await readContract(wagmiConfig, {
+      const price = await readContract(this.getWagmi(), {
         address: this.managerAddress,
         abi: BRAIN_BOOK_GAME_MANAGER_ABI,
         functionName: 'itemPrices',
@@ -319,7 +341,7 @@ export class GameContractService {
     const totalPrice = parseEther(priceEth) * BigInt(quantity);
 
     // 1. Check allowance
-    const allowance = await readContract(wagmiConfig, {
+    const allowance = await readContract(this.getWagmi(), {
       address: this.tokenAddress,
       abi: ERC20_ABI,
       functionName: 'allowance',
@@ -330,27 +352,27 @@ export class GameContractService {
     if (allowance < totalPrice) {
       console.log(`Approving GameManager to spend ${formatEther(totalPrice)} BRAINBOOK...`);
 
-      const approveHash = await writeContract(wagmiConfig, {
+      const approveHash = await writeContract(this.getWagmi(), {
         address: this.tokenAddress,
         abi: ERC20_ABI,
         functionName: 'approve',
         args: [this.managerAddress, totalPrice]
       });
 
-      await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
+      await waitForTransactionReceipt(this.getWagmi(), { hash: approveHash });
       console.log('Approve transaction confirmed!');
     }
 
     // 3. Purchase the item
     console.log(`Purchasing item ${itemId} x ${quantity}...`);
-    const purchaseHash = await writeContract(wagmiConfig, {
+    const purchaseHash = await writeContract(this.getWagmi(), {
       address: this.managerAddress,
       abi: BRAIN_BOOK_GAME_MANAGER_ABI,
       functionName: 'purchaseGameItem',
       args: [BigInt(itemId), BigInt(quantity)]
     });
 
-    await waitForTransactionReceipt(wagmiConfig, { hash: purchaseHash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash: purchaseHash });
     console.log('Purchase transaction confirmed!');
     return purchaseHash;
   }
@@ -363,14 +385,14 @@ export class GameContractService {
     if (!userAddress) throw new Error('Wallet not connected');
 
     console.log(`Claiming achievement badge NFT ${tokenId}...`);
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.managerAddress,
       abi: BRAIN_BOOK_GAME_MANAGER_ABI,
       functionName: 'claimAchievement',
       args: [BigInt(tokenId), BigInt(amount), signature as `0x${string}`]
     });
 
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     console.log('Achievement claim confirmed!');
     return hash;
   }
@@ -383,16 +405,63 @@ export class GameContractService {
     if (!userAddress) throw new Error('Wallet not connected');
 
     console.log(`Claiming token reward of ${formatEther(amountInWei)} BRAINBOOK...`);
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.managerAddress,
       abi: BRAIN_BOOK_GAME_MANAGER_ABI,
       functionName: 'claimTokenReward',
       args: [amountInWei, signature as `0x${string}`]
     });
 
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     console.log('Token reward claim confirmed!');
     return hash;
+  }
+
+  /**
+   * Check if user owns a specific NFT achievement
+   */
+  async checkNFTOwnership(tokenId: number, userAddress?: Address): Promise<boolean> {
+    const address = userAddress || this.w3s.account$();
+    if (!address) {
+      throw new Error('No wallet connected');
+    }
+
+    try {
+      const balance = await readContract(this.getWagmi(), {
+        address: this.nftAddress,
+        abi: BRAIN_BOOK_NFT_ABI,
+        functionName: 'balanceOf',
+        args: [address, BigInt(tokenId)]
+      });
+
+      return Number(balance) > 0;
+    } catch (error) {
+      console.error('Error checking NFT ownership:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Mint an achievement NFT using backend signature
+   */
+  async mintAchievementNFT(tokenId: number, signature: string): Promise<string> {
+    if (!this.w3s.account$()) {
+      throw new Error('No wallet connected');
+    }
+
+    try {
+      const hash = await this.w3s.writeContractWithMiniPay({
+        address: this.nftAddress,
+        abi: BRAIN_BOOK_NFT_ABI,
+        functionName: 'mintItem',
+        args: [this.w3s.account$(), BigInt(tokenId), BigInt(1)]
+      });
+
+      return hash;
+    } catch (error: any) {
+      console.error('Error minting achievement NFT:', error);
+      throw new Error(error?.message || 'Failed to mint NFT');
+    }
   }
 
   get stakingAddress(): `0x${string}` {
@@ -404,7 +473,7 @@ export class GameContractService {
     const address = accountAddress || this.w3s.account$();
     if (!address || !this.stakingAddress || this.stakingAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const balance = await readContract(wagmiConfig, {
+      const balance = await readContract(this.getWagmi(), {
         address: this.stakingAddress,
         abi: BRAIN_BOOK_STAKING_ABI,
         functionName: 'balanceOf',
@@ -420,7 +489,7 @@ export class GameContractService {
   async getTotalStaked(): Promise<string> {
     if (!this.stakingAddress || this.stakingAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const total = await readContract(wagmiConfig, {
+      const total = await readContract(this.getWagmi(), {
         address: this.stakingAddress,
         abi: BRAIN_BOOK_STAKING_ABI,
         functionName: 'totalSupply'
@@ -436,7 +505,7 @@ export class GameContractService {
     const address = accountAddress || this.w3s.account$();
     if (!address || !this.stakingAddress || this.stakingAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const earned = await readContract(wagmiConfig, {
+      const earned = await readContract(this.getWagmi(), {
         address: this.stakingAddress,
         abi: BRAIN_BOOK_STAKING_ABI,
         functionName: 'earned',
@@ -452,7 +521,7 @@ export class GameContractService {
   async getStakingAllowance(accountAddress: string): Promise<bigint> {
     if (!this.stakingAddress || this.stakingAddress === '0x0000000000000000000000000000000000000000') return 0n;
     try {
-      const allowance = await readContract(wagmiConfig, {
+      const allowance = await readContract(this.getWagmi(), {
         address: this.tokenAddress,
         abi: BRAIN_BOOK_TOKEN_ABI,
         functionName: 'allowance',
@@ -466,55 +535,55 @@ export class GameContractService {
   }
 
   async approveStaking(amountEth: string): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.tokenAddress,
       abi: BRAIN_BOOK_TOKEN_ABI,
       functionName: 'approve',
       args: [this.stakingAddress, parseEther(amountEth)]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
   async stake(amountEth: string): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.stakingAddress,
       abi: BRAIN_BOOK_STAKING_ABI,
       functionName: 'stake',
       args: [parseEther(amountEth)]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
   async withdrawStaking(amountEth: string): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.stakingAddress,
       abi: BRAIN_BOOK_STAKING_ABI,
       functionName: 'withdraw',
       args: [parseEther(amountEth)]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
   async getStakingReward(): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.stakingAddress,
       abi: BRAIN_BOOK_STAKING_ABI,
       functionName: 'getReward'
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
   async exitStaking(): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.stakingAddress,
       abi: BRAIN_BOOK_STAKING_ABI,
       functionName: 'exit'
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
@@ -529,7 +598,7 @@ export class GameContractService {
     const address = accountAddress || this.w3s.account$();
     if (!address || !this.liquidityMiningAddress || this.liquidityMiningAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const balance = await readContract(wagmiConfig, {
+      const balance = await readContract(this.getWagmi(), {
         address: this.liquidityMiningAddress,
         abi: BRAIN_BOOK_LIQUIDITY_MINING_ABI,
         functionName: 'balanceOf',
@@ -545,7 +614,7 @@ export class GameContractService {
   async getLpTotalStaked(): Promise<string> {
     if (!this.liquidityMiningAddress || this.liquidityMiningAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const total = await readContract(wagmiConfig, {
+      const total = await readContract(this.getWagmi(), {
         address: this.liquidityMiningAddress,
         abi: BRAIN_BOOK_LIQUIDITY_MINING_ABI,
         functionName: 'totalSupply'
@@ -561,7 +630,7 @@ export class GameContractService {
     const address = accountAddress || this.w3s.account$();
     if (!address || !this.liquidityMiningAddress || this.liquidityMiningAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const earned = await readContract(wagmiConfig, {
+      const earned = await readContract(this.getWagmi(), {
         address: this.liquidityMiningAddress,
         abi: BRAIN_BOOK_LIQUIDITY_MINING_ABI,
         functionName: 'earned',
@@ -579,7 +648,7 @@ export class GameContractService {
       return '0x0000000000000000000000000000000000000000';
     }
     try {
-      const token = await readContract(wagmiConfig, {
+      const token = await readContract(this.getWagmi(), {
         address: this.liquidityMiningAddress,
         abi: BRAIN_BOOK_LIQUIDITY_MINING_ABI,
         functionName: 'stakingToken'
@@ -601,7 +670,7 @@ export class GameContractService {
     }
 
     try {
-      const symbol = await readContract(wagmiConfig, {
+      const symbol = await readContract(this.getWagmi(), {
         address: tokenAddress as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'symbol'
@@ -618,7 +687,7 @@ export class GameContractService {
     const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
     if (!address || !tokenAddress || tokenAddress === ZERO_ADDR) return '0.0';
     try {
-      const balance = await readContract(wagmiConfig, {
+      const balance = await readContract(this.getWagmi(), {
         address: tokenAddress as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'balanceOf',
@@ -635,7 +704,7 @@ export class GameContractService {
     const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
     if (!this.liquidityMiningAddress || this.liquidityMiningAddress === ZERO_ADDR || !tokenAddress || tokenAddress === ZERO_ADDR) return 0n;
     try {
-      const allowance = await readContract(wagmiConfig, {
+      const allowance = await readContract(this.getWagmi(), {
         address: tokenAddress as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'allowance',
@@ -649,55 +718,55 @@ export class GameContractService {
   }
 
   async approveLpStaking(tokenAddress: string, amountEth: string): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: tokenAddress as `0x${string}`,
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [this.liquidityMiningAddress, parseEther(amountEth)]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
   async stakeLp(amountEth: string): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.liquidityMiningAddress,
       abi: BRAIN_BOOK_LIQUIDITY_MINING_ABI,
       functionName: 'stake',
       args: [parseEther(amountEth)]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
   async withdrawLp(amountEth: string): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.liquidityMiningAddress,
       abi: BRAIN_BOOK_LIQUIDITY_MINING_ABI,
       functionName: 'withdraw',
       args: [parseEther(amountEth)]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
   async getLpReward(): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.liquidityMiningAddress,
       abi: BRAIN_BOOK_LIQUIDITY_MINING_ABI,
       functionName: 'getReward'
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
   async exitLpStaking(): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.liquidityMiningAddress,
       abi: BRAIN_BOOK_LIQUIDITY_MINING_ABI,
       functionName: 'exit'
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
@@ -714,7 +783,7 @@ export class GameContractService {
     if (!dex.poolId || dex.poolId === ZERO32 || dex.poolId === ZERO) return null;
 
     try {
-      const result = await readContract(wagmiConfig, {
+      const result = await readContract(this.getWagmi(), {
         address: dex.poolManagerAddress as `0x${string}`,
         abi: UNISWAP_V4_POOL_MANAGER_ABI,
         functionName: 'getSlot0',
@@ -785,7 +854,7 @@ export class GameContractService {
     ] as const;
 
     try {
-      const token0 = await readContract(wagmiConfig, {
+      const token0 = await readContract(this.getWagmi(), {
         address: dex.poolAddress as `0x${string}`,
         abi: V3_POOL_ABI,
         functionName: 'token0'
@@ -794,7 +863,7 @@ export class GameContractService {
 
       // Try TWAP first
       try {
-        const obs = await readContract(wagmiConfig, {
+        const obs = await readContract(this.getWagmi(), {
           address: dex.poolAddress as `0x${string}`,
           abi: V3_POOL_ABI,
           functionName: 'observe',
@@ -808,7 +877,7 @@ export class GameContractService {
         // Fallback to slot0
       }
 
-      const slot0 = await readContract(wagmiConfig, {
+      const slot0 = await readContract(this.getWagmi(), {
         address: dex.poolAddress as `0x${string}`,
         abi: V3_POOL_ABI,
         functionName: 'slot0'
@@ -880,7 +949,7 @@ export class GameContractService {
 
   async getSwapAllowance(tokenAddress: string, spenderAddress: string, accountAddress: string): Promise<bigint> {
     try {
-      return await readContract(wagmiConfig, {
+      return await readContract(this.getWagmi(), {
         address: tokenAddress as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'allowance',
@@ -892,13 +961,13 @@ export class GameContractService {
   }
 
   async approveTokenForSwap(tokenAddress: string, spenderAddress: string, amountEth: string): Promise<string> {
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: tokenAddress as `0x${string}`,
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [spenderAddress as `0x${string}`, parseEther(amountEth)]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
@@ -917,7 +986,7 @@ export class GameContractService {
       : 0n;
     const amountOutMinimum = estimatedOut * BigInt(10000 - slippageBps) / 10000n;
 
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: dex.routerAddress as `0x${string}`,
       abi: UNISWAP_V3_ROUTER_ABI,
       functionName: 'exactInputSingle',
@@ -931,7 +1000,7 @@ export class GameContractService {
         sqrtPriceLimitX96: 0n
       }]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
@@ -1022,13 +1091,13 @@ export class GameContractService {
     const commands = '0x10' as `0x${string}`;
     const deadline = BigInt(Math.floor(Date.now() / 1000) + 1200); // 20 min
 
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: dex.universalRouterAddress as `0x${string}`,
       abi: UNISWAP_V4_UNIVERSAL_ROUTER_ABI,
       functionName: 'execute',
       args: [commands, [swapInput], deadline]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
@@ -1045,7 +1114,7 @@ export class GameContractService {
   async getPresaleRaised(): Promise<string> {
     if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const raised = await readContract(wagmiConfig, {
+      const raised = await readContract(this.getWagmi(), {
         address: this.presaleAddress,
         abi: BRAIN_BOOK_PRESALE_ABI,
         functionName: 'totalCusdRaised'
@@ -1060,7 +1129,7 @@ export class GameContractService {
   async getPresaleSold(): Promise<string> {
     if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const sold = await readContract(wagmiConfig, {
+      const sold = await readContract(this.getWagmi(), {
         address: this.presaleAddress,
         abi: BRAIN_BOOK_PRESALE_ABI,
         functionName: 'totalTokensSold'
@@ -1075,7 +1144,7 @@ export class GameContractService {
   async getPresalePrice(): Promise<string> {
     if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return '0.01';
     try {
-      const price = await readContract(wagmiConfig, {
+      const price = await readContract(this.getWagmi(), {
         address: this.presaleAddress,
         abi: BRAIN_BOOK_PRESALE_ABI,
         functionName: 'tokenPriceInCusd'
@@ -1090,7 +1159,7 @@ export class GameContractService {
   async getPresaleHardcap(): Promise<string> {
     if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return '500000';
     try {
-      const cap = await readContract(wagmiConfig, {
+      const cap = await readContract(this.getWagmi(), {
         address: this.presaleAddress,
         abi: BRAIN_BOOK_PRESALE_ABI,
         functionName: 'hardcap'
@@ -1105,7 +1174,7 @@ export class GameContractService {
   async getPresalePaused(): Promise<boolean> {
     if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return false;
     try {
-      const paused = await readContract(wagmiConfig, {
+      const paused = await readContract(this.getWagmi(), {
         address: this.presaleAddress,
         abi: BRAIN_BOOK_PRESALE_ABI,
         functionName: 'paused'
@@ -1120,7 +1189,7 @@ export class GameContractService {
   async getPresaleStartTime(): Promise<number> {
     if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return 0;
     try {
-      const time = await readContract(wagmiConfig, {
+      const time = await readContract(this.getWagmi(), {
         address: this.presaleAddress,
         abi: BRAIN_BOOK_PRESALE_ABI,
         functionName: 'startTime'
@@ -1135,7 +1204,7 @@ export class GameContractService {
   async getPresaleEndTime(): Promise<number> {
     if (this.presaleAddress === '0x0000000000000000000000000000000000000000') return 0;
     try {
-      const time = await readContract(wagmiConfig, {
+      const time = await readContract(this.getWagmi(), {
         address: this.presaleAddress,
         abi: BRAIN_BOOK_PRESALE_ABI,
         functionName: 'endTime'
@@ -1151,7 +1220,7 @@ export class GameContractService {
     const address = accountAddress || this.w3s.account$();
     if (!address || this.cusdTokenAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const balance = await readContract(wagmiConfig, {
+      const balance = await readContract(this.getWagmi(), {
         address: this.cusdTokenAddress,
         abi: ERC20_ABI,
         functionName: 'balanceOf',
@@ -1167,7 +1236,7 @@ export class GameContractService {
   async getCusdAllowance(accountAddress: string): Promise<string> {
     if (this.cusdTokenAddress === '0x0000000000000000000000000000000000000000' || this.presaleAddress === '0x0000000000000000000000000000000000000000') return '0.0';
     try {
-      const allowance = await readContract(wagmiConfig, {
+      const allowance = await readContract(this.getWagmi(), {
         address: this.cusdTokenAddress,
         abi: ERC20_ABI,
         functionName: 'allowance',
@@ -1184,13 +1253,13 @@ export class GameContractService {
     if (this.cusdTokenAddress === '0x0000000000000000000000000000000000000000' || this.presaleAddress === '0x0000000000000000000000000000000000000000') {
       throw new Error('Contract not configured');
     }
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.cusdTokenAddress,
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [this.presaleAddress, parseEther(amountEth)]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 
@@ -1198,13 +1267,13 @@ export class GameContractService {
     if (this.presaleAddress === '0x0000000000000000000000000000000000000000') {
       throw new Error('Contract not configured');
     }
-    const hash = await writeContract(wagmiConfig, {
+    const hash = await writeContract(this.getWagmi(), {
       address: this.presaleAddress,
       abi: BRAIN_BOOK_PRESALE_ABI,
       functionName: 'buyTokens',
       args: [parseEther(amountEth)]
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash });
+    await waitForTransactionReceipt(this.getWagmi(), { hash });
     return hash;
   }
 }

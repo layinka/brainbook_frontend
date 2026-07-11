@@ -153,6 +153,6 @@ export class AuthOverlayComponent {
 
   onCancel() {
     // If they cancel or disconnect, we disconnect their wallet so the overlay hides
-    this.saveUpAuth.web3Service.appKit.disconnect();
+    this.saveUpAuth.web3Service.disconnectWallet();
   }
 }

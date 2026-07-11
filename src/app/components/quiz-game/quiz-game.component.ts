@@ -373,6 +373,12 @@ export class QuizGameComponent implements OnInit, OnDestroy {
   }
 
   async claimSessionTokens(): Promise<void> {
+    // Check if token claims are enabled in frontend
+    if (!environment.tokenClaimsEnabled) {
+      this.toast.show('Coming Soon', 'Token claims are temporarily disabled. Stay tuned!', undefined, 'bg-info text-light');
+      return;
+    }
+
     if (!this.w3s.account$()) {
       this.toast.error('Wallet Disconnected', 'Please connect your wallet first.');
       return;
@@ -383,7 +389,14 @@ export class QuizGameComponent implements OnInit, OnDestroy {
       // 1. Fetch EIP-712 signature from backend for all unclaimed game rewards
       const claimRes = await this.http.post<any>(`${environment.apiUrl}/game/rewards/claim`, {}, { withCredentials: true }).toPromise();
       
-      if (!claimRes || !claimRes.success || !claimRes.signature) {
+      // Check if claims are temporarily disabled (backend-side check)
+      if (claimRes?.comingSoon) {
+        this.toast.show('Coming Soon', claimRes.message || 'Token claims are temporarily disabled. Stay tuned!', undefined, 'bg-info text-light');
+        this.claimingTokens.set(false);
+        return;
+      }
+      
+      if (!claimRes || !claimRes.success || !claimRes.signature || claimRes.signature === '0x') {
         throw new Error(claimRes?.error || 'Failed to acquire signature from game vault.');
       }
       

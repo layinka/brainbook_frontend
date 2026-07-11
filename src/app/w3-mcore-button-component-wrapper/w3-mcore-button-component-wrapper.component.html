@@ -1,7 +1,14 @@
-<!-- <w3m-core-button [balance]="'show'" > </w3m-core-button> -->
-<div class="d-flex ">
-    <appkit-network-button></appkit-network-button> &nbsp;
-<appkit-button [balance]="'show'"></appkit-button>
+<div class="web3-onboard-wrapper d-flex gap-2">
+  @if (isConnected) {
+    <button class="btn btn-outline-primary d-flex align-items-center gap-2" (click)="disconnectWallet()">
+      <span class="address-badge">{{ address }}</span>
+      @if (chainName) {
+        <span class="chain-badge">{{ chainName }}</span>
+      }
+    </button>
+  } @else {
+    <button class="btn btn-primary" (click)="connectWallet()">
+      Connect Wallet
+    </button>
+  }
 </div>
-
-      

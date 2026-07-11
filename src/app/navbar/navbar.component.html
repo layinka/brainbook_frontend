@@ -92,9 +92,29 @@
 
         <!-- Right Side Items -->
         <div class="navbar-right d-flex align-items-center gap-3">
-          @if (chainName) {
-          <div class="chain-badge">
-            <span class="badge chain-indicator">{{chainName}}</span>
+          @if (chainName && w3s.account$()) {
+          <div class="network-switcher" ngbDropdown>
+            <button class="btn btn-sm chain-switcher-btn" id="networkDropdown" ngbDropdownToggle>
+              <span class="chain-icon">{{ getChainIcon(w3s.chainId$() ?? 0) }}</span>
+              <span class="chain-name">{{ chainName }}</span>
+              <span class="dropdown-arrow">▾</span>
+            </button>
+            <div ngbDropdownMenu aria-labelledby="networkDropdown" class="network-dropdown">
+              @for (chain of availableChains; track chain.id) {
+                <button 
+                  ngbDropdownItem 
+                  class="network-item"
+                  [class.active]="chain.id === w3s.chainId$()"
+                  [disabled]="chain.id === w3s.chainId$() || isNetworkSwitching()"
+                  (click)="switchNetwork(chain.id)">
+                  <span class="network-icon">{{ getChainIcon(chain.id) }}</span>
+                  <span class="network-name">{{ chain.name }}</span>
+                  @if (chain.id === w3s.chainId$()) {
+                    <span class="network-status">✓</span>
+                  }
+                </button>
+              }
+            </div>
           </div>
           }
 

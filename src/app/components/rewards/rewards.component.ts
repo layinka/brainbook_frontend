@@ -29,15 +29,34 @@ export class RewardsComponent implements OnInit {
   loadingStats = signal<boolean>(false);
   claiming = signal<boolean>(false);
 
+  // NFT Achievement states
+  ogEligible = signal<boolean>(false);
+  firstPlayEligible = signal<boolean>(false);
+  ogAlreadyMinted = signal<boolean>(false);
+  firstPlayAlreadyMinted = signal<boolean>(false);
+  mintingOG = signal<boolean>(false);
+  mintingFirstPlay = signal<boolean>(false);
+  ogCutoffDate = signal<string>('');
+
+  // NFT Token IDs
+  readonly OG_NFT_ID = 1;
+  readonly FIRST_PLAY_NFT_ID = 2;
+
   constructor() {
     // Re-fetch stats when the account changes
     effect(() => {
       const acct = this.w3s.account$();
       if (acct) {
         this.fetchRewardStats();
+        void this.checkNFTEligibility();
+        void this.checkNFTOwnership();
       } else {
         this.totalEarned.set(0);
         this.unclaimedTokens.set(0);
+        this.ogEligible.set(false);
+        this.firstPlayEligible.set(false);
+        this.ogAlreadyMinted.set(false);
+        this.firstPlayAlreadyMinted.set(false);
       }
     });
   }
@@ -60,10 +79,12 @@ export class RewardsComponent implements OnInit {
   }
 
   async claimRewards(): Promise<void> {
-    this.toast.show('Coming Soon', 'Token claims are temporarily disabled. Stay tuned!', undefined, 'bg-info text-light');
-    return;
+    // Check if token claims are enabled
+    if (!environment.tokenClaimsEnabled) {
+      this.toast.show('Coming Soon', 'Token claims are temporarily disabled. Stay tuned!', undefined, 'bg-info text-light');
+      return;
+    }
 
-    /*
     if (this.unclaimedTokens() <= 0 || this.claiming()) return;
 
     if (!this.w3s.account$()) {
@@ -78,7 +99,14 @@ export class RewardsComponent implements OnInit {
       // 1. Post claim request to backend to obtain EIP-712 signature
       const claimRes = await this.http.post<any>(`${environment.apiUrl}/game/rewards/claim`, {}, { withCredentials: true }).toPromise();
 
-      if (!claimRes?.success || !claimRes?.signature) {
+      // Check if claims are temporarily disabled (backend-side check)
+      if (claimRes?.comingSoon) {
+        this.toast.show('Coming Soon', claimRes.message || 'Token claims are temporarily disabled. Stay tuned!', undefined, 'bg-info text-light');
+        this.claiming.set(false);
+        return;
+      }
+
+      if (!claimRes || !claimRes.success || !claimRes.signature || claimRes.signature === '0x') {
         throw new Error(claimRes?.error || 'Failed to acquire verification signature.');
       }
 
@@ -109,6 +137,102 @@ export class RewardsComponent implements OnInit {
     } finally {
       this.claiming.set(false);
     }
-    */
+  }
+
+  async checkNFTEligibility(): Promise<void> {
+    try {
+      const res = await this.http.get<any>(`${environment.apiUrl}/game/nft-rewards/eligibility`, { withCredentials: true }).toPromise();
+      if (res && res.success) {
+        this.ogEligible.set(res.ogEligible);
+        this.firstPlayEligible.set(res.firstPlayEligible);
+        this.ogCutoffDate.set(res.ogCutoffDate);
+      }
+    } catch (err) {
+      console.error('Error checking NFT eligibility:', err);
+    }
+  }
+
+  async checkNFTOwnership(): Promise<void> {
+    try {
+      const ogOwned = await this.gameContract.checkNFTOwnership(this.OG_NFT_ID);
+      const firstPlayOwned = await this.gameContract.checkNFTOwnership(this.FIRST_PLAY_NFT_ID);
+      
+      this.ogAlreadyMinted.set(ogOwned);
+      this.firstPlayAlreadyMinted.set(firstPlayOwned);
+    } catch (err) {
+      console.error('Error checking NFT ownership:', err);
+    }
+  }
+
+  async mintOGNFT(): Promise<void> {
+    if (!this.w3s.account$()) {
+      this.toast.error('Wallet Disconnected', 'Please connect your Web3 wallet first.');
+      return;
+    }
+
+    if (this.mintingOG()) return;
+
+    this.mintingOG.set(true);
+    this.toast.show('Initiating Mint', 'Requesting OG NFT signature...', 4000, 'bg-info text-light');
+
+    try {
+      // Get signature from backend
+      const mintRes = await this.http.post<any>(`${environment.apiUrl}/game/nft-rewards/mint-og`, {}, { withCredentials: true }).toPromise();
+
+      if (!mintRes || !mintRes.success || !mintRes.signature) {
+        throw new Error(mintRes?.error || 'Failed to get mint signature');
+      }
+
+      this.toast.show('Wallet Prompt', 'Confirm transaction to mint your OG NFT...', 4000, 'bg-info text-light');
+
+      // Call contract to mint
+      const txHash = await this.gameContract.mintAchievementNFT(this.OG_NFT_ID, mintRes.signature);
+
+      this.toast.show('Mint Successful!', 'Your OG NFT has been minted!', 5000, 'bg-success text-light');
+      
+      // Update ownership status
+      this.ogAlreadyMinted.set(true);
+    } catch (err: any) {
+      console.error('OG NFT mint failed:', err);
+      this.toast.error('Mint Failed', err?.message || 'Transaction could not be completed.');
+    } finally {
+      this.mintingOG.set(false);
+    }
+  }
+
+  async mintFirstPlayNFT(): Promise<void> {
+    if (!this.w3s.account$()) {
+      this.toast.error('Wallet Disconnected', 'Please connect your Web3 wallet first.');
+      return;
+    }
+
+    if (this.mintingFirstPlay()) return;
+
+    this.mintingFirstPlay.set(true);
+    this.toast.show('Initiating Mint', 'Requesting First Play NFT signature...', 4000, 'bg-info text-light');
+
+    try {
+      // Get signature from backend
+      const mintRes = await this.http.post<any>(`${environment.apiUrl}/game/nft-rewards/mint-first-play`, {}, { withCredentials: true }).toPromise();
+
+      if (!mintRes || !mintRes.success || !mintRes.signature) {
+        throw new Error(mintRes?.error || 'Failed to get mint signature');
+      }
+
+      this.toast.show('Wallet Prompt', 'Confirm transaction to mint your First Play NFT...', 4000, 'bg-info text-light');
+
+      // Call contract to mint
+      const txHash = await this.gameContract.mintAchievementNFT(this.FIRST_PLAY_NFT_ID, mintRes.signature);
+
+      this.toast.show('Mint Successful!', 'Your First Play NFT has been minted!', 5000, 'bg-success text-light');
+      
+      // Update ownership status
+      this.firstPlayAlreadyMinted.set(true);
+    } catch (err: any) {
+      console.error('First Play NFT mint failed:', err);
+      this.toast.error('Mint Failed', err?.message || 'Transaction could not be completed.');
+    } finally {
+      this.mintingFirstPlay.set(false);
+    }
   }
 }

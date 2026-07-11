@@ -1,33 +1,21 @@
 import { Injectable, signal } from '@angular/core';
 
 import {
-  sendTransaction as wagmiSendTransaction,
-  switchChain,
-  disconnect,
-  getConnectors,
-  writeContract,
-  readContract,
-  multicall,
-  getAccount,
-  getBalance,
-  getBlockNumber,
-  reconnect,
-  watchAccount,
-  watchChainId,
-  getChainId,
-  getPublicClient,
-  getConnections
-} from '@web3-onboard/wagmi'
+  watchAccount, getChainId, watchChainId, getBalance, getBlockNumber,
+  getPublicClient, reconnect, connect, getConnection, writeContract,
+  createConfig, http
+} from '@wagmi/core';
+
+import { getAccount, readContract, multicall } from '@wagmi/core';
 
 import { environment } from '../../environments/environment';
 import { toDataSuffix } from '@celo/attribution-tags';
 import { Address, erc20Abi, formatUnits, Chain } from 'viem';
-import { celo, celoSepolia, coreDao } from 'viem/chains';
+import { celo, celoSepolia, hardhat, coreDao } from 'viem/chains';
 import Onboard, { OnboardAPI } from '@web3-onboard/core';
 import injectedModule from '@web3-onboard/injected-wallets';
 import walletConnectModule from '@web3-onboard/walletconnect';
 import coinbaseWalletModule from '@web3-onboard/coinbase';
-import wagmi from '@web3-onboard/wagmi'
 
 // Custom chain type for hardhat - viem's hardhat doesn't export properly
 const hardhatChain: Chain = {
@@ -52,6 +40,15 @@ export const ALL_CHAINS: Chain[] = [hardhatChain, celo, celoSepolia, coreDao];
 
 const supportedChains: Chain[] = (environment.production === true ? [celo, celoSepolia] : [celoSepolia, hardhatChain]);
 
+// Create wagmi config
+export const wagmiConfig = createConfig({
+  chains: supportedChains as any,
+  transports: supportedChains.reduce((acc, chain) => {
+    acc[chain.id] = http();
+    return acc;
+  }, {} as Record<number, ReturnType<typeof http>>),
+});
+
 export const chains: Record<number, Chain> = {
   42220: celo,
   11142220: celoSepolia,
@@ -59,15 +56,17 @@ export const chains: Record<number, Chain> = {
   31337: hardhatChain,
 };
 
-export const useNativeChainCoinList: any[] = [];
+export const useNativeChainCoinList = [
 
-export function getMultiCallAddress(chainId: number) {
-  const chain = chains[chainId];
+]
+const chain = chains[chainId];
   const multicall = chain?.contracts?.multicall3?.address;
   if (!multicall) {
     throw new Error("Multicall address not found for chainId: " + chainId);
   }
-  return multicall as Address;
+  return multicall as Addressr("Multicall address not found for chainId: " + chainId);
+  }
+  return multicall;
 }
 
 export interface MiniPayWriteOptions {
@@ -82,7 +81,9 @@ const FEE_CURRENCY_STORAGE_KEY = 'brainbook.feeCurrency.address';
 })
 export class Web3Service {
 
-  chains: Chain[] = supportedChains;
+  chains: AppKitNetwork[] = supportedChains;
+  // 1. Define constants
+  projectIChain[] = supportedChains;
 
   // Chain ID signal
   public chainId$ = signal<number | undefined>(undefined);
@@ -120,24 +121,7 @@ export class Web3Service {
 
   unwatchAccount: any;
 
-  onboard!: OnboardAPI;
-
-  // Getter for wagmi config from onboard state
-  private get wagmiConfig() {
-    const config = this.onboard?.state?.get()?.wagmiConfig;
-    if (!config) {
-      console.warn('Wagmi config not yet available from onboard state');
-    }
-    return config;
-  }
-
-  // Public method to get wagmi config for use in other services
-  // Returns as 'any' to work around type incompatibility between wagmi versions
-  public getWagmiConfig(): any {
-    return this.wagmiConfig;
-  }
-
-  private isMiniPayEnvironment(): boolean {
+  onboard!: OnboardAPIayEnvironment(): boolean {
     if (typeof window === 'undefined') {
       return false;
     }
@@ -147,26 +131,18 @@ export class Web3Service {
   }
 
   private syncConnectedStateFromConfig() {
-    const config = this.wagmiConfig;
-    if (!config) return;
-
-    try {
-      const chainId = getChainId(config);
-      if (chainId) {
-        this.chainId$.set(chainId);
-      }
-
-      const connections = getConnections(config);
-      const connection = connections?.[0];
-      if (connection?.accounts?.[0]) {
-        this.account$.set(connection.accounts[0] as Address);
-      }
-    } catch (error) {
-      console.warn('Error syncing connected state:', error);
+    const chainId = getChainId(wagmiAdapter.wagmiConfig);
+    if (chainId) {
+      this.chainId$.set(chainId);
     }
-  }
 
-  private readStoredFeeCurrencyPreference(): Address | undefined {
+    const account = getConnection(wagmiAdapter.wagmiConfig);
+    if (account && account.isConnectConfig);
+    if (chainId) {
+      this.chainId$.set(chainId);
+    }
+
+    const account = getConnection(dress | undefined {
     if (typeof localStorage === 'undefined') {
       return undefined;
     }
@@ -282,12 +258,9 @@ export class Web3Service {
 
     if (!next['gasPrice'] && chainId) {
       try {
-        const config = this.wagmiConfig;
-        if (config) {
-          const publicClient = getPublicClient(config, { chainId });
-          if (publicClient) {
-            next['gasPrice'] = await publicClient.getGasPrice();
-          }
+        const publicClient = getPublicClient(wagmiConfig, { chainId });
+        if (publicClient) {
+          next['gasPrice'] = await publicClient.getGasPrice();
         }
       } catch (error) {
         console.warn('MiniPay gasPrice fallback failed:', error);
@@ -301,17 +274,7 @@ export class Web3Service {
     request: Parameters<typeof writeContract>[1],
     options?: MiniPayWriteOptions
   ) {
-    const config = this.wagmiConfig;
-    if (!config) {
-      throw new Error('Wagmi config not available. Please connect wallet first.');
-    }
-
     const normalizedRequest = await this.applyMiniPayTransactionOverrides(request, options);
-
-    // Ensure chain is set
-    if (!normalizedRequest.chainId && this.chainId) {
-      (normalizedRequest as any).chainId = this.chainId;
-    }
 
     // Append Celo Attribution Tag
     const code = environment.celoAttributionCode;
@@ -326,85 +289,51 @@ export class Web3Service {
       }
     }
 
-    return writeContract(config, normalizedRequest as any);
+    return writeContract(wagmiAdapter.wagmiConfig, normalizedRequest);
   }
 
   private async initializeConnectionState() {
-    // Web3-Onboard will automatically reconnect to the last wallet via autoConnectLastWallet: true
-    // We just need to setup watchers after auto-reconnection
-    setTimeout(async () => {
-      const wallets = this.onboard.state.get().wallets;
-      if (wallets.length > 0) {
-        await this.setupWagmiWatchers();
-        this.syncConnectedStateFromConfig();
-      }
+    await reconnect(wagmiAdapter.wagmiConfig);
+    this.syncConnectedStateFromConfig();
 
-      // MiniPay auto-connect (only if not already connected)
-      if (this.isMiniPay$() && !this.account$() && !this.hasAttemptedMiniPayConnect) {
-        this.hasAttemptedMiniPayConnect = true;
+    const account = getConnection(wagmiAdapter.wagmiConfig);
+    if (
+      this.isMiniPay$() &&
+      !account.isConnecteConfig);
+    this.syncConnectedStateFromConfig();
 
-        try {
-          await this.onboard.connectWallet();
-          await this.setupWagmiWatchers();
-          this.syncConnectedStateFromConfig();
-        } catch (error) {
-          console.warn('MiniPay auto-connect fallback failed:', error);
-        }
-      }
-    }, 100); // Small delay to let Web3-Onboard complete its auto-reconnection
-  }
-
-  // Setup wagmi watchers after wallet connection
-  private async setupWagmiWatchers() {
-    const config = this.wagmiConfig;
-    if (!config) {
-      console.warn('Cannot setup wagmi watchers - config not available');
-      return;
+    // Try to restore previous wallet connection
+    const previouslyConnectedWallets = this.onboard.state.get().wallets;
+    if (previouslyConnectedWallets.length > 0) {
+      await this.onboard.connectWallet({
+        autoSelect: { label: previouslyConnectedWallets[0].label, disableModals: true }
+      });
     }
 
-    // Unwatch previous watchers if they exist
-    if (this.unwatchAccount) {
-      this.unwatchAccount();
-    }
-    if (this.unwatchNetwork) {
-      this.unwatchNetwork();
-    }
+    const account = getConnection(wagmiConfig);
+    if (
+      this.isMiniPay$() &&
+      !account.isConnected &&
+      !this.hasAttemptedMiniPayConnect
+    ) {
+      this.hasAttemptedMiniPayConnect = true;
 
-    // Setup account watcher
-    this.unwatchAccount = watchAccount(config, {
-      onChange: (account) => {
-        if (account?.address) {
-          this.account$.set(account.address);
-        } else {
-          this.account$.set(undefined);
-        }
+      try {
+        // Auto-connect for MiniPay
+        await this.onboard.connectWallet();
+      } catch (error) {
+        console.warn('MiniPay auto-connect fallback failed:', error);
       }
-    });
 
-    // Setup chain watcher
-    this.unwatchNetwork = watchChainId(config, {
-      onChange: (chainId) => {
-        console.log('ChainId changed to:', chainId);
-        if (chainId) {
-          this.chainId$.set(chainId);
-        } else {
-          this.chainId$.set(undefined);
-        }
-      }
-    });
+      this.syncConnectedStateFromConfig();
+    }
   }
 
   // Method to connect wallet
   public async connectWallet() {
     try {
       const wallets = await this.onboard.connectWallet();
-      if (wallets.length > 0) {
-        // Setup wagmi watchers after successful connection
-        await this.setupWagmiWatchers();
-        this.syncConnectedStateFromConfig();
-        return true;
-      }
-      return false;
+      return wallets.length > 0;
     } catch (error) {
       console.error('Failed to connect wallet:', error);
       return false;
@@ -427,19 +356,21 @@ export class Web3Service {
       return true;
     } catch (error) {
       console.error('Failed to switch chain:', error);
-      return false;
-    }
-  }
-
-  constructor() {
-
-    this.isMiniPay$.set(this.isMiniPayEnvironment());
+      return falseironment());
 
     const storedFeeCurrency = this.readStoredFeeCurrencyPreference();
     if (storedFeeCurrency) {
       this.setPreferredFeeCurrency(storedFeeCurrency);
     }
 
+
+    this.appKit = createAppKit({
+      adapters: [wagmiAdapter],
+      networks: supportedChains,
+      // defaultNetwork: celo,
+      metadata: metadata,
+      projectId,
+      themeMode: 'dark',
     // Initialize Web3-Onboard wallets
     const injected = injectedModule();
     const walletConnect = walletConnectModule({
@@ -451,7 +382,6 @@ export class Web3Service {
 
     // Initialize Web3-Onboard
     this.onboard = Onboard({
-      wagmi,
       wallets: [injected, walletConnect, coinbaseWallet],
       chains: supportedChains.map(chain => ({
         id: `0x${chain.id.toString(16)}`,
@@ -467,10 +397,6 @@ export class Web3Service {
           { name: 'MetaMask', url: 'https://metamask.io' },
           { name: 'Coinbase', url: 'https://wallet.coinbase.com/' }
         ]
-      },
-      connect: {
-        autoConnectLastWallet: true, // Auto-connect to last connected wallet on page reload
-        autoConnectAllPreviousWallet: false
       },
       accountCenter: {
         desktop: {
@@ -493,8 +419,8 @@ export class Web3Service {
 
     void this.initializeConnectionState();
 
-    // Watch for wallet state changes from onboard
-    this.onboard.state.select('wallets').subscribe(async (wallets) => {
+    // Watch for wallet state changes
+    this.onboard.state.select('wallets').subscribe((wallets) => {
       const wallet = wallets[0];
       if (wallet?.accounts?.[0]) {
         const account = wallet.accounts[0].address as Address;
@@ -502,48 +428,42 @@ export class Web3Service {
         
         const chainId = parseInt(wallet.chains[0].id, 16);
         this.chainId$.set(chainId);
-
-        // Setup wagmi watchers when wallet connects
-        await this.setupWagmiWatchers();
       } else {
-        // Wallet disconnected
         this.account$.set(undefined);
-        
-        // Cleanup watchers
-        if (this.unwatchAccount) {
-          this.unwatchAccount();
-          this.unwatchAccount = undefined;
-        }
-        if (this.unwatchNetwork) {
-          this.unwatchNetwork();
-          this.unwatchNetwork = undefined;
+      }
+    });
+
+    // Also watch wagmi account changes for consistency
+    this.unwatchAccount = watchAccount(wagmiConfig, {
+      onChange: (account) => {
+        if (account && account.isConnected) {
+          this.account$.set(account.address);
+        } else {
+          this.account$.set(undefined);
         }
       }
     });
-  }
 
-
-  async getAccountInfo() {
-    const config = this.wagmiConfig;
-    if (!config) throw new Error('Wagmi config not available');
-    return getAccount(config);
-  }
-
-  async getBalanceNativeCurrency(account: Address) {
-    const config = this.wagmiConfig;
-    if (!config) throw new Error('Wagmi config not available');
-    return await getBalance(config, {
+    // Watch chain changes
+    this.unwatchNetwork = watchChainId(wagmiConfig, {
+      onChange: async (chainId) => {
+        console.log("ChainId changed to: ", chainId);
+        if (chainId) {
+          this.chainId$.set(chainId);
+        } else {
+          this.chainId$.set(undefined);
+        }
+      }
+    });  async getBalanceNativeCurrency(account: Address) {
+    return await getBalance(wagmiConfig, {
       address: account,
     });
   }
 
 
   async getBalanceERC20(tokenAddress: `0x${string}`, account: `0x${string}`) {
-    const config = this.wagmiConfig;
-    if (!config) throw new Error('Wagmi config not available');
-    
     const chainId = this.chainId || 31337;
-    const results = await multicall(config, {
+    const results = await multicall(wagmiConfig, {
       contracts: [
         {
           address: tokenAddress,
@@ -579,11 +499,8 @@ export class Web3Service {
   }
 
   async getTokenInfo(tokenAddress: `0x${string}`, chainId?: number | undefined, formatUnitsArg: any | undefined = undefined) {
-    const config = this.wagmiConfig;
-    if (!config) throw new Error('Wagmi config not available');
-    
     const activeChainId = chainId ?? this.chainId ?? 31337;
-    const results = await multicall(config, {
+    const results = await multicall(wagmiConfig, {
       contracts: [
         {
           address: tokenAddress,
@@ -633,11 +550,8 @@ export class Web3Service {
 
 
   async fetchBlockNumber() {
-    const config = this.wagmiConfig;
-    if (!config) throw new Error('Wagmi config not available');
-    
     const blockNumber = await getBlockNumber(
-      config,
+      wagmiConfig,
       {
         chainId: this.chainId
       }
@@ -647,10 +561,8 @@ export class Web3Service {
 
 
   async getERC20Allowance(tokenAddress: `0x${string}`, contractToApprove: `0x${string}`, account: `0x${string}`, chainId?: number) {
-    const config = this.wagmiConfig;
-    if (!config) throw new Error('Wagmi config not available');
 
-    const allowance = await readContract(config, {
+    const allowance = await readContract(wagmiConfig, {
       address: tokenAddress,
       abi: erc20Abi,
       chainId,
@@ -678,10 +590,7 @@ export class Web3Service {
     amount: bigint
   ): Promise<boolean> {
     try {
-      const config = this.wagmiConfig;
-      if (!config) throw new Error('Wagmi config not available');
-      
-      const approvedAmount = await readContract(config, {
+      const approvedAmount = await readContract(wagmiConfig, {
         address: tokenAddress,
         abi: erc20Abi,
         functionName: 'allowance',

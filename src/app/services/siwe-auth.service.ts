@@ -2,8 +2,7 @@ import { inject, Injectable, effect } from '@angular/core';
 import { Web3Service } from './web3';
 import { AuthService, SiweService, EmailOtpService } from 'ngx-better-auth';
 import { firstValueFrom } from 'rxjs';
-import { signMessage } from '@wagmi/core';
-import { wagmiConfig } from './web3';
+import { signMessage } from '@web3-onboard/wagmi';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -25,7 +24,8 @@ export class SIWEAuthService {
       const currentSession = this.authService.session();
 
       // Prevent signing out during initialization / reconnection
-      const status = wagmiConfig.state.status;
+      const wagmiConfig = this.web3Service.getWagmiConfig();
+      const status = wagmiConfig?.state?.status;
       if (status === 'connecting' || status === 'reconnecting') {
         return;
       }
@@ -110,6 +110,10 @@ Issued At: ${issuedAt}`;
 
       // 3. Request signature from wallet via wagmi config
       console.log('[SIWE] 3. Prompting wallet signature...');
+      const wagmiConfig = this.web3Service.getWagmiConfig();
+      if (!wagmiConfig) {
+        throw new Error('Wagmi config not available. Please reconnect your wallet.');
+      }
       const signature = await signMessage(wagmiConfig, {
         message
       });

@@ -37,3 +37,27 @@
 .table {
   --bs-table-bg: transparent;
 }
+
+.nft-card {
+  transition: all 0.3s ease;
+  
+  &.eligible {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+  }
+  
+  &.owned {
+    opacity: 0.8;
+    filter: grayscale(0.3);
+  }
+  
+  &:hover:not(.owned) {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.nft-image {
+  svg {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+  }
+}

@@ -74,17 +74,17 @@
             </thead>
             <tbody>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <td class="py-3">💡 Correct Answer</td>
+                <td class="py-3 text-light">💡 Correct Answer</td>
                 <td class="py-3 fw-bold text-success">+{{ rewardsConfig.correctAnswer }} BRAINBOOK</td>
                 <td class="py-3 text-light opacity-75">Plus score streak multipliers</td>
               </tr>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <td class="py-3">🏁 Complete Topic (All Questions)</td>
+                <td class="py-3 text-light">🏁 Complete Topic (All Questions)</td>
                 <td class="py-3 fw-bold text-success">+{{ rewardsConfig.topicCompletion | number:'1.1-2' }} BRAINBOOK</td>
                 <td class="py-3 text-warning">🏅 {{ rewardsConfig.topicCompletionNftName }}</td>
               </tr>
               <tr>
-                <td class="py-3">🎁 7-Day Login Streak</td>
+                <td class="py-3 text-light">🎁 7-Day Login Streak</td>
                 <td class="py-3 fw-bold text-success">+15.0 BRAINBOOK (Cumulative)</td>
                 <td class="py-3 text-warning">🛡️ {{ rewardsConfig.weeklyWarriorNftName }}</td>
               </tr>
@@ -119,6 +119,138 @@
               </div>
             </div>
           }
+        </div>
+      </div>
+
+      <!-- NFT Achievement Rewards -->
+      <div class="bb-card p-5 mb-5 bb-anim-slide-up">
+        <h2 class="h3 fw-bold bb-text-gold mb-4">🏆 NFT Achievement Badges</h2>
+        <p class="text-light opacity-75 mb-4">
+          Exclusive soulbound NFT badges commemorating special milestones. These NFTs are non-transferable and permanently tied to your wallet.
+        </p>
+
+        <div class="row g-4">
+          <!-- OG NFT Card -->
+          <div class="col-md-6">
+            <div class="nft-card p-4 rounded h-100 position-relative"
+              [class.owned]="ogAlreadyMinted()"
+              [class.eligible]="ogEligible() && !ogAlreadyMinted()"
+              style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%); border: 2px solid rgba(245, 158, 11, 0.3);">
+              
+              @if (ogAlreadyMinted()) {
+                <div class="position-absolute top-0 end-0 m-3">
+                  <span class="badge bg-success">✓ Minted</span>
+                </div>
+              }
+
+              <div class="text-center mb-3">
+                <!-- SVG Badge Placeholder -->
+                <div class="nft-image mb-3" style="width: 120px; height: 120px; margin: 0 auto;">
+                  <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="60" cy="60" r="55" fill="url(#goldGradient)" />
+                    <defs>
+                      <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                    <text x="60" y="75" font-size="50" text-anchor="middle" fill="#1a1a2e">🏆</text>
+                  </svg>
+                </div>
+                <h4 class="fw-bold text-warning mb-2">OG Badge</h4>
+                <p class="text-light opacity-75 small mb-3">
+                  Exclusive badge for early supporters who joined before {{ ogCutoffDate() | date:'mediumDate' }}
+                </p>
+              </div>
+
+              <div class="d-flex flex-column gap-2">
+                @if (ogAlreadyMinted()) {
+                  <button class="btn btn-success" disabled>
+                    ✓ Already Minted
+                  </button>
+                } @else if (!w3s.account$()) {
+                  <button class="btn btn-secondary" disabled>
+                    Connect Wallet to Check Eligibility
+                  </button>
+                } @else if (!ogEligible()) {
+                  <button class="btn btn-secondary" disabled>
+                    Not Eligible (Joined After Cutoff)
+                  </button>
+                } @else {
+                  <button class="bb-btn bb-btn--gold w-100" 
+                    [disabled]="mintingOG()"
+                    (click)="mintOGNFT()">
+                    {{ mintingOG() ? 'Minting...' : 'Mint OG Badge' }}
+                  </button>
+                }
+              </div>
+
+              <div class="mt-3 text-center">
+                <small class="text-muted">Token ID: 1 • Soulbound (Non-transferable)</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- First Play NFT Card -->
+          <div class="col-md-6">
+            <div class="nft-card p-4 rounded h-100 position-relative"
+              [class.owned]="firstPlayAlreadyMinted()"
+              [class.eligible]="firstPlayEligible() && !firstPlayAlreadyMinted()"
+              style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%); border: 2px solid rgba(167, 139, 250, 0.3);">
+              
+              @if (firstPlayAlreadyMinted()) {
+                <div class="position-absolute top-0 end-0 m-3">
+                  <span class="badge bg-success">✓ Minted</span>
+                </div>
+              }
+
+              <div class="text-center mb-3">
+                <!-- SVG Badge Placeholder -->
+                <div class="nft-image mb-3" style="width: 120px; height: 120px; margin: 0 auto;">
+                  <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="60" cy="60" r="55" fill="url(#purpleGradient)" />
+                    <defs>
+                      <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                    <text x="60" y="75" font-size="50" text-anchor="middle" fill="#ffffff">🎮</text>
+                  </svg>
+                </div>
+                <h4 class="fw-bold text-warning mb-2">First Play Badge</h4>
+                <p class="text-light opacity-75 small mb-3">
+                  Welcome reward for completing your first Brain Book game session
+                </p>
+              </div>
+
+              <div class="d-flex flex-column gap-2">
+                @if (firstPlayAlreadyMinted()) {
+                  <button class="btn btn-success" disabled>
+                    ✓ Already Minted
+                  </button>
+                } @else if (!w3s.account$()) {
+                  <button class="btn btn-secondary" disabled>
+                    Connect Wallet to Check Eligibility
+                  </button>
+                } @else if (!firstPlayEligible()) {
+                  <button class="btn btn-secondary" disabled>
+                    Play Your First Game to Unlock
+                  </button>
+                } @else {
+                  <button class="bb-btn bb-btn--gold w-100" 
+                    [disabled]="mintingFirstPlay()"
+                    (click)="mintFirstPlayNFT()">
+                    {{ mintingFirstPlay() ? 'Minting...' : 'Mint First Play Badge' }}
+                  </button>
+                }
+              </div>
+
+              <div class="mt-3 text-center">
+                <small class="text-muted">Token ID: 2 • Soulbound (Non-transferable)</small>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

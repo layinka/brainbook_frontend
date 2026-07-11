@@ -232,6 +232,9 @@ export const environment = {
   authUrl: 'http://localhost:3011',
   walletConnectProjectId: '6dc075707b4e66bff8df286aab204770',
 
+  // Feature Flags
+  tokenClaimsEnabled: true, // Set to true to enable token claims
+
   // BrainBook contract configuration per chain
   contracts: ALL_CONTRACTS,
   feeCurrenciesByChain: ALL_FEE_CURRENCIES,
