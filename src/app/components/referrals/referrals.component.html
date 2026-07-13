@@ -57,15 +57,16 @@
             <!-- Ticket-style Referral Code Display -->
             <div class="form-group mb-4">
               <label class="form-label text-white-50 small font-semibold">Your Referral Code</label>
-              <div class="referral-code-card position-relative" (click)="copyCode()" 
-                   [ngClass]="{'copied': codeCopied()}">
+              <div class="referral-code-card position-relative" (click)="copyCode()"
+                [ngClass]="{'copied': codeCopied()}">
                 <div class="ticket-cutout left"></div>
                 <div class="ticket-cutout right"></div>
                 <div class="d-flex flex-column align-items-center justify-content-center py-3 px-4">
                   <span class="referral-code-display text-gradient mb-1">{{ referralCode() }}</span>
-                  
+
                   <!-- Click/Copy Status Pill -->
-                  <div class="copy-pill d-inline-flex align-items-center gap-1 mt-1" [ngClass]="{'copied': codeCopied()}">
+                  <div class="copy-pill d-inline-flex align-items-center gap-1 mt-1"
+                    [ngClass]="{'copied': codeCopied()}">
                     <i class="bi" [ngClass]="codeCopied() ? 'bi-check-circle-fill text-success' : 'bi-clipboard'"></i>
                     <span>{{ codeCopied() ? 'Copied to Clipboard!' : 'Click code to copy' }}</span>
                   </div>
@@ -79,8 +80,9 @@
               <div class="input-group invite-link-group">
                 <input type="text" class="form-control bg-dark border-secondary text-white small"
                   [value]="getInviteLink()" readonly (click)="copyReferralLink()">
-                <button class="btn btn-primary btn-glow-blue px-3" type="button" (click)="copyReferralLink()" [disabled]="linkCopied()">
-                  <i class="bi" [ngClass]="linkCopied() ? 'bi-check-lg' : 'bi-link-45deg'"></i> 
+                <button class="btn btn-primary btn-glow-blue px-3" type="button" (click)="copyReferralLink()"
+                  [disabled]="linkCopied()">
+                  <i class="bi" [ngClass]="linkCopied() ? 'bi-check-lg' : 'bi-link-45deg'"></i>
                   {{ linkCopied() ? 'Copied!' : 'Copy Link' }}
                 </button>
               </div>
@@ -95,21 +97,22 @@
                   <i class="bi bi-twitter-x"></i>
                   <span class="btn-text">Share</span>
                 </button>
-                
+
                 <!-- Telegram -->
                 <button class="btn social-btn btn-telegram" (click)="shareOn('telegram')" title="Share on Telegram">
                   <i class="bi bi-telegram"></i>
                   <span class="btn-text">Send</span>
                 </button>
-                
+
                 <!-- WhatsApp -->
                 <button class="btn social-btn btn-whatsapp" (click)="shareOn('whatsapp')" title="Share on WhatsApp">
                   <i class="bi bi-whatsapp"></i>
                   <span class="btn-text">WhatsApp</span>
                 </button>
-                
+
                 <!-- Native Share API Button -->
-                <button class="btn social-btn btn-native-share" *ngIf="isShareApiSupported()" (click)="shareNative()" title="More Sharing Options">
+                <button class="btn social-btn btn-native-share" *ngIf="isShareApiSupported()" (click)="shareNative()"
+                  title="More Sharing Options">
                   <i class="bi bi-share-fill"></i>
                   <span class="btn-text">More</span>
                 </button>
@@ -238,9 +241,17 @@
                 <span class="rank-badge" [ngClass]="{'rank-1': idx === 0, 'rank-2': idx === 1, 'rank-3': idx === 2}">
                   {{ idx + 1 }}
                 </span>
-                <img [src]="entry.avatarUrl || 'assets/images/default-avatar.png'" alt="avatar"
-                  class="avatar-sm rounded-circle">
-                <span class="font-semibold text-white">{{ entry.displayName }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="avatar-sm rounded-circle"
+                  [style.background]="getAvatarStyle(entry.displayName).background"
+                  style="width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.15);">
+                  <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
+                  <g [attr.fill]="getAvatarStyle(entry.displayName).iconColor" opacity="0.85">
+                    <circle cx="50" cy="38" r="14" />
+                    <path d="M 24 74 C 24 62, 34 56, 50 56 C 66 56, 76 62, 76 74" />
+                  </g>
+                </svg>
+                <span class="font-semibold text-white">{{ entry.displayName.substring(0,10) }}
+                  {{entry.displayName.length>10?'...':''}}</span>
               </div>
               <span class="badge bg-purple-glow text-white">{{ entry.referralCount }} invites</span>
             </div>

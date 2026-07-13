@@ -91,11 +91,21 @@ const UNISWAP_V3_POOL_ABI = [
 /** Fallback price shown when no pool is configured or the TWAP call fails (pre-launch) */
 const FALLBACK_PRICE_USD = '0.001';
 
+let activeWeb3Service: any = null;
+
 /**
  * Custom writeContract wrapper to automatically append Celo Attribution Tag
- * for Proof of Ship qualification.
+ * for Proof of Ship qualification and support MiniPay overrides/fees.
  */
 async function writeContract(config: any, args: any): Promise<`0x${string}`> {
+  if (activeWeb3Service) {
+    try {
+      return await activeWeb3Service.writeContractWithMiniPay(args);
+    } catch (err) {
+      console.warn('[GameContractService] writeContract delegation failed, falling back:', err);
+    }
+  }
+
   const code = environment.celoAttributionCode;
   let suffix: `0x${string}` | undefined;
   if (code) {
@@ -117,6 +127,10 @@ async function writeContract(config: any, args: any): Promise<`0x${string}`> {
 })
 export class GameContractService {
   private w3s = inject(Web3Service);
+
+  constructor() {
+    activeWeb3Service = this.w3s;
+  }
 
   get tokenAddress(): `0x${string}` {
     const chainId = this.w3s.chainId || environment.defaultChainId;

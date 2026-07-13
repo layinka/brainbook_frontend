@@ -19,4 +19,47 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
   }
+
+  .wallet-btn-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .wallet-dropdown-menu {
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(135, 37, 172, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(135, 37, 172, 0.15);
+    border-radius: 12px;
+    padding: 0.5rem;
+    min-width: 220px;
+    margin-top: 0.5rem;
+
+    .dropdown-item {
+      color: rgba(255, 255, 255, 0.85);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.15s ease-in-out;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+
+      &:hover {
+        background: rgba(135, 37, 172, 0.2);
+        color: #ffffff;
+      }
+
+      &.text-danger {
+        color: #ff4757;
+
+        &:hover {
+          background: rgba(255, 71, 87, 0.15);
+          color: #ff6b81;
+        }
+      }
+    }
+  }
 }

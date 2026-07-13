@@ -23,6 +23,17 @@ export class SIWEAuthService {
       const currentWallet = this.web3Service.account$();
       const currentSession = this.authService.session();
 
+      // If the user is logged in (already signed up), clear any pre-existing stored referral codes
+      if (currentSession && currentSession.user) {
+        try {
+          if (localStorage.getItem('brainbook_referrer_code') || document.cookie.includes('brainbook_referrer_code=')) {
+            console.log('[SIWE] User is logged in (already signed up). Clearing stored referral code.');
+            localStorage.removeItem('brainbook_referrer_code');
+            document.cookie = "brainbook_referrer_code=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax; Secure";
+          }
+        } catch (e) { }
+      }
+
       // Prevent signing out during initialization / reconnection
       const wagmiConfig = this.web3Service.getWagmiConfig();
       const status = wagmiConfig?.state?.status;
@@ -93,7 +104,7 @@ export class SIWEAuthService {
       console.log('[SIWE] 2. Constructing EIP-4361 SIWE message...');
       const domain = window.location.host;
       const origin = window.location.origin;
-      const statement = 'Sign in with Ethereum to Save Up.';
+      const statement = 'Sign in with Ethereum to BrainBook.';
       const issuedAt = new Date().toISOString();
 
       const message = `${domain} wants you to sign in with your Ethereum account:
@@ -136,8 +147,8 @@ Issued At: ${issuedAt}`;
       }
 
       const verifyResult: any = await firstValueFrom(
-        this.http.post<{ success: boolean; user: any }>(
-          `${environment.authUrl}/api/auth/siwe/verify`,
+        this.http.post<{ success: boolean; user: any; isAlreadySignedUp?: boolean }>(
+          `${environment.apiUrl.replace('/api/v1', '')}/api/auth/siwe/verify`,
           { message, signature, walletAddress, chainId, referrerCode },
           { withCredentials: true }
         )
@@ -148,11 +159,13 @@ Issued At: ${issuedAt}`;
         throw new Error('Verification failed');
       }
 
-      // Success - clear stored referral code
-      if (referrerCode) {
+      // Success - clear stored referral code if user was already signed up, OR if a referral code was successfully used
+      const isAlreadySignedUp = !!verifyResult.isAlreadySignedUp;
+      if (isAlreadySignedUp || referrerCode) {
+        console.log(`[SIWE] Clearing referral code. alreadySignedUp=${isAlreadySignedUp}, usedCode=${!!referrerCode}`);
         try {
           localStorage.removeItem('brainbook_referrer_code');
-        } catch (e) {}
+        } catch (e) { }
         // Clear cookie as well
         document.cookie = "brainbook_referrer_code=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax; Secure";
       }
@@ -177,7 +190,7 @@ Issued At: ${issuedAt}`;
   async sendEmailOtp(email: string): Promise<any> {
     console.log('[SIWE] User has a regular email. Initiating change-email OTP request for:', email);
     return firstValueFrom(
-      this.http.post(`${environment.authUrl}/api/auth/email-otp/request-email-change`, {
+      this.http.post(`${environment.apiUrl.replace('/api/v1', '')}/api/auth/email-otp/request-email-change`, {
         newEmail: email
       }, { withCredentials: true })
     );
@@ -189,7 +202,7 @@ Issued At: ${issuedAt}`;
   async verifyEmailOtp(email: string, otp: string): Promise<any> {
     console.log('[SIWE] User has a regular email. Initiating change-email OTP verification...');
     const res = await firstValueFrom(
-      this.http.post(`${environment.authUrl}/api/auth/email-otp/change-email`, {
+      this.http.post(`${environment.apiUrl.replace('/api/v1', '')}/api/auth/email-otp/change-email`, {
         newEmail: email,
         otp
       }, { withCredentials: true })
@@ -208,7 +221,7 @@ Issued At: ${issuedAt}`;
     console.log('[SIWE] Fetching updated session from server...');
     try {
       const sessionData = await firstValueFrom(
-        this.http.get<any>(`${environment.authUrl}/api/auth/get-session`, {
+        this.http.get<any>(`${environment.apiUrl.replace('/api/v1', '')}/api/auth/get-session`, {
           withCredentials: true
         })
       );

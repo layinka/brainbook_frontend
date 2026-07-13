@@ -13,7 +13,7 @@ import { NgxSpinnerService, NgxSpinnerModule } from 'ngx-spinner';
   imports: [CommonModule, FormsModule, NgxSpinnerModule]
 })
 export class AuthOverlayComponent {
-  public saveUpAuth = inject(SIWEAuthService);
+  public authService = inject(SIWEAuthService);
   private toastService = inject(AppToastService);
   private spinner = inject(NgxSpinnerService);
 
@@ -48,7 +48,7 @@ export class AuthOverlayComponent {
     effect(() => {
       const isConnected = this.walletConnected;
       const isLoggedIn = this.isLoggedIn;
-      const isMiniPay = this.saveUpAuth.web3Service.isMiniPay;
+      const isMiniPay = this.authService.web3Service.isMiniPay;
 
       if (!isConnected) {
         this.hasAttemptedAutoSignIn = false;
@@ -68,15 +68,15 @@ export class AuthOverlayComponent {
 
   // Helper getters
   get walletConnected(): boolean {
-    return !!this.saveUpAuth.web3Service.account$();
+    return !!this.authService.web3Service.account$();
   }
 
   get isLoggedIn(): boolean {
-    return this.saveUpAuth.authService.isLoggedIn();
+    return this.authService.authService.isLoggedIn();
   }
 
   get emailVerified(): boolean {
-    const session = this.saveUpAuth.authService.session();
+    const session = this.authService.authService.session();
     return !!(session?.user?.emailVerified);
   }
 
@@ -95,7 +95,7 @@ export class AuthOverlayComponent {
       if (this.referralInput && this.referralInput.trim()) {
         localStorage.setItem('brainbook_referrer_code', this.referralInput.trim());
       }
-      await this.saveUpAuth.signInWithEthereum();
+      await this.authService.signInWithEthereum();
       this.toastService.show('Success', 'Authenticated successfully! 🚀', 4000, 'bg-success text-light');
     } catch (error: any) {
       console.error(error);
@@ -115,7 +115,7 @@ export class AuthOverlayComponent {
     this.isLoading.set(true);
     await this.spinner.show('otp-spinner');
     try {
-      await this.saveUpAuth.sendEmailOtp(this.emailInput);
+      await this.authService.sendEmailOtp(this.emailInput);
       this.otpSent.set(true);
       this.toastService.show('OTP Sent', `A 6-digit code has been queued for ${this.emailInput}`, 4000, 'bg-info text-light');
     } catch (error: any) {
@@ -136,7 +136,7 @@ export class AuthOverlayComponent {
     this.isLoading.set(true);
     await this.spinner.show('otp-spinner');
     try {
-      await this.saveUpAuth.verifyEmailOtp(this.emailInput, this.otpInput);
+      await this.authService.verifyEmailOtp(this.emailInput, this.otpInput);
       this.toastService.show('Success', 'Email verified successfully! Profile activated. 🎉', 5000, 'bg-success text-light');
       // Reset form
       this.emailInput = '';
@@ -153,6 +153,6 @@ export class AuthOverlayComponent {
 
   onCancel() {
     // If they cancel or disconnect, we disconnect their wallet so the overlay hides
-    this.saveUpAuth.web3Service.disconnectWallet();
+    this.authService.web3Service.disconnectWallet();
   }
 }

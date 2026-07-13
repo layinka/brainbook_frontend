@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { Web3Service } from '../../services/web3';
 import { GameContractService } from '../../services/game-contract.service';
 import { AppToastService } from '../../services/app-toast.service';
+import { SIWEAuthService } from '../../services/siwe-auth.service';
 import { environment } from '../../../environments/environment';
 import { W3MCoreButtonComponentWrapperComponent } from '../../w3-mcore-button-component-wrapper/w3-mcore-button-component-wrapper.component';
 
@@ -28,6 +29,7 @@ export class ProfileComponent implements OnInit {
   private gameContract = inject(GameContractService);
   private toast = inject(AppToastService);
   private http = inject(HttpClient);
+  private authService = inject(SIWEAuthService);
 
   readonly achievementBadges: AchievementBadge[] = [
     {
@@ -73,11 +75,14 @@ export class ProfileComponent implements OnInit {
   ownedBadges = signal<Record<number, number>>({});
 
   constructor() {
-    // Reactively refresh blockchain balances when connected wallet changes
+    // Reactively refresh blockchain balances and profile stats when connected wallet/SIWE changes
     effect(async () => {
       const account = this.w3s.account$();
-      if (account) {
+      const isLoggedIn = this.authService.authService.isLoggedIn();
+      
+      if (account && isLoggedIn) {
         await this.fetchBlockchainBalances(account);
+        await this.fetchProfileData();
       } else {
         this.ownedItems.set({ 1000: 0, 1001: 0, 1002: 0 });
         this.ownedBadges.set({});
@@ -89,12 +94,6 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    void this.fetchProfileData();
-
-    const account = this.w3s.account$();
-    if (account) {
-      void this.fetchBlockchainBalances(account);
-    }
   }
 
   async fetchProfileData(): Promise<void> {

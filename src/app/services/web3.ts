@@ -220,7 +220,15 @@ export class Web3Service {
 
   private resolveFeeCurrencyForRequest(chainId?: number, override?: Address): Address | undefined {
     const targetChainId = chainId ?? this.chainId;
-    const candidate = override ?? this.selectedFeeCurrency$();
+    let candidate = override ?? this.selectedFeeCurrency$();
+
+    // If no candidate is selected, but we are inside MiniPay and target is Celo, default to USDm
+    if (!candidate && this.isMiniPay$() && targetChainId && this.isMiniPaySupportedChain(targetChainId)) {
+      const usdm = this.getAvailableFeeCurrencies(targetChainId).find(c => c.symbol === 'USDm');
+      if (usdm) {
+        candidate = usdm.address as Address;
+      }
+    }
 
     if (!targetChainId || !candidate || !this.isFeeCurrencySupportedChain(targetChainId)) {
       return undefined;
@@ -335,8 +343,8 @@ export class Web3Service {
     setTimeout(async () => {
       const wallets = this.onboard.state.get().wallets;
       if (wallets.length > 0) {
-        await this.setupWagmiWatchers();
-        this.syncConnectedStateFromConfig();
+
+
       }
 
       // MiniPay auto-connect (only if not already connected)
@@ -345,12 +353,15 @@ export class Web3Service {
 
         try {
           await this.onboard.connectWallet();
-          await this.setupWagmiWatchers();
-          this.syncConnectedStateFromConfig();
+          // await this.setupWagmiWatchers();
+          // this.syncConnectedStateFromConfig();
         } catch (error) {
           console.warn('MiniPay auto-connect fallback failed:', error);
         }
       }
+
+      await this.setupWagmiWatchers();
+      this.syncConnectedStateFromConfig();
     }, 100); // Small delay to let Web3-Onboard complete its auto-reconnection
   }
 
@@ -373,6 +384,7 @@ export class Web3Service {
     // Setup account watcher
     this.unwatchAccount = watchAccount(config, {
       onChange: (account) => {
+        console.log('Account changed to:', account);
         if (account?.address) {
           this.account$.set(account.address);
         } else {
@@ -428,6 +440,31 @@ export class Web3Service {
     } catch (error) {
       console.error('Failed to switch chain:', error);
       return false;
+    }
+  }
+
+  // Method to force account/wallet selection (forces MetaMask to show account selector, or opens onboard modal)
+  public async switchAccount() {
+    try {
+      // 1. If window.ethereum is available, we can request permissions to force MetaMask to prompt account switching
+      if (typeof window !== 'undefined' && (window as any).ethereum) {
+        try {
+          await (window as any).ethereum.request({
+            method: 'wallet_requestPermissions',
+            params: [{ eth_accounts: {} }]
+          });
+          // This will trigger accountsChanged in MetaMask, which Web3-Onboard will hear and sync.
+          return;
+        } catch (permError) {
+          console.warn('MetaMask permission request failed or rejected:', permError);
+        }
+      }
+
+      // 2. Fallback: Disconnect current and open connect modal to let them select
+      await this.disconnectWallet();
+      await this.connectWallet();
+    } catch (error) {
+      console.error('Failed to switch account:', error);
     }
   }
 
@@ -499,7 +536,7 @@ export class Web3Service {
       if (wallet?.accounts?.[0]) {
         const account = wallet.accounts[0].address as Address;
         this.account$.set(account);
-        
+
         const chainId = parseInt(wallet.chains[0].id, 16);
         this.chainId$.set(chainId);
 
@@ -508,7 +545,7 @@ export class Web3Service {
       } else {
         // Wallet disconnected
         this.account$.set(undefined);
-        
+
         // Cleanup watchers
         if (this.unwatchAccount) {
           this.unwatchAccount();
@@ -541,7 +578,7 @@ export class Web3Service {
   async getBalanceERC20(tokenAddress: `0x${string}`, account: `0x${string}`) {
     const config = this.wagmiConfig;
     if (!config) throw new Error('Wagmi config not available');
-    
+
     const chainId = this.chainId || 31337;
     const results = await multicall(config, {
       contracts: [
@@ -581,7 +618,7 @@ export class Web3Service {
   async getTokenInfo(tokenAddress: `0x${string}`, chainId?: number | undefined, formatUnitsArg: any | undefined = undefined) {
     const config = this.wagmiConfig;
     if (!config) throw new Error('Wagmi config not available');
-    
+
     const activeChainId = chainId ?? this.chainId ?? 31337;
     const results = await multicall(config, {
       contracts: [
@@ -635,7 +672,7 @@ export class Web3Service {
   async fetchBlockNumber() {
     const config = this.wagmiConfig;
     if (!config) throw new Error('Wagmi config not available');
-    
+
     const blockNumber = await getBlockNumber(
       config,
       {
@@ -680,7 +717,7 @@ export class Web3Service {
     try {
       const config = this.wagmiConfig;
       if (!config) throw new Error('Wagmi config not available');
-      
+
       const approvedAmount = await readContract(config, {
         address: tokenAddress,
         abi: erc20Abi,

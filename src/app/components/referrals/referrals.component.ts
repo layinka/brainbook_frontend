@@ -119,6 +119,58 @@ export class ReferralsComponent implements OnInit {
     }
   }
 
+  getAvatarStyle(name: string): { background: string; iconColor: string } {
+    if (!name) {
+      return {
+        background: 'linear-gradient(135deg, #1e1b4b 0%, #111827 100%)',
+        iconColor: '#c084fc'
+      };
+    }
+    
+    // 1. Try to find the first character after "0x"
+    let char = '';
+    const lowerName = name.toLowerCase();
+    const oxIndex = lowerName.indexOf('0x');
+    if (oxIndex !== -1 && oxIndex + 2 < lowerName.length) {
+      char = lowerName.charAt(oxIndex + 2);
+    } else {
+      char = lowerName.charAt(0);
+    }
+
+    // 2. Derive index from character code
+    const charCode = char.charCodeAt(0) || 0;
+    const index = charCode % 8;
+
+    // 3. Define 8 premium neon gradients
+    const gradients = [
+      'linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%)', // Purple/Deep Blue
+      'linear-gradient(135deg, #065f46 0%, #022c22 100%)', // Emerald/Deep Green
+      'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)', // Blue/Dark Navy
+      'linear-gradient(135deg, #831843 0%, #500724 100%)', // Pink/Maroon
+      'linear-gradient(135deg, #7c2d12 0%, #431407 100%)', // Orange/Rust
+      'linear-gradient(135deg, #115e59 0%, #134e4a 100%)', // Teal/Dark Teal
+      'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', // Slate/Steel
+      'linear-gradient(135deg, #581c87 0%, #3b0764 100%)'  // Violet/Plum
+    ];
+
+    // Define 8 corresponding SVG user silhouette colors (bright neon/pastel fills)
+    const iconColors = [
+      '#c084fc', // Light Purple
+      '#34d399', // Emerald Green
+      '#60a5fa', // Blue
+      '#f472b6', // Pink
+      '#fb923c', // Orange
+      '#2dd4bf', // Teal
+      '#cbd5e1', // Slate
+      '#e879f9'  // Violet
+    ];
+
+    return {
+      background: gradients[index],
+      iconColor: iconColors[index]
+    };
+  }
+
   getInviteLink(): string {
     const code = this.referralCode();
     if (!code) return '';

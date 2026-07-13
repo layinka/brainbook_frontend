@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { Web3Service } from '../services/web3';
 import { CommonModule } from '@angular/common';
+import { NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownItem } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'app-w3m-core-button-wrapper',
     templateUrl: './w3-mcore-button-component-wrapper.component.html',
     styleUrls: ['./w3-mcore-button-component-wrapper.component.scss'],
     standalone: true,
-    imports: [CommonModule]
+    imports: [CommonModule, NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownItem]
 })
 export class W3MCoreButtonComponentWrapperComponent {
   public web3Service = inject(Web3Service);
@@ -18,6 +19,10 @@ export class W3MCoreButtonComponentWrapperComponent {
 
   async disconnectWallet() {
     await this.web3Service.disconnectWallet();
+  }
+
+  async switchAccount() {
+    await this.web3Service.switchAccount();
   }
 
   get isConnected(): boolean {

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "save-up-frontend": {
+    "brainbook-frontend": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -87,10 +87,10 @@
           },
           "configurations": {
             "production": {
-              "buildTarget": "save-up-frontend:build:production"
+              "buildTarget": "brainbook-frontend:build:production"
             },
             "development": {
-              "buildTarget": "save-up-frontend:build:development"
+              "buildTarget": "brainbook-frontend:build:development"
             }
           },
           "defaultConfiguration": "development"

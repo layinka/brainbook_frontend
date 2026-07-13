@@ -324,3 +324,85 @@
   .stats-grid { grid-template-columns: 1fr; }
   .nft-showcase .badge-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Gas Fee Currency Options ─────────────────────────────────────────── */
+.fee-currency-section {
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  border-color: rgba(135, 37, 172, 0.2);
+
+  .section-desc {
+    color: var(--bb-text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .fee-options-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .fee-option-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(135, 37, 172, 0.3);
+      transform: translateY(-2px);
+    }
+
+    &.active {
+      background: rgba(135, 37, 172, 0.15);
+      border-color: rgba(135, 37, 172, 0.6);
+      box-shadow: 0 0 15px rgba(135, 37, 172, 0.25);
+
+      .currency-badge {
+        color: #ffffff;
+      }
+    }
+
+    .option-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .currency-badge {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.85);
+      letter-spacing: 0.5px;
+    }
+
+    .status-indicator {
+      font-size: 0.75rem;
+      background: rgba(46, 213, 115, 0.15);
+      color: #2ed573;
+      padding: 0.2rem 0.5rem;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+
+    .option-desc {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin: 0;
+      line-height: 1.4;
+    }
+  }
+}
+

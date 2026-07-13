@@ -15,7 +15,7 @@ import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ 
+    provideZoneChangeDetection({
       eventCoalescing: true,
       runCoalescing: true
     }),
@@ -28,15 +28,15 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(FormsModule),
     NgbModal,
     provideBetterAuth({
-      baseURL: environment.authUrl, // backend URL
+      baseURL: environment.apiUrl.replace('/api/v1', ''), // backend URL
       basePath: '/api/auth',   // Fastify backend base auth path
-        
+
       // Example with plugins
       plugins: [
         usernameClient(),
         twoFactorClient({
           onTwoFactorRedirect() {
-              window.location.href = '/two-factor-auth'
+            window.location.href = '/two-factor-auth'
           },
         }),
         siweClient()

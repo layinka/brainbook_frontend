@@ -1,14 +1,26 @@
+@if (!web3Service.isMiniPay) {
 <div class="web3-onboard-wrapper d-flex gap-2">
   @if (isConnected) {
-    <button class="btn btn-outline-primary d-flex align-items-center gap-2" (click)="disconnectWallet()">
-      <span class="address-badge">{{ address }}</span>
-      @if (chainName) {
-        <span class="chain-badge">{{ chainName }}</span>
-      }
-    </button>
+    <div class="wallet-btn-dropdown" ngbDropdown>
+      <button class="btn btn-outline-primary d-flex align-items-center gap-2" id="walletDropdown" ngbDropdownToggle>
+        <span class="address-badge">{{ address }}</span>
+        @if (chainName) {
+          <span class="chain-badge">{{ chainName }}</span>
+        }
+      </button>
+      <div ngbDropdownMenu aria-labelledby="walletDropdown" class="wallet-dropdown-menu">
+        <button ngbDropdownItem class="dropdown-item d-flex align-items-center gap-2" (click)="switchAccount()">
+          <span>🔄</span> Switch Account / Wallet
+        </button>
+        <button ngbDropdownItem class="dropdown-item d-flex align-items-center gap-2 text-danger" (click)="disconnectWallet()">
+          <span>❌</span> Disconnect Wallet
+        </button>
+      </div>
+    </div>
   } @else {
     <button class="btn btn-primary" (click)="connectWallet()">
       Connect Wallet
     </button>
   }
 </div>
+}

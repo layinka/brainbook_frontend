@@ -128,6 +128,41 @@
         }
       </div>
     </div>
+
+    <!-- Gas Fee Currency Settings Section -->
+    <div class="fee-currency-section bb-card bb-anim-slide-up">
+      <h3 class="section-title">⚙️ Transaction Gas Settings</h3>
+      <p class="section-desc">Choose which currency you want to pay network transaction gas fees with. Inside MiniPay, paying gas fees in USDm (cUSD) is recommended so you do not need to hold CELO.</p>
+      
+      <div class="fee-options-container">
+        <!-- CELO (Native) Option -->
+        <button 
+          class="fee-option-card"
+          [class.active]="w3s.usesNativeFeeCurrency"
+          (click)="w3s.setPreferredFeeCurrency(undefined)"
+        >
+          <div class="option-header">
+            <span class="currency-badge">CELO</span>
+            <span class="status-indicator" *ngIf="w3s.usesNativeFeeCurrency">✓ Active</span>
+          </div>
+          <p class="option-desc">Pay gas fees using Celo native token (Standard).</p>
+        </button>
+
+        <!-- USDm (cUSD) Option -->
+        <button 
+          *ngFor="let option of w3s.getAvailableFeeCurrencies()"
+          class="fee-option-card"
+          [class.active]="w3s.selectedFeeCurrency?.toLowerCase() === option.address.toLowerCase()"
+          (click)="w3s.setPreferredFeeCurrency(option.address)"
+        >
+          <div class="option-header">
+            <span class="currency-badge">{{ option.symbol }}</span>
+            <span class="status-indicator" *ngIf="w3s.selectedFeeCurrency?.toLowerCase() === option.address.toLowerCase()">✓ Active</span>
+          </div>
+          <p class="option-desc">Pay gas fees using Celo Dollar stablecoin (USDm).</p>
+        </button>
+      </div>
+    </div>
   }
 
 </div>

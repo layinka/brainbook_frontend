@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <!-- Background Gradient matching the app theme (neon purple/blue) -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="50%" stop-color="#311042" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <!-- Accent Ring Gradient -->
+    <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8725ac" />
+      <stop offset="100%" stop-color="#00f2fe" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer Rounded Square Background -->
+  <rect width="100" height="100" rx="24" fill="url(#bg-grad)" />
+  
+  <!-- Decorative Ring -->
+  <circle cx="50" cy="50" r="44" fill="none" stroke="url(#ring-grad)" stroke-width="1.5" opacity="0.8" />
+  
+  <!-- User Figure -->
+  <g fill="#a5b4fc" opacity="0.85">
+    <!-- Head -->
+    <circle cx="50" cy="38" r="14" />
+    <!-- Shoulder / Torso -->
+    <path d="M 24 74 C 24 62, 34 56, 50 56 C 66 56, 76 62, 76 74" />
+  </g>
+</svg>

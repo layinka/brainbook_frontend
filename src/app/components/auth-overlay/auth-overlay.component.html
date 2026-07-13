@@ -8,23 +8,30 @@
           <i class="bi bi-shield-lock-fill"></i>
         </div>
       </div>
-      
+
       <h2 class="auth-title">Authenticate Wallet</h2>
       <p class="auth-description">
-        Please sign a secure, gasless message with your wallet to prove ownership and authenticate your session on Save-Up.
+        Please sign a secure, gasless message with your wallet to prove ownership and authenticate your session on
+        Save-Up.
       </p>
 
       <div class="form-group mb-3 text-start">
-        <label for="referralCode" class="form-label" style="font-size: 0.85rem; color: #a0aec0; margin-bottom: 0.25rem; display: block;">Referral Code (Optional)</label>
+        <label for="referralCode" class="form-label"
+          style="font-size: 0.85rem; color: #a0aec0; margin-bottom: 0.25rem; display: block;">Referral Code
+          (Optional)</label>
         <div class="input-with-icon" style="position: relative;">
-          <i class="bi bi-person-plus" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #8892b0;"></i>
-          <input type="text" id="referralCode" name="referralCode" class="form-control" [(ngModel)]="referralInput" placeholder="Enter referral code" [disabled]="isLoading()" style="padding-left: 2.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; width: 100%; border-radius: 8px; height: 42px;">
+          <i class="bi bi-person-plus"
+            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #8892b0;"></i>
+          <input type="text" id="referralCode" name="referralCode" class="form-control" [(ngModel)]="referralInput"
+            placeholder="Enter referral code" [disabled]="isLoading()"
+            style="padding-left: 2.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; width: 100%; border-radius: 8px; height: 42px;">
         </div>
       </div>
 
       <div class="wallet-info-badge mb-3">
         <i class="bi bi-wallet2"></i>
-        <span>{{ saveUpAuth.web3Service.account$() | slice:0:6 }}...{{ saveUpAuth.web3Service.account$() | slice:-4 }}</span>
+        <span>{{ authService.web3Service.account$() | slice:0:6 }}...{{ authService.web3Service.account$() | slice:-4
+          }}</span>
       </div>
 
       <div class="action-buttons">
@@ -36,12 +43,14 @@
             Authenticating...
           </span>
         </button>
-        <button *ngIf="!saveUpAuth.web3Service.isMiniPay" class="btn btn-outline-cancel" (click)="onCancel()" [disabled]="isLoading()">
+        <button *ngIf="!authService.web3Service.isMiniPay" class="btn btn-outline-cancel" (click)="onCancel()"
+          [disabled]="isLoading()">
           Disconnect Wallet
         </button>
       </div>
     </div>
-    <ngx-spinner name="siwe-spinner" [fullScreen]="false" type="ball-scale-multiple" bdColor="rgba(0,0,0,0.5)"></ngx-spinner>
+    <ngx-spinner name="siwe-spinner" [fullScreen]="false" type="ball-scale-multiple"
+      bdColor="rgba(0,0,0,0.5)"></ngx-spinner>
   </div>
 
   <!-- Email OTP Flow -->
@@ -53,10 +62,11 @@
           <i class="bi bi-envelope-check-fill"></i>
         </div>
       </div>
-      
+
       <h2 class="auth-title">Two-Step Verification</h2>
       <p class="auth-description">
-        We require a verified email to send you updates regarding your savings streaks, performance dividends, and speed rewards.
+        We require a verified email to send you updates regarding your savings streaks, performance dividends, and speed
+        rewards.
       </p>
 
       <!-- Step 1: Request OTP -->
@@ -65,7 +75,8 @@
           <label for="email" class="form-label">Email Address</label>
           <div class="input-with-icon">
             <i class="bi bi-envelope"></i>
-            <input type="email" id="email" name="email" class="form-control" [(ngModel)]="emailInput" placeholder="name@domain.com" required [disabled]="isLoading()">
+            <input type="email" id="email" name="email" class="form-control" [(ngModel)]="emailInput"
+              placeholder="name@domain.com" required [disabled]="isLoading()">
           </div>
         </div>
 
@@ -78,7 +89,8 @@
               Sending...
             </span>
           </button>
-          <button *ngIf="!saveUpAuth.web3Service.isMiniPay" type="button" class="btn btn-outline-cancel" (click)="onCancel()" [disabled]="isLoading()">
+          <button *ngIf="!authService.web3Service.isMiniPay" type="button" class="btn btn-outline-cancel"
+            (click)="onCancel()" [disabled]="isLoading()">
             Disconnect Wallet
           </button>
         </div>
@@ -89,14 +101,16 @@
         <div class="email-sent-alert">
           <i class="bi bi-check-circle-fill me-2 text-success"></i>
           <span>Code sent to <strong>{{ emailInput }}</strong></span>
-          <button type="button" class="btn btn-link btn-change-email" (click)="otpSent.set(false)" [disabled]="isLoading()">Change</button>
+          <button type="button" class="btn btn-link btn-change-email" (click)="otpSent.set(false)"
+            [disabled]="isLoading()">Change</button>
         </div>
 
         <div class="form-group">
           <label for="otp" class="form-label">6-Digit Verification Code</label>
           <div class="input-with-icon">
             <i class="bi bi-key"></i>
-            <input type="text" id="otp" name="otp" class="form-control text-center letter-spacing-wide" [(ngModel)]="otpInput" maxlength="6" placeholder="0 0 0 0 0 0" required [disabled]="isLoading()">
+            <input type="text" id="otp" name="otp" class="form-control text-center letter-spacing-wide"
+              [(ngModel)]="otpInput" maxlength="6" placeholder="0 0 0 0 0 0" required [disabled]="isLoading()">
           </div>
         </div>
 
@@ -115,6 +129,7 @@
         </div>
       </form>
     </div>
-    <ngx-spinner name="otp-spinner" [fullScreen]="false" type="ball-scale-multiple" bdColor="rgba(0,0,0,0.5)"></ngx-spinner>
+    <ngx-spinner name="otp-spinner" [fullScreen]="false" type="ball-scale-multiple"
+      bdColor="rgba(0,0,0,0.5)"></ngx-spinner>
   </div>
 </div>

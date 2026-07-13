@@ -212,7 +212,7 @@ const ALL_FEE_CURRENCIES: Record<number, FeeCurrencyOption[]> = {
     {
       symbol: 'USDm',
       name: 'USDm',
-      address: '0x471EcE3750Da237f93B8E339c536989b8978a438'
+      address: '0x765DE816845861e75A25fCA122bb6898B8B1282a'
     }
   ],
   // Celo Sepolia
@@ -220,7 +220,7 @@ const ALL_FEE_CURRENCIES: Record<number, FeeCurrencyOption[]> = {
     {
       symbol: 'USDm',
       name: 'USDm',
-      address: '0x765DE816845861e75A25fCA122bb6898B8B1282a'
+      address: '0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B'
     }
   ]
 }
@@ -229,7 +229,6 @@ export const environment = {
   production: false,
   appName: 'BrainBook',
   apiUrl: 'http://localhost:3011/api/v1',
-  authUrl: 'http://localhost:3011',
   walletConnectProjectId: '6dc075707b4e66bff8df286aab204770',
 
   // Feature Flags
