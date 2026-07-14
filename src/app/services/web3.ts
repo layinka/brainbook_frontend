@@ -352,9 +352,7 @@ export class Web3Service {
         this.hasAttemptedMiniPayConnect = true;
 
         try {
-          await this.onboard.connectWallet();
-          // await this.setupWagmiWatchers();
-          // this.syncConnectedStateFromConfig();
+          await this.connectWallet();
         } catch (error) {
           console.warn('MiniPay auto-connect fallback failed:', error);
         }
@@ -409,7 +407,17 @@ export class Web3Service {
   // Method to connect wallet
   public async connectWallet() {
     try {
-      const wallets = await this.onboard.connectWallet();
+      let wallets;
+      if (this.isMiniPay$()) {
+        wallets = await this.onboard.connectWallet({
+          autoSelect: {
+            label: 'Opera MiniPay',
+            disableModals: true
+          }
+        });
+      } else {
+        wallets = await this.onboard.connectWallet();
+      }
       if (wallets.length > 0) {
         // Setup wagmi watchers after successful connection
         await this.setupWagmiWatchers();
@@ -470,15 +478,34 @@ export class Web3Service {
 
   constructor() {
 
-    this.isMiniPay$.set(this.isMiniPayEnvironment());
+    const isMiniPay = this.isMiniPayEnvironment();
+    this.isMiniPay$.set(isMiniPay);
 
     const storedFeeCurrency = this.readStoredFeeCurrencyPreference();
     if (storedFeeCurrency) {
       this.setPreferredFeeCurrency(storedFeeCurrency);
     }
 
+    // Define custom MiniPay wallet for silent auto-connection
+    const miniPayWallet = {
+      label: 'Opera MiniPay',
+      injectedNamespace: 'ethereum',
+      checkProviderIdentity: ({ provider }: any) => !!provider && !!provider.isMiniPay,
+      getIcon: async () => `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#C837AB"/>
+        </svg>
+      `,
+      getInterface: async () => ({
+        provider: (window as any).ethereum
+      }),
+      platforms: ['mobile']
+    };
+
     // Initialize Web3-Onboard wallets
-    const injected = injectedModule();
+    const injected = injectedModule({
+      custom: [miniPayWallet as any]
+    });
     const walletConnect = walletConnectModule({
       projectId: environment.walletConnectProjectId,
       requiredChains: supportedChains.map(c => c.id),
@@ -511,11 +538,11 @@ export class Web3Service {
       },
       accountCenter: {
         desktop: {
-          enabled: true,
+          enabled: !isMiniPay,
           minimal: false
         },
         mobile: {
-          enabled: true,
+          enabled: !isMiniPay,
           minimal: false
         }
       },
