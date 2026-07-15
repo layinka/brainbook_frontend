@@ -265,7 +265,7 @@ export class ReferralsComponent implements OnInit {
 
     try {
       // 1. Post claim request to backend to obtain EIP-712 signature
-      const claimRes = await this.http.post<any>(`${environment.apiUrl}/referrals/claim`, {}, { withCredentials: true }).toPromise();
+      const claimRes = await this.http.post<any>(`${environment.apiUrl}/referrals/claim`, { chainId: this.w3s.chainId }, { withCredentials: true }).toPromise();
       
       if (!claimRes?.success || !claimRes?.signature) {
         throw new Error(claimRes?.error || 'Failed to acquire verification signature.');
