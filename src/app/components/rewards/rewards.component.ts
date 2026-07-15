@@ -97,7 +97,7 @@ export class RewardsComponent implements OnInit {
 
     try {
       // 1. Post claim request to backend to obtain EIP-712 signature
-      const claimRes = await this.http.post<any>(`${environment.apiUrl}/game/rewards/claim`, {}, { withCredentials: true }).toPromise();
+      const claimRes = await this.http.post<any>(`${environment.apiUrl}/game/rewards/claim`, { chainId: this.w3s.chainId }, { withCredentials: true }).toPromise();
 
       // Check if claims are temporarily disabled (backend-side check)
       if (claimRes?.comingSoon) {
@@ -182,7 +182,7 @@ export class RewardsComponent implements OnInit {
 
     try {
       // Get signature from backend
-      const mintRes = await this.http.post<any>(`${environment.apiUrl}/game/nft-rewards/mint-og`, {}, { withCredentials: true }).toPromise();
+      const mintRes = await this.http.post<any>(`${environment.apiUrl}/game/nft-rewards/mint-og`, { chainId: this.w3s.chainId }, { withCredentials: true }).toPromise();
 
       if (!mintRes || !mintRes.success || !mintRes.signature) {
         throw new Error(mintRes?.error || 'Failed to get mint signature');
@@ -218,7 +218,7 @@ export class RewardsComponent implements OnInit {
 
     try {
       // Get signature from backend
-      const mintRes = await this.http.post<any>(`${environment.apiUrl}/game/nft-rewards/mint-first-play`, {}, { withCredentials: true }).toPromise();
+      const mintRes = await this.http.post<any>(`${environment.apiUrl}/game/nft-rewards/mint-first-play`, { chainId: this.w3s.chainId }, { withCredentials: true }).toPromise();
 
       if (!mintRes || !mintRes.success || !mintRes.signature) {
         throw new Error(mintRes?.error || 'Failed to get mint signature');
