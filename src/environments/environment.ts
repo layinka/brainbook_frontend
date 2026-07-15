@@ -202,6 +202,17 @@ const ALL_CONTRACTS: Record<number, BrainBookContracts> = {
     brainbookPresale: '0x0000000000000000000000000000000000000000',
     cusdToken: '0x765DE816845861e75A25fCA122bb6898B8B1282a',
   },
+  // Celo Sepolia Testnet (Chain ID: 11142220)
+  11142220: {
+    brainbookToken: '0x03c17184a7c6cd808dc84275121c0d3bf71f0dd8',
+    brainbookNFT: '0x4dc3ed05fec6270834271a3e12db618d2c21d1df',
+    brainbookGameManager: '0x7e79feabcda77f6d5cd62511b8871e58dcb976e2',
+    brainbookStaking: '0x602be0603bbb17377d3709e0e2bf14bc4230bc2b',
+    brainbookLiquidityMining: '0x76c8a69ebb96683b3abc91a35e0cc550a9014c5b',
+    ubeswapPool: '0x0000000000000000000000000000000000000000',
+    brainbookPresale: '0x0000000000000000000000000000000000000000',
+    cusdToken: '0xAe081498364F90e6a64010a3014a4E31e2c96Bb1',
+  },
 };
 
 // Chain-specific fee currencies for chains that support feeCurrency in tx payloads.

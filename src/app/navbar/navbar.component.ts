@@ -43,7 +43,9 @@ export class NavbarComponent {
     effect(() => {
       const chainId = this.w3s.chainId$();
       if (chainId) {
-        this.chainName = chains[chainId]?.name || '';
+        this.chainName = chains[chainId]?.name || 'Unsupported Network';
+      } else {
+        this.chainName = '';
       }
     });
 
@@ -76,14 +78,20 @@ export class NavbarComponent {
 
   }
 
-  async switchNetwork(chainId: number) {
+  async switchNetwork(chainId: number, dropdown?: NgbDropdown) {
+    console.log('Attempting to switch')
     if (this.isNetworkSwitching()) return;
-    
+
     this.isNetworkSwitching.set(true);
     try {
       const success = await this.w3s.switchChain(chainId);
       if (!success) {
         console.warn('Failed to switch network');
+      } else {
+        console.info('Network switched');
+        if (dropdown) {
+          dropdown.close();
+        }
       }
     } catch (error) {
       console.error('Error switching network:', error);

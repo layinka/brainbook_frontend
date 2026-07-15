@@ -21,7 +21,7 @@ import {
 
 import { environment } from '../../environments/environment';
 import { toDataSuffix } from '@celo/attribution-tags';
-import { Address, erc20Abi, formatUnits, Chain } from 'viem';
+import { Address, erc20Abi, formatUnits, Chain, isHex, fromHex } from 'viem';
 import { celo, celoSepolia, coreDao } from 'viem/chains';
 import Onboard, { OnboardAPI } from '@web3-onboard/core';
 import injectedModule from '@web3-onboard/injected-wallets';
@@ -129,6 +129,128 @@ export class Web3Service {
       console.warn('Wagmi config not yet available from onboard state');
     }
     return config;
+  }
+
+  constructor() {
+
+    const isMiniPay = this.isMiniPayEnvironment();
+    this.isMiniPay$.set(isMiniPay);
+
+    const storedFeeCurrency = this.readStoredFeeCurrencyPreference();
+    if (storedFeeCurrency) {
+      this.setPreferredFeeCurrency(storedFeeCurrency);
+    }
+
+    // Define custom MiniPay wallet for silent auto-connection
+    const miniPayWallet = {
+      label: 'Opera MiniPay',
+      injectedNamespace: 'ethereum',
+      checkProviderIdentity: ({ provider }: any) => !!provider && !!provider.isMiniPay,
+      getIcon: async () => `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#C837AB"/>
+        </svg>
+      `,
+      getInterface: async () => ({
+        provider: (window as any).ethereum
+      }),
+      platforms: ['mobile']
+    };
+
+    // Initialize Web3-Onboard wallets
+    const injected = injectedModule({
+      custom: [miniPayWallet as any]
+    });
+    const walletConnect = walletConnectModule({
+      projectId: environment.walletConnectProjectId,
+      requiredChains: supportedChains.map(c => c.id),
+      dappUrl: 'https://brain-book.app'
+    });
+    const coinbaseWallet = coinbaseWalletModule({ darkMode: true });
+
+    // Initialize Web3-Onboard
+    this.onboard = Onboard({
+      wagmi,
+      wallets: [injected, walletConnect, coinbaseWallet],
+      chains: supportedChains.map(chain => ({
+        id: `0x${chain.id.toString(16)}`,
+        token: chain.nativeCurrency.symbol,
+        label: chain.name,
+        rpcUrl: chain.rpcUrls.default.http[0]
+      })),
+      appMetadata: {
+        name: 'Brain Book',
+        icon: '<svg><!-- icon --></svg>',
+        description: 'Brain Book - Web3 Gaming Platform',
+        recommendedInjectedWallets: [
+          { name: 'MetaMask', url: 'https://metamask.io' },
+          { name: 'Coinbase', url: 'https://wallet.coinbase.com/' }
+        ]
+      },
+      connect: {
+        autoConnectLastWallet: true, // Auto-connect to last connected wallet on page reload
+        autoConnectAllPreviousWallet: false
+      },
+      accountCenter: {
+        desktop: {
+          enabled: !isMiniPay,
+          minimal: false
+        },
+        mobile: {
+          enabled: !isMiniPay,
+          minimal: false
+        }
+      },
+      theme: {
+        '--w3o-background-color': '#1a1a2e',
+        '--w3o-foreground-color': '#16213e',
+        '--w3o-text-color': '#ffffff',
+        '--w3o-border-color': '#8725ac',
+        '--w3o-action-color': '#8725ac'
+      }
+    });
+
+    // Watch for wagmiConfig becoming available to set up watchers exactly when config is ready
+    this.onboard.state.select('wagmiConfig').subscribe(async (config) => {
+      if (config) {
+        console.log('[Web3Service] Wagmi config available. Setting up watchers.');
+        await this.setupWagmiWatchers();
+        this.syncConnectedStateFromConfig();
+      }
+    });
+
+    // void this.initializeConnectionState();
+    // this.onboard.state.select('chains').subscribe(async (chains) => {
+    //   if (chains) {
+    //     console.log('[Web3Service] Chains available. Setting up watchers.');
+    //     await this.setupWagmiWatchers();
+    //     this.syncConnectedStateFromConfig();
+    //   }
+    // })
+
+    // // Watch for wallet state changes from onboard
+    // this.onboard.state.select('wallets').subscribe(async (wallets) => {
+    //   const wallet = wallets[0];
+    //   if (wallet?.accounts?.[0]) {
+    //     // Let the Wagmi configuration/watchers handle account and chain state updates
+    //     await this.setupWagmiWatchers();
+    //     this.syncConnectedStateFromConfig();
+    //   } else {
+    //     // Wallet disconnected
+    //     this.account$.set(undefined);
+    //     this.chainId$.set(undefined);
+
+    //     // Cleanup watchers
+    //     if (this.unwatchAccount) {
+    //       this.unwatchAccount();
+    //       this.unwatchAccount = undefined;
+    //     }
+    //     if (this.unwatchNetwork) {
+    //       this.unwatchNetwork();
+    //       this.unwatchNetwork = undefined;
+    //     }
+    //   }
+    // });
   }
 
   // Public method to get wagmi config for use in other services
@@ -360,7 +482,7 @@ export class Web3Service {
 
       await this.setupWagmiWatchers();
       this.syncConnectedStateFromConfig();
-    }, 100); // Small delay to let Web3-Onboard complete its auto-reconnection
+    }, 200); // Small delay to let Web3-Onboard complete its auto-reconnection
   }
 
   // Setup wagmi watchers after wallet connection
@@ -370,6 +492,8 @@ export class Web3Service {
       console.warn('Cannot setup wagmi watchers - config not available');
       return;
     }
+
+    console.log('Now setting up wagmi watchers - config now available');
 
     // Unwatch previous watchers if they exist
     if (this.unwatchAccount) {
@@ -442,8 +566,35 @@ export class Web3Service {
   // Method to switch chain
   public async switchChain(chainId: number) {
     try {
-      const hexChainId = `0x${chainId.toString(16)}`;
-      await this.onboard.setChain({ chainId: hexChainId });
+      // current primary wallet - as multiple wallets can connect this value is the currently active
+      const [activeWallet] = this.onboard.state.get().wallets
+      const { wagmiConnector } = activeWallet
+      let chainAsNumber
+      if (isHex(chainId)) {
+        chainAsNumber = fromHex(chainId, 'number')
+      } else if (!isHex(chainId) && typeof chainId === 'number') {
+        chainAsNumber = chainId
+      } else {
+        throw new Error('Invalid chainId')
+      }
+      const wagmiConfig = this.onboard.state.get().wagmiConfig
+      if (!wagmiConfig) {
+        throw new Error("No WagmiConfig")
+      }
+      await switchChain(wagmiConfig, {
+        chainId: chainAsNumber,
+        connector: wagmiConnector
+      });
+
+      // Synchronize Web3-Onboard state and local chainId$ signal immediately
+      try {
+        const hexChainId = `0x${chainAsNumber.toString(16)}`;
+        await this.onboard.setChain({ chainId: hexChainId });
+      } catch (onboardError) {
+        console.warn('Failed to sync chain to Web3-Onboard:', onboardError);
+      }
+
+      this.chainId$.set(chainAsNumber);
       return true;
     } catch (error) {
       console.error('Failed to switch chain:', error);
@@ -476,115 +627,6 @@ export class Web3Service {
     }
   }
 
-  constructor() {
-
-    const isMiniPay = this.isMiniPayEnvironment();
-    this.isMiniPay$.set(isMiniPay);
-
-    const storedFeeCurrency = this.readStoredFeeCurrencyPreference();
-    if (storedFeeCurrency) {
-      this.setPreferredFeeCurrency(storedFeeCurrency);
-    }
-
-    // Define custom MiniPay wallet for silent auto-connection
-    const miniPayWallet = {
-      label: 'Opera MiniPay',
-      injectedNamespace: 'ethereum',
-      checkProviderIdentity: ({ provider }: any) => !!provider && !!provider.isMiniPay,
-      getIcon: async () => `
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#C837AB"/>
-        </svg>
-      `,
-      getInterface: async () => ({
-        provider: (window as any).ethereum
-      }),
-      platforms: ['mobile']
-    };
-
-    // Initialize Web3-Onboard wallets
-    const injected = injectedModule({
-      custom: [miniPayWallet as any]
-    });
-    const walletConnect = walletConnectModule({
-      projectId: environment.walletConnectProjectId,
-      requiredChains: supportedChains.map(c => c.id),
-      dappUrl: 'https://brain-book.app'
-    });
-    const coinbaseWallet = coinbaseWalletModule({ darkMode: true });
-
-    // Initialize Web3-Onboard
-    this.onboard = Onboard({
-      wagmi,
-      wallets: [injected, walletConnect, coinbaseWallet],
-      chains: supportedChains.map(chain => ({
-        id: `0x${chain.id.toString(16)}`,
-        token: chain.nativeCurrency.symbol,
-        label: chain.name,
-        rpcUrl: chain.rpcUrls.default.http[0]
-      })),
-      appMetadata: {
-        name: 'Brain Book',
-        icon: '<svg><!-- icon --></svg>',
-        description: 'Brain Book - Web3 Gaming Platform',
-        recommendedInjectedWallets: [
-          { name: 'MetaMask', url: 'https://metamask.io' },
-          { name: 'Coinbase', url: 'https://wallet.coinbase.com/' }
-        ]
-      },
-      connect: {
-        autoConnectLastWallet: true, // Auto-connect to last connected wallet on page reload
-        autoConnectAllPreviousWallet: false
-      },
-      accountCenter: {
-        desktop: {
-          enabled: !isMiniPay,
-          minimal: false
-        },
-        mobile: {
-          enabled: !isMiniPay,
-          minimal: false
-        }
-      },
-      theme: {
-        '--w3o-background-color': '#1a1a2e',
-        '--w3o-foreground-color': '#16213e',
-        '--w3o-text-color': '#ffffff',
-        '--w3o-border-color': '#8725ac',
-        '--w3o-action-color': '#8725ac'
-      }
-    });
-
-    void this.initializeConnectionState();
-
-    // Watch for wallet state changes from onboard
-    this.onboard.state.select('wallets').subscribe(async (wallets) => {
-      const wallet = wallets[0];
-      if (wallet?.accounts?.[0]) {
-        const account = wallet.accounts[0].address as Address;
-        this.account$.set(account);
-
-        const chainId = parseInt(wallet.chains[0].id, 16);
-        this.chainId$.set(chainId);
-
-        // Setup wagmi watchers when wallet connects
-        await this.setupWagmiWatchers();
-      } else {
-        // Wallet disconnected
-        this.account$.set(undefined);
-
-        // Cleanup watchers
-        if (this.unwatchAccount) {
-          this.unwatchAccount();
-          this.unwatchAccount = undefined;
-        }
-        if (this.unwatchNetwork) {
-          this.unwatchNetwork();
-          this.unwatchNetwork = undefined;
-        }
-      }
-    });
-  }
 
 
   async getAccountInfo() {
