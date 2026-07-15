@@ -404,6 +404,12 @@ export class QuizGameComponent implements OnInit, OnDestroy {
 
       // 4. First Play eligibility - user just finished a game, so they're eligible
       const firstPlayEligible = true;
+      const firstPlayCompletedBefore = this.ls.hasPlayedFirstGame();
+
+      // If they already own the NFT but local storage isn't set, sync it
+      if (firstPlayOwned && !firstPlayCompletedBefore) {
+        this.ls.markFirstGamePlayed();
+      }
 
       // 5. Show celebratory notifications for unminted eligible NFTs
       if (ogEligible && !ogOwned) {
@@ -417,7 +423,7 @@ export class QuizGameComponent implements OnInit, OnDestroy {
         }, 2000); // Delay to not overlap with game completion toasts
       }
 
-      if (firstPlayEligible && !firstPlayOwned) {
+      if (firstPlayEligible && !firstPlayOwned && !firstPlayCompletedBefore) {
         setTimeout(() => {
           this.toast.show(
             '🎮 First Play Badge Available!', 
@@ -426,6 +432,8 @@ export class QuizGameComponent implements OnInit, OnDestroy {
             'bg-info text-light'
           );
         }, ogEligible && !ogOwned ? 4000 : 2000); // Stagger if both notifications needed
+        
+        this.ls.markFirstGamePlayed();
       }
     } catch (err) {
       console.error('Error checking NFT eligibility:', err);
