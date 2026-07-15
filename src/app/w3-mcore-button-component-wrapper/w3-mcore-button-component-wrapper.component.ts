@@ -39,6 +39,6 @@ export class W3MCoreButtonComponentWrapperComponent {
     const chainId = this.web3Service.chainId;
     if (!chainId) return '';
     const chain = this.web3Service.chains.find(c => c.id === chainId);
-    return chain?.name || '';
+    return chain?.name || 'Unsupported Network';
   }
 }

@@ -21,6 +21,7 @@ export class SIWEAuthService {
     // If the wallet is disconnected or changed, synchronize or terminate the Better-Auth session
     effect(() => {
       const currentWallet = this.web3Service.account$();
+      const currentChainId = this.web3Service.chainId$();
       const currentSession = this.authService.session();
 
       // If the user is logged in (already signed up), clear any pre-existing stored referral codes
@@ -49,6 +50,13 @@ export class SIWEAuthService {
           if (sessionWallet.toLowerCase() !== currentWallet.toLowerCase()) {
             console.log('Wallet address mismatch. Signing out session.');
             void this.signOut();
+          } else if (currentChainId) {
+            // Check if chain ID has changed since SIWE login
+            const loggedInChainId = localStorage.getItem('brainbook_siwe_chain_id');
+            if (loggedInChainId && String(currentChainId) !== loggedInChainId) {
+              console.log(`Chain ID mismatch (current: ${currentChainId}, loggedIn: ${loggedInChainId}). Signing out session.`);
+              void this.signOut();
+            }
           }
         } else if (!currentWallet && status === 'disconnected') {
           // If wallet explicitly disconnected, clear Better-Auth session
@@ -172,6 +180,9 @@ Issued At: ${issuedAt}`;
 
       console.log('[SIWE] Backend verification result data:', verifyResult.user);
 
+      // Save the signed-in chain ID so we can reactively log out if they switch networks
+      localStorage.setItem('brainbook_siwe_chain_id', String(chainId));
+
       // Force session refetch after SIWE verification to update ngx-better-auth session signal
       console.log('[SIWE] 5. Requesting session refetch...');
       await this.refreshSession();
@@ -239,6 +250,7 @@ Issued At: ${issuedAt}`;
    */
   async signOut(): Promise<void> {
     try {
+      localStorage.removeItem('brainbook_siwe_chain_id');
       await firstValueFrom(this.authService.signOut());
     } catch (error) {
       console.error('Better Auth sign out failed:', error);
