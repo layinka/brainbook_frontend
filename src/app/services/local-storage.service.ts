@@ -10,6 +10,7 @@ const KEYS = {
   itemInventory:  'brainbook.items',
   completedCats:  'brainbook.completed',
   totalScore:     'brainbook.totalscore',
+  firstGamePlayed: 'brainbook.firstgameplayed',
 } as const;
 
 export interface ItemInventory {
@@ -154,6 +155,15 @@ export class LocalStorageService {
   addToTotalScore(points: number): void {
     const current = this.getTotalLifetimeScore();
     this.set(KEYS.totalScore, current + points);
+  }
+
+  // ── First Game Played Status ───────────────────────────────────────────────
+  hasPlayedFirstGame(): boolean {
+    return this.get<boolean>(KEYS.firstGamePlayed) ?? false;
+  }
+
+  markFirstGamePlayed(): void {
+    this.set(KEYS.firstGamePlayed, true);
   }
 
   // ── Internal helpers ───────────────────────────────────────────────────────
