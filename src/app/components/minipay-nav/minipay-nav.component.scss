@@ -1,0 +1,102 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   MiniPay Bottom Navigation Bar
+   Rendered ONLY inside MiniPay (guarded by isMiniPay in app.html).
+   All styles are scoped to :host so they CANNOT leak to non-MiniPay UI.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:host {
+  display: block;
+}
+
+/* ── Nav Bar Container ────────────────────────────────────────────────── */
+.minipay-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+
+  /* Safe-area inset: respects iPhone home indicator / notched phones */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Glass-dark background matching the BrainBook dark theme */
+  background: rgba(10, 10, 26, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  /* Subtle top border with brand purple glow */
+  border-top: 1px solid rgba(124, 58, 237, 0.35);
+  box-shadow: 0 -4px 24px rgba(124, 58, 237, 0.12);
+
+  /* 5 equal-width columns */
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+
+  /* Fixed bar height; tabs fill it */
+  height: 64px;
+}
+
+/* ── Individual Tab ───────────────────────────────────────────────────── */
+.minipay-nav__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  /* Remove default anchor styling */
+  text-decoration: none;
+  color: rgba(160, 160, 192, 0.75); /* bb-text-secondary, dimmed */
+
+  /* Smooth colour transition on tap */
+  transition:
+    color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Top border acts as active indicator (hidden by default) */
+  border-top: 2px solid transparent;
+  padding-top: 2px; /* compensates for border so layout doesn't shift */
+
+  /* Touch feedback */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+
+  &:active {
+    background: rgba(124, 58, 237, 0.08);
+  }
+
+  /* ── Active State ──────────────────────────────────────────────────── */
+  &.active {
+    color: #f59e0b; /* bb-gold */
+    border-top-color: #f59e0b;
+
+    .minipay-nav__icon {
+      /* Subtle scale pop on active tab */
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5));
+    }
+
+    .minipay-nav__label {
+      font-weight: 700;
+      color: #f59e0b;
+    }
+  }
+}
+
+/* ── Icon ─────────────────────────────────────────────────────────────── */
+.minipay-nav__icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+}
+
+/* ── Label ────────────────────────────────────────────────────────────── */
+.minipay-nav__label {
+  font-family: 'Outfit', 'Nunito', sans-serif;
+  font-size: 0.63rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  transition: color 0.18s ease, font-weight 0.18s ease;
+}

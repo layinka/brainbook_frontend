@@ -1,0 +1,114 @@
+.attributions-page {
+  position: relative;
+  z-index: 1;
+}
+
+.attributions-header {
+  .back-btn {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .attributions-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+
+  .attributions-subtitle {
+    font-size: 1rem;
+    color: var(--bb-text-secondary);
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+.attributions-list {
+  position: relative;
+}
+
+.attribution-card {
+  padding: 1.5rem;
+  transition: transform var(--bb-transition), border-color var(--bb-transition), box-shadow var(--bb-transition);
+
+  .attribution-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--bb-radius);
+    flex-shrink: 0;
+
+    .emoji-logo {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+  }
+
+  .attribution-info {
+    flex: 1;
+
+    .asset-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--bb-text-primary);
+      margin: 0 0 0.35rem 0;
+    }
+
+    .asset-desc {
+      font-size: 0.88rem;
+      color: var(--bb-text-secondary);
+      line-height: 1.4;
+      margin: 0;
+    }
+  }
+}
+
+/* Meta Tags / Badges inside cards */
+.meta-tags {
+  display: flex;
+  align-items: center;
+}
+
+.badge-license {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--bb-green-light);
+  font-weight: 700;
+}
+
+.badge-author {
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  color: var(--bb-purple-light);
+  font-weight: 600;
+}
+
+.badge-link {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--bb-blue-light);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all var(--bb-transition);
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+}
+
+/* Custom glow effect for the main brand asset card */
+.card-glow-purple {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--bb-grad-primary);
+}

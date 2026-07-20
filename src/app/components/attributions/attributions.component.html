@@ -1,0 +1,93 @@
+<div class="attributions-page container py-5 mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <!-- Header / Back button -->
+      <div class="attributions-header bb-anim-slide-up mb-4">
+        <button class="bb-btn bb-btn--ghost back-btn" routerLink="/" (click)="playClick()">
+          <span>←</span> Back Home
+        </button>
+        <h1 class="attributions-title mt-3">
+          <span class="bb-text-gradient">Open Source</span> Attributions
+        </h1>
+        <p class="attributions-subtitle">
+          We believe in acknowledging and crediting open-source contributions, graphic creators, and media assets that make BrainBook possible.
+        </p>
+      </div>
+
+      <!-- Main Attributions List -->
+      <div class="attributions-list d-flex flex-column gap-3 bb-anim-slide-up">
+        
+        <!-- Logo Brain Emoji Attribution -->
+        <div class="attribution-card bb-card">
+          <div class="card-glow-purple"></div>
+          <div class="attribution-item d-flex align-items-start gap-3">
+            <div class="attribution-visual">
+              <span class="emoji-logo">🧠</span>
+            </div>
+            <div class="attribution-info">
+              <h3 class="asset-name">Brain Emoji (Brand Logo)</h3>
+              <p class="asset-desc">
+                Used as the core brand mark for BrainBook. Attributed to the open-source Twemoji / Twitter Emoji collection.
+              </p>
+              <div class="meta-tags d-flex flex-wrap gap-2 mt-2">
+                <span class="badge badge-license">License: CC-BY 4.0</span>
+                <span class="badge badge-author">Author: Twitter / Twemoji project</span>
+                <a href="https://github.com/twitter/twemoji" target="_blank" class="badge badge-link">Project Link ↗</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Confetti Attribution -->
+        <div class="attribution-card bb-card">
+          <div class="attribution-item d-flex align-items-start gap-3">
+            <div class="attribution-visual">
+              <span class="emoji-logo">🎉</span>
+            </div>
+            <div class="attribution-info">
+              <h3 class="asset-name">canvas-confetti library</h3>
+              <p class="asset-desc">
+                Provides the high-performance confetti explosion animations displayed upon victorious quiz completions.
+              </p>
+              <div class="meta-tags d-flex flex-wrap gap-2 mt-2">
+                <span class="badge badge-license">License: MIT License</span>
+                <span class="badge badge-author">Author: Kiril Vatev</span>
+                <a href="https://github.com/catdad/canvas-confetti" target="_blank" class="badge badge-link">Project Link ↗</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bootstrap Icons Attribution -->
+        <div class="attribution-card bb-card">
+          <div class="attribution-item d-flex align-items-start gap-3">
+            <div class="attribution-visual">
+              <span class="emoji-logo">🛡️</span>
+            </div>
+            <div class="attribution-info">
+              <h3 class="asset-name">Bootstrap Icons</h3>
+              <p class="asset-desc">
+                High-quality visual UI system icons used throughout overlay headers, wallet connection indicators, and transaction forms.
+              </p>
+              <div class="meta-tags d-flex flex-wrap gap-2 mt-2">
+                <span class="badge badge-license">License: MIT License</span>
+                <span class="badge badge-author">Author: The Bootstrap Authors</span>
+                <a href="https://icons.getbootstrap.com/" target="_blank" class="badge badge-link">Project Link ↗</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Callout for future attributions -->
+      <div class="bb-card text-center mt-5 py-4 px-3 bb-anim-slide-up" 
+           style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(124, 58, 237, 0.25);">
+        <p class="mb-0 text-light opacity-75 small">
+          💡 If you are an artist, developer, or creator who believes we have missed an attribution, please contact support or submit a pull request to our repository.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
