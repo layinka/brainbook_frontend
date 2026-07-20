@@ -121,7 +121,7 @@ html, body {
   flex: 1;
   position: relative;
   z-index: 1;
-  padding-bottom: 80px; /* space for bottom nav */
+  /* No global bottom padding here — MiniPay clearance is applied via .minipay-mode below */
 }
 
 /* ── Cards ──────────────────────────────────────────────────────────────────── */
@@ -626,4 +626,36 @@ html, body {
   vertical-align: -0.2em;
   margin-right: 0.25em;
   display: inline-block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MiniPay-Only Layout Overrides
+   Applied ONLY when body has the .minipay-mode class (set in app.ts when
+   window.ethereum.isMiniPay === true). Zero effect outside MiniPay.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.minipay-mode {
+
+  /* ── Main scroll container clearance ──────────────────────────────────
+     Adds bottom padding so the last item on any page scrolls above the
+     fixed 64px bottom tab bar. env(safe-area-inset-bottom) adds extra
+     clearance on iPhones/notched phones. */
+  .bb-main {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+
+  /* ── Per-page overrides (pages with their own padding-bottom) ──────────
+     These pages already define their own padding-bottom in their component
+     SCSS files. We ensure they also respect the tab bar height. The values
+     below are intentionally generous to guarantee nothing is clipped. */
+
+  /* Home page — component sets padding-bottom: 90px */
+  .home {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 24px);
+  }
+
+  /* Game over / result screen — needs clearance above MiniPay nav */
+  .qg-gameover {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 24px);
+  }
 }

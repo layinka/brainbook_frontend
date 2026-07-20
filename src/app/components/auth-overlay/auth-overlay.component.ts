@@ -64,6 +64,34 @@ export class AuthOverlayComponent {
         }, 1000);
       }
     });
+
+    // Scroll window/page back to top when the auth overlay closes
+    // (e.g. after successful authentication/verification, or cancellation).
+    // This resolves layout shifting or scroll displacement from mobile keyboard/inputs.
+    let previousShowOverlay = this.showOverlay;
+    effect(() => {
+      const currentShow = this.showOverlay;
+      if (previousShowOverlay && !currentShow) {
+        console.log('[AuthOverlay] Overlay closed. Resetting scroll position to top...');
+        this.scrollToTop();
+      }
+      previousShowOverlay = currentShow;
+    });
+  }
+
+  private scrollToTop() {
+    if (typeof window !== 'undefined') {
+      // Scroll window/body
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+
+      // Scroll the main content shell as well in case it holds the scroll container
+      const mainShell = document.querySelector('.bb-main');
+      if (mainShell) {
+        mainShell.scrollTop = 0;
+      }
+    }
   }
 
   // Helper getters

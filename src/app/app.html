@@ -13,4 +13,12 @@
   @if (!web3Service.isMiniPay) {
     <app-footer></app-footer>
   }
+
+  <!-- MiniPay-only bottom tab navigation.
+       Rendered only inside MiniPay — zero impact on the regular navbar/footer UI.
+       The companion .minipay-mode body class (set in app.ts) scopes all
+       MiniPay-specific padding/layout so non-MiniPay users are unaffected. -->
+  @if (web3Service.isMiniPay) {
+    <app-minipay-nav></app-minipay-nav>
+  }
 </div>

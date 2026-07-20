@@ -193,22 +193,22 @@ const ALL_CONTRACTS: Record<number, BrainBookContracts> = {
   },
   // Celo Mainnet (Chain ID: 42220)
   42220: {
-    brainbookToken: '0x0000000000000000000000000000000000000000',      // Set after mainnet deploy
-    brainbookNFT: '0x0000000000000000000000000000000000000000',        // Set after mainnet deploy
-    brainbookGameManager: '0x0000000000000000000000000000000000000000', // Set after mainnet deploy
-    brainbookStaking: '0x0000000000000000000000000000000000000000',     // Set after mainnet deploy
-    brainbookLiquidityMining: '0x0000000000000000000000000000000000000000', // Set after mainnet deploy
+    brainbookToken: '0x8ba290bc8a5cb99d3be646ba303ece1f58a89a92',
+    brainbookNFT: '0x7fb62809d1b958fb3ad4e151b8f89365cde6eab8',
+    brainbookGameManager: '0xba6b2dbc5eaf01b50e17b342fb90088f2723834b',
+    brainbookStaking: '0xfb50b2c40979311da1fd892c82abea01cfb8bfdf',
+    brainbookLiquidityMining: '0x2d1d266a26c57d1218fa61e095eb08649edd287b', // Set after mainnet deploy
     ubeswapPool: '0x0000000000000000000000000000000000000000',          // Set after Ubeswap V3 BRAINBOOK/cUSD pool creation
     brainbookPresale: '0x0000000000000000000000000000000000000000',
     cusdToken: '0x765DE816845861e75A25fCA122bb6898B8B1282a',
   },
   // Celo Sepolia Testnet (Chain ID: 11142220)
   11142220: {
-    brainbookToken: '0x03c17184a7c6cd808dc84275121c0d3bf71f0dd8',
+    brainbookToken: '0xfa89911d61ce8a5c5872be6e997ee0948241ae2d',
     brainbookNFT: '0x4dc3ed05fec6270834271a3e12db618d2c21d1df',
-    brainbookGameManager: '0x7e79feabcda77f6d5cd62511b8871e58dcb976e2',
-    brainbookStaking: '0x602be0603bbb17377d3709e0e2bf14bc4230bc2b',
-    brainbookLiquidityMining: '0x76c8a69ebb96683b3abc91a35e0cc550a9014c5b',
+    brainbookGameManager: '0xfa40235c3d059638f00bad9d7504f39d9c688e49',
+    brainbookStaking: '0x2963b3c00242002249032d11ac63583aef44b1bd',
+    brainbookLiquidityMining: '0x24c24e10f98b82a7250b7098ea47797341a7627c',
     ubeswapPool: '0x0000000000000000000000000000000000000000',
     brainbookPresale: '0x0000000000000000000000000000000000000000',
     cusdToken: '0xAe081498364F90e6a64010a3014a4E31e2c96Bb1',
@@ -221,6 +221,11 @@ const ALL_FEE_CURRENCIES: Record<number, FeeCurrencyOption[]> = {
   // Celo Mainnet
   42220: [
     {
+      symbol: 'cUSD',
+      name: 'cUSD',
+      address: '0x765DE816845861e75A25fCA122bb6898B8B1282a'
+    },
+    {
       symbol: 'USDm',
       name: 'USDm',
       address: '0x765DE816845861e75A25fCA122bb6898B8B1282a'
@@ -231,7 +236,7 @@ const ALL_FEE_CURRENCIES: Record<number, FeeCurrencyOption[]> = {
     {
       symbol: 'USDm',
       name: 'USDm',
-      address: '0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B'
+      address: '0xEF4d55D6dE8e8d73232827Cd1e9b2F2dBb45bC80'
     }
   ]
 }
@@ -265,7 +270,8 @@ export const environment = {
 
   // Game Rewards Configuration
   rewards: {
-    correctAnswer: 0.1,
+    questionAnswered: 0.1,
+    correctAnswerBonus: 1.0,
     topicCompletion: 5.0,
     topicCompletionNftName: 'Topic Aficionado NFT Badge',
     weeklyWarriorNftName: 'Weekly Warrior NFT Badge',

@@ -74,9 +74,14 @@
             </thead>
             <tbody>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <td class="py-3 text-light">💡 Correct Answer</td>
-                <td class="py-3 fw-bold text-success">+{{ rewardsConfig.correctAnswer }} BRAINBOOK</td>
-                <td class="py-3 text-light opacity-75">Plus score streak multipliers</td>
+                <td class="py-3 text-light">💡 Question Answered (Any choice)</td>
+                <td class="py-3 fw-bold text-success">+{{ rewardsConfig.questionAnswered | number:'1.1-2' }} BRAINBOOK</td>
+                <td class="py-3 text-light opacity-75">Earned for every trivia question completed</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td class="py-3 text-light">✅ Correct Answer Bonus</td>
+                <td class="py-3 fw-bold text-success">+{{ rewardsConfig.correctAnswerBonus | number:'1.1-2' }} BRAINBOOK</td>
+                <td class="py-3 text-light opacity-75">Additional accuracy bonus per correct answer</td>
               </tr>
               <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td class="py-3 text-light">🏁 Complete Topic (All Questions)</td>

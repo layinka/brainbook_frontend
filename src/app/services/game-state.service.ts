@@ -16,6 +16,21 @@ export class QuizService {
 
   constructor() {}
 
+  /** Fetch current rewards configuration from backend dynamically to ensure sync */
+  async loadRewardsConfig(): Promise<void> {
+    try {
+      const res = await this.http.get<any>(`${environment.apiUrl}/game/rewards/config`).toPromise();
+      if (res && res.success && res.rewards) {
+        environment.rewards.questionAnswered = res.rewards.questionAnswered;
+        environment.rewards.correctAnswerBonus = res.rewards.correctAnswerBonus;
+        environment.rewards.topicCompletion = res.rewards.topicCompletion;
+        console.log('🔄 Synced rewards config from backend:', environment.rewards);
+      }
+    } catch (err) {
+      console.error('Failed to load rewards config from backend:', err);
+    }
+  }
+
   /** Load a category's quiz data (fetch from backend) */
   async loadCategory(categoryKey: string): Promise<QuizCategory> {
     if (this.cache.has(categoryKey)) {

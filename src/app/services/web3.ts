@@ -50,7 +50,7 @@ const hardhatChain: Chain = {
 
 export const ALL_CHAINS: Chain[] = [hardhatChain, celo, celoSepolia, coreDao];
 
-const supportedChains: Chain[] = (environment.production === true ? [celo, celoSepolia] : [celoSepolia, hardhatChain]);
+const supportedChains: Chain[] = (environment.production === true ? [celo, celoSepolia] : [celo, celoSepolia, hardhatChain]);
 
 export const chains: Record<number, Chain> = {
   42220: celo,
@@ -344,11 +344,11 @@ export class Web3Service {
     const targetChainId = chainId ?? this.chainId;
     let candidate = override ?? this.selectedFeeCurrency$();
 
-    // If no candidate is selected, but we are inside MiniPay and target is Celo, default to USDm
+    // If no candidate is selected, but we are inside MiniPay and target is Celo, default to the first available fee currency (e.g., cUSD)
     if (!candidate && this.isMiniPay$() && targetChainId && this.isMiniPaySupportedChain(targetChainId)) {
-      const usdm = this.getAvailableFeeCurrencies(targetChainId).find(c => c.symbol === 'USDm');
-      if (usdm) {
-        candidate = usdm.address as Address;
+      const defaultToken = this.getAvailableFeeCurrencies(targetChainId)[0];
+      if (defaultToken) {
+        candidate = defaultToken.address as Address;
       }
     }
 
@@ -416,11 +416,51 @@ export class Web3Service {
         if (config) {
           const publicClient = getPublicClient(config, { chainId });
           if (publicClient) {
-            next['gasPrice'] = await publicClient.getGasPrice();
+            if (feeCurrency) {
+              // Celo's eth_gasPrice RPC accepts the feeCurrency address as parameter to estimate correct gas price in that stablecoin
+              const hexGasPrice = await publicClient.request({
+                method: 'eth_gasPrice',
+                params: [feeCurrency as `0x${string}`]
+              } as any);
+              next['gasPrice'] = BigInt(hexGasPrice as string);
+            } else {
+              next['gasPrice'] = await publicClient.getGasPrice();
+            }
           }
         }
       } catch (error) {
         console.warn('MiniPay gasPrice fallback failed:', error);
+      }
+    }
+
+    // Add explicit gas estimation if not provided to prevent "gas too low" issues in MiniPay
+    if (!next['gas'] && chainId) {
+      try {
+        const config = this.wagmiConfig;
+        if (config) {
+          const publicClient = getPublicClient(config, { chainId });
+          if (publicClient) {
+            const estimateParams = {
+              address: next['address'] as Address,
+              abi: next['abi'] as any,
+              functionName: next['functionName'] as string,
+              args: next['args'] as any,
+              account: (next['account'] ?? this.account) as Address,
+              value: next['value'] as bigint | undefined,
+              feeCurrency: feeCurrency as Address | undefined,
+            };
+            const estimatedGas = await publicClient.estimateContractGas(estimateParams as any);
+            // Add a safety buffer: 20% + 100,000 gas if paying in custom feeCurrency, or 10% if native
+            if (feeCurrency) {
+              next['gas'] = (estimatedGas * 120n / 100n) + 100000n;
+            } else {
+              next['gas'] = (estimatedGas * 110n / 100n);
+            }
+            console.log(`[Web3Service] Estimated gas for MiniPay transaction: ${next['gas']?.toString()} (base: ${estimatedGas.toString()})`);
+          }
+        }
+      } catch (error) {
+        console.warn('MiniPay gas estimation fallback failed:', error);
       }
     }
 

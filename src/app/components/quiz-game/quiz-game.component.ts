@@ -118,7 +118,9 @@ export class QuizGameComponent implements OnInit, OnDestroy {
     const sess = this.session();
     if (!sess) return 0;
     const qAnswered = sess.correctCount + sess.wrongCount;
-    return parseFloat((qAnswered * 0.1).toFixed(1));
+    const base = qAnswered * environment.rewards.questionAnswered;
+    const bonus = sess.correctCount * environment.rewards.correctAnswerBonus;
+    return parseFloat((base + bonus).toFixed(1));
   });
 
   timerClass = computed(() => {

@@ -34,7 +34,7 @@ export class CategoriesComponent implements OnInit {
   async ngOnInit() {
     this.completedCats.set(this.ls.getCompletedCategories());
     const manifests = await this.quizService.loadAllCategoryManifests();
-    console.log('manifests ', manifests);
+    // console.log('manifests ', manifests);
 
     this.categories.set(manifests);
     this.loading.set(false);

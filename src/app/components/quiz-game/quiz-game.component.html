@@ -92,7 +92,8 @@
       </span>
     </div>
 
-    <!-- Question Card -->
+    <!-- Question Card — scrollable section (flex: 1, overflow-y: auto).
+         Shrinks on small screens so the lifelines bar below is ALWAYS visible. -->
     @if (currentQ(); as q) {
       <div class="qg-question" [@questionAnim]="session()?.currentIndex">
 
@@ -161,7 +162,9 @@
       </div>
     }
 
-    <!-- Game Item Toolbar -->
+    <!-- Game Item Toolbar — direct child of qg-game flex column.
+         flex-shrink: 0 guarantees it is ALWAYS visible at the bottom
+         regardless of screen size. qg-question scrolls above it. -->
     <div class="qg-items">
       <button
         class="qg-item-btn"
@@ -320,6 +323,7 @@
         <div class="qg-gameover__actions">
           <button class="bb-btn bb-btn--primary bb-btn--lg" (click)="playAgain()" id="btn-retry">🔄 Try Again</button>
           <button class="bb-btn bb-btn--ghost" (click)="goCategories()" id="btn-back-cats-lose">📚 Categories</button>
+          <button class="bb-btn bb-btn--ghost" (click)="goHome()" id="btn-go-home-lose">🏠 Home</button>
         </div>
       </div>
     }
