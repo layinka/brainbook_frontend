@@ -110,7 +110,7 @@ export const DEX_REGISTRY: DexEntry[] = [
     protocol: 'uniswap-v3',
     enabled: true,
     pairName: 'BRAINBOOK / cUSD',
-    stablecoinAddress: '0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B', // cUSD on Celo Sepolia
+    stablecoinAddress: '0x765DE816845861e75A25fCA122bb6898B8B1282a', // cUSD on Celo Sepolia
     stablecoinSymbol: 'cUSD',
     feeTier: 3000,
     tickSpacing: 60,
@@ -217,6 +217,9 @@ const ALL_CONTRACTS: Record<number, BrainBookContracts> = {
 
 // Chain-specific fee currencies for chains that support feeCurrency in tx payloads.
 // Add more CELO-compatible fee currencies here as they become available.
+// NOTE: 6-decimal tokens (USDC, USDT) cannot be used as feeCurrency directly — gas
+// must be paid through their 18-decimal FeeCurrencyDirectory *adapter* addresses.
+// The first entry per chain is the default fee currency used inside MiniPay.
 const ALL_FEE_CURRENCIES: Record<number, FeeCurrencyOption[]> = {
   // Celo Mainnet
   42220: [
@@ -226,17 +229,27 @@ const ALL_FEE_CURRENCIES: Record<number, FeeCurrencyOption[]> = {
       address: '0x765DE816845861e75A25fCA122bb6898B8B1282a'
     },
     {
-      symbol: 'USDm',
-      name: 'USDm',
-      address: '0x765DE816845861e75A25fCA122bb6898B8B1282a'
+      symbol: 'USDC',
+      name: 'USDC (via fee adapter)',
+      address: '0x2f25deb3848c207fc8e0c34035b3ba7fc157602b' // USDC FeeCurrency adapter, NOT the token
+    },
+    {
+      symbol: 'USDT',
+      name: 'USDT (via fee adapter)',
+      address: '0x0e2a3e05bc9a16f5292a6170456a710cb89c6f72' // USDT FeeCurrency adapter, NOT the token
     }
   ],
-  // Celo Sepolia
+  // Celo Sepolia — verified against the on-chain FeeCurrencyDirectory (0x9212Fb72ae65367A7c887eC4Ad9bE310BAC611BF)
   11142220: [
     {
       symbol: 'USDm',
       name: 'USDm',
       address: '0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b'
+    },
+    {
+      symbol: 'cUSD',
+      name: 'cUSD',
+      address: '0xEF4d55D6dE8e8d73232827Cd1e9b2F2dBb45bC80'
     }
   ]
 }

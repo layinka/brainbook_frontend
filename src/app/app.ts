@@ -9,6 +9,7 @@ import { SoundService } from './services/sound.service';
 import { LocalStorageService } from './services/local-storage.service';
 import { MinipayNavComponent } from './components/minipay-nav/minipay-nav.component';
 import { QuizService } from './services/game-state.service';
+import { SeoService } from './services/seo.service';
 
 @Component({
   selector: 'app-root',
@@ -22,8 +23,12 @@ export class App {
   private soundService = inject(SoundService);
   private localStorageService = inject(LocalStorageService);
   private quizService = inject(QuizService);
+  private seoService = inject(SeoService);
 
   constructor() {
+    // Initialize SEO route listeners
+    this.seoService.initRouteSeo();
+
     // Sync P2E rewards configuration from backend
     void this.quizService.loadRewardsConfig();
 
