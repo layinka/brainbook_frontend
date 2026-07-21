@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { AppToastService } from './app-toast.service';
 
 import {
   sendTransaction as wagmiSendTransaction,
@@ -21,7 +22,7 @@ import {
 
 import { environment } from '../../environments/environment';
 import { toDataSuffix } from '@celo/attribution-tags';
-import { Address, erc20Abi, formatUnits, Chain, isHex, fromHex } from 'viem';
+import { Address, erc20Abi, formatUnits, formatEther, formatGwei, Chain, isHex, fromHex, encodeFunctionData } from 'viem';
 import { celo, celoSepolia, coreDao } from 'viem/chains';
 import Onboard, { OnboardAPI } from '@web3-onboard/core';
 import injectedModule from '@web3-onboard/injected-wallets';
@@ -82,6 +83,7 @@ const FEE_CURRENCY_STORAGE_KEY = 'brainbook.feeCurrency.address';
 })
 export class Web3Service {
 
+  private toast = inject(AppToastService);
   chains: Chain[] = supportedChains;
 
   // Chain ID signal
@@ -94,7 +96,7 @@ export class Web3Service {
   unwatchNetwork: any;
 
   public account$ = signal<Address | undefined>(undefined);
-  private readonly isMiniPay$ = signal<boolean>(false);
+  public readonly isMiniPay$ = signal<boolean>(false);
   private readonly selectedFeeCurrency$ = signal<Address | undefined>(undefined);
   private hasAttemptedMiniPayConnect = false;
 
@@ -410,57 +412,110 @@ export class Web3Service {
     delete next['maxFeePerGas'];
     delete next['maxPriorityFeePerGas'];
 
-    if (!next['gasPrice'] && chainId) {
-      try {
-        const config = this.wagmiConfig;
-        if (config) {
-          const publicClient = getPublicClient(config, { chainId });
-          if (publicClient) {
-            if (feeCurrency) {
-              // Celo's eth_gasPrice RPC accepts the feeCurrency address as parameter to estimate correct gas price in that stablecoin
-              const hexGasPrice = await publicClient.request({
-                method: 'eth_gasPrice',
-                params: [feeCurrency as `0x${string}`]
-              } as any);
-              next['gasPrice'] = BigInt(hexGasPrice as string);
-            } else {
-              next['gasPrice'] = await publicClient.getGasPrice();
-            }
-          }
-        }
-      } catch (error) {
-        console.warn('MiniPay gasPrice fallback failed:', error);
-      }
+    this.toast.show('🔧 MiniPay Debug', `feeCurrency: ${feeCurrency ?? 'NATIVE CELO'} | chainId: ${chainId} | target: ${next['address'] ?? 'unknown'}`, 10000, 'bg-info text-light');
+
+    const config = this.wagmiConfig;
+    if (!config || !chainId) {
+      return next as Parameters<typeof writeContract>[1];
     }
 
-    // Add explicit gas estimation if not provided to prevent "gas too low" issues in MiniPay
-    if (!next['gas'] && chainId) {
+    const publicClient = getPublicClient(config, { chainId });
+    if (!publicClient) {
+      this.toast.error('🔧 Debug', 'No publicClient available for gas estimation', 10000);
+      return next as Parameters<typeof writeContract>[1];
+    }
+
+    // Step 1: Check fee currency balance
+    try {
+      const account = (next['account'] ?? this.account) as Address;
+      if (feeCurrency && account) {
+        const balanceRaw = await publicClient.readContract({
+          address: feeCurrency as Address,
+          abi: erc20Abi,
+          functionName: 'balanceOf',
+          args: [account]
+        });
+        const symbol = await publicClient.readContract({
+          address: feeCurrency as Address,
+          abi: erc20Abi,
+          functionName: 'symbol'
+        }).catch(() => 'Unknown');
+        const decimals = await publicClient.readContract({
+          address: feeCurrency as Address,
+          abi: erc20Abi,
+          functionName: 'decimals'
+        }).catch(() => 18);
+        const balFormatted = formatUnits(balanceRaw as bigint, Number(decimals));
+        this.toast.show('💰 Fee Token Balance', `${balFormatted} ${symbol} | FeeToken: ${feeCurrency}`, 10000, 'bg-warning text-dark');
+      }
+    } catch (err: any) {
+      this.toast.error('💰 Balance Check Failed', `${err?.message?.slice(0, 100) || 'unknown error'} | FeeToken: ${feeCurrency}`, 10000);
+    }
+
+    // Step 2: Estimate gas price (aligned with MiniPay docs)
+    let gasPriceBigInt: bigint | undefined;
+    if (!next['gasPrice']) {
       try {
-        const config = this.wagmiConfig;
-        if (config) {
-          const publicClient = getPublicClient(config, { chainId });
-          if (publicClient) {
-            const estimateParams = {
-              address: next['address'] as Address,
-              abi: next['abi'] as any,
-              functionName: next['functionName'] as string,
-              args: next['args'] as any,
-              account: (next['account'] ?? this.account) as Address,
-              value: next['value'] as bigint | undefined,
-              feeCurrency: feeCurrency as Address | undefined,
-            };
-            const estimatedGas = await publicClient.estimateContractGas(estimateParams as any);
-            // Add a safety buffer: 20% + 100,000 gas if paying in custom feeCurrency, or 10% if native
-            if (feeCurrency) {
-              next['gas'] = (estimatedGas * 120n / 100n) + 100000n;
-            } else {
-              next['gas'] = (estimatedGas * 110n / 100n);
-            }
-            console.log(`[Web3Service] Estimated gas for MiniPay transaction: ${next['gas']?.toString()} (base: ${estimatedGas.toString()})`);
-          }
+        if (feeCurrency) {
+          // MiniPay docs pattern: eth_gasPrice with feeCurrency param
+          const hexGasPrice = await publicClient.request({
+            method: 'eth_gasPrice',
+            params: [feeCurrency as `0x${string}`]
+          } as any);
+          gasPriceBigInt = BigInt(hexGasPrice as string);
+        } else {
+          gasPriceBigInt = await publicClient.getGasPrice();
         }
-      } catch (error) {
-        console.warn('MiniPay gas estimation fallback failed:', error);
+        next['gasPrice'] = gasPriceBigInt;
+        this.toast.show('⛽ Gas Price', `${formatGwei(gasPriceBigInt!)} gwei (in ${feeCurrency ? 'fee token' : 'CELO'})`, 10000, 'bg-info text-light');
+      } catch (error: any) {
+        this.toast.error('⛽ Gas Price Failed', error?.message?.slice(0, 100) || 'unknown', 10000);
+      }
+    } else {
+      gasPriceBigInt = next['gasPrice'] as bigint;
+    }
+
+    // Step 3: Estimate gas limit using encoded calldata (aligned with MiniPay docs)
+    // The MiniPay docs use publicClient.estimateGas with feeCurrency, not estimateContractGas
+    if (!next['gas']) {
+      try {
+        const account = (next['account'] ?? this.account) as Address;
+        const contractAddr = next['address'] as Address;
+
+        // Encode the contract call data the same way wagmi/viem would
+        const callData = encodeFunctionData({
+          abi: next['abi'] as any,
+          functionName: next['functionName'] as string,
+          args: next['args'] as any,
+        });
+
+        // Use publicClient.estimateGas with feeCurrency — matching MiniPay docs pattern
+        const estimateParams: any = {
+          account: account,
+          to: contractAddr,
+          data: callData,
+        };
+        if (feeCurrency) {
+          estimateParams.feeCurrency = feeCurrency;
+        }
+        if (next['value']) {
+          estimateParams.value = next['value'];
+        }
+
+        const estimatedGas = await publicClient.estimateGas(estimateParams);
+        // Only add a modest 20% buffer (no flat +100k — that was causing "exceeds balance" errors)
+        next['gas'] = estimatedGas * 120n / 100n;
+
+        this.toast.show('📊 Gas Estimate', `estimated: ${estimatedGas.toString()} | +20%: ${next['gas']?.toString()} | Target: ${contractAddr}`, 10000, 'bg-info text-light');
+
+        // Step 4: Calculate and show total fee cost
+        if (gasPriceBigInt) {
+          const totalFeeWei = (next['gas'] as bigint) * gasPriceBigInt;
+          const totalFeeFormatted = formatEther(totalFeeWei);
+          this.toast.show('💸 Total Fee Cost', `${totalFeeFormatted}, ${(feeCurrency?.substring(0, 6))}, ${feeCurrency ? 'fee token' : 'CELO'}`, 10000, 'bg-warning text-dark');
+        }
+      } catch (error: any) {
+        this.toast.error('📊 Gas Estimate Failed', error?.message?.slice(0, 150) || 'unknown', 10000);
       }
     }
 

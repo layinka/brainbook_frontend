@@ -69,6 +69,36 @@
     <button class="home__play-btn bb-btn bb-btn--primary bb-btn--lg" (click)="goCategories()" id="btn-play-main">
       ▶ Play Now
     </button>
+
+    <!-- ── TEST BUTTONS ROW (REMOVE AFTER TESTING) ── -->
+    <div class="row g-2 mt-3 px-3" id="test-token-row">
+      <div class="col-6">
+        <button class="btn btn-warning w-100 py-2 fw-bold"
+          [disabled]="testUsdmLoading()"
+          (click)="testTokenAction('USDm')"
+          id="btn-test-usdm">
+          @if (testUsdmLoading()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          }
+          💵 Test USDm (5)
+        </button>
+      </div>
+      <div class="col-6">
+        <button class="btn btn-primary w-100 py-2 fw-bold"
+          [disabled]="testUsdcLoading()"
+          (click)="testTokenAction('USDC')"
+          id="btn-test-usdc">
+          @if (testUsdcLoading()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          }
+          💲 Test USDC (5)
+        </button>
+      </div>
+      <div class="col-12 text-center mt-1">
+        <small class="text-muted" style="font-size:0.7rem">Check balance &amp; transfer 5 tokens to test wallet</small>
+      </div>
+    </div>
+    <!-- ── END TEST BUTTONS ROW ── -->
   </section>
 
   <!-- Quick Play Categories -->

@@ -236,7 +236,7 @@ const ALL_FEE_CURRENCIES: Record<number, FeeCurrencyOption[]> = {
     {
       symbol: 'USDm',
       name: 'USDm',
-      address: '0xEF4d55D6dE8e8d73232827Cd1e9b2F2dBb45bC80'
+      address: '0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b'
     }
   ]
 }
