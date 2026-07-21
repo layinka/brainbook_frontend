@@ -35,6 +35,10 @@ export interface QuizCategory {
   totalQuestions: number;
   completionNft: CompletionNft;
   isFeatured?: boolean;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
+  ogImage?: string;
   questions: QuizQuestion[];
 }
 

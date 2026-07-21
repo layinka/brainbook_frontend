@@ -1,0 +1,6 @@
+# Allow search engine crawlers full access to BrainBook Play-to-Earn Trivia Game
+User-agent: *
+Allow: /
+
+# Sitemap Location
+Sitemap: https://brainbook.roxsolid.co/sitemap.xml

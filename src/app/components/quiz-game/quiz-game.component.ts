@@ -10,6 +10,7 @@ import { AppToastService } from '../../services/app-toast.service';
 import { Web3Service } from '../../services/web3';
 import { GameContractService } from '../../services/game-contract.service';
 import { SIWEAuthService } from '../../services/siwe-auth.service';
+import { SeoService } from '../../services/seo.service';
 import { environment } from '../../../environments/environment';
 import { QuizCategory, QuizQuestion } from '../../models/game.models';
 import confetti from 'canvas-confetti';
@@ -76,6 +77,7 @@ export class QuizGameComponent implements OnInit, OnDestroy {
   public w3s = inject(Web3Service);
   private gameContract = inject(GameContractService);
   private siweAuth = inject(SIWEAuthService);
+  private seoService = inject(SeoService);
 
   category = signal<QuizCategory | null>(null);
   loadError = signal('');
@@ -142,6 +144,7 @@ export class QuizGameComponent implements OnInit, OnDestroy {
     try {
       const cat = await this.quizService.loadCategory(categoryKey);
       this.category.set(cat);
+      this.seoService.setCategorySeo(cat);
       this.sound.preloadGameSounds();
       this._startCountdown(cat);
     } catch {

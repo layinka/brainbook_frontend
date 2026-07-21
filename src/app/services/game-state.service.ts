@@ -49,6 +49,11 @@ export class QuizService {
       description: res.category.description,
       totalQuestions: res.category.totalQuestions,
       completionNft: res.category.completionNft,
+      isFeatured: res.category.isFeatured,
+      metaTitle: res.category.metaTitle,
+      metaDescription: res.category.metaDescription,
+      keywords: res.category.keywords,
+      ogImage: res.category.ogImage,
       questions: res.questions || []
     };
 
@@ -68,7 +73,11 @@ export class QuizService {
           description: cat.description,
           totalQuestions: cat.totalQuestions,
           completionNft: cat.completionNft,
-          isFeatured: cat.isFeatured
+          isFeatured: cat.isFeatured,
+          metaTitle: cat.metaTitle,
+          metaDescription: cat.metaDescription,
+          keywords: cat.keywords,
+          ogImage: cat.ogImage
         }));
       }
     } catch (err) {
