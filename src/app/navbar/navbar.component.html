@@ -6,6 +6,15 @@
         <span class="brand-text">Brain<span class="brand-text-gold">Book</span></span>
       </a>
       <div class="d-flex align-items-center gap-2 ms-auto d-xl-none">
+        <button 
+          type="button" 
+          class="btn btn-sm sound-toggle-btn" 
+          [class.muted]="soundService.isMuted()" 
+          (click)="toggleSound()" 
+          [attr.aria-label]="soundService.isMuted() ? 'Unmute game sound' : 'Mute game sound'"
+          [title]="soundService.isMuted() ? 'Unmute Sound' : 'Mute Sound'">
+          <span class="sound-icon">{{ soundService.isMuted() ? '🔇' : '🔊' }}</span>
+        </button>
         @if (!w3s.hideConnectWalletForMiniPay) {
         <div class="wallet-connection">
           <app-w3m-core-button-wrapper></app-w3m-core-button-wrapper>
@@ -92,6 +101,17 @@
 
         <!-- Right Side Items -->
         <div class="navbar-right d-flex align-items-center gap-3">
+          <!-- Sound Toggle (Desktop) -->
+          <button 
+            type="button" 
+            class="btn btn-sm sound-toggle-btn d-none d-xl-flex align-items-center gap-1" 
+            [class.muted]="soundService.isMuted()" 
+            (click)="toggleSound()" 
+            [attr.aria-label]="soundService.isMuted() ? 'Unmute game sound' : 'Mute game sound'"
+            [title]="soundService.isMuted() ? 'Unmute Sound' : 'Mute Sound'">
+            <span class="sound-icon">{{ soundService.isMuted() ? '🔇' : '🔊' }}</span>
+            <span class="sound-label d-none d-xxl-inline">{{ soundService.isMuted() ? 'Muted' : 'Sound' }}</span>
+          </button>
           @if (chainName && w3s.account$()) {
           <div class="network-switcher" ngbDropdown #netDropdown="ngbDropdown">
             <button class="btn btn-sm chain-switcher-btn" id="networkDropdown" ngbDropdownToggle>

@@ -5,6 +5,7 @@ import {
   switchChain,
   disconnect,
   getConnectors,
+  connect,
   writeContract,
   readContract,
   multicall,
@@ -121,9 +122,11 @@ export class Web3Service {
   unwatchNetwork: any;
 
   public account$ = signal<Address | undefined>(undefined);
+  public readonly isConnecting$ = signal<boolean>(false);
   public readonly isMiniPay$ = signal<boolean>(false);
   private readonly selectedFeeCurrency$ = signal<Address | undefined>(undefined);
   private hasAttemptedMiniPayConnect = false;
+  private toastService = inject(AppToastService);
 
   public get account() {
     return this.account$();
@@ -188,10 +191,13 @@ export class Web3Service {
     const injected = injectedModule({
       custom: [miniPayWallet as any]
     });
+    const celoChains = supportedChains.map(c => c.id).filter(id => id === 42220 || id === 11142220);
     const walletConnect = walletConnectModule({
       projectId: environment.walletConnectProjectId,
-      requiredChains: supportedChains.map(c => c.id),
-      dappUrl: 'https://brain-book.app'
+      requiredChains: supportedChains.map(c => c.id).filter(id => id !== 31337),
+      optionalChains: supportedChains.map(c => c.id),
+      dappUrl: typeof window !== 'undefined' ? window.location.origin : 'https://brainbook.roxsolid.co',
+      // showQrModal: true
     });
     const coinbaseWallet = coinbaseWalletModule({ darkMode: true });
 
@@ -243,8 +249,38 @@ export class Web3Service {
         console.log('[Web3Service] Wagmi config available. Setting up watchers.');
         await this.setupWagmiWatchers();
         this.syncConnectedStateFromConfig();
+
+        // Auto-connect MiniPay wallet silently if inside MiniPay environment and not connected yet
+        const isMiniPay = this.isMiniPayEnvironment();
+        this.isMiniPay$.set(isMiniPay);
+        if (isMiniPay && !this.account$() && !this.hasAttemptedMiniPayConnect) {
+          this.hasAttemptedMiniPayConnect = true;
+          this.toastService.show('MiniPay Detected', 'Auto-connecting wallet on config ready...', 4000, 'bg-info text-light');
+          console.log('[MiniPay] Auto-connecting MiniPay wallet...');
+          await this.connectWallet();
+        }
       }
     });
+
+    // Boot auto-connect check for MiniPay
+    const autoConnectMiniPay = async () => {
+      const isMP = this.isMiniPayEnvironment();
+      this.isMiniPay$.set(isMP);
+
+      if (isMP && !this.account$()) {
+        console.log('[MiniPay] Auto-connecting MiniPay wallet...');
+        const connected = await this.connectWallet();
+        if (connected && this.account$()) {
+          console.log('[MiniPay] Auto-connection completed successfully:', this.account$());
+        }
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      setTimeout(() => void autoConnectMiniPay(), 100);
+      setTimeout(() => void autoConnectMiniPay(), 600);
+      setTimeout(() => void autoConnectMiniPay(), 1800);
+    }
 
     // void this.initializeConnectionState();
     // this.onboard.state.select('chains').subscribe(async (chains) => {
@@ -286,32 +322,51 @@ export class Web3Service {
     return this.wagmiConfig;
   }
 
-  private isMiniPayEnvironment(): boolean {
+  public isMiniPayEnvironment(): boolean {
     if (typeof window === 'undefined') {
       return false;
     }
-
-    const provider = (window as Window & { ethereum?: { isMiniPay?: boolean } }).ethereum;
-    return Boolean(provider && provider.isMiniPay);
+    const win = window as any;
+    const nav = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    return Boolean(
+      (win.ethereum && (win.ethereum.isMiniPay || win.ethereum.isOpera)) ||
+      win.isMiniPay ||
+      nav.includes('MiniPay')
+    );
   }
 
   private syncConnectedStateFromConfig() {
     const config = this.wagmiConfig;
-    if (!config) return;
+    if (!config) {
+      if (this.isMiniPay$() && !this.chainId$()) {
+        this.chainId$.set(42220);
+      }
+      return;
+    }
 
     try {
       const chainId = getChainId(config);
       if (chainId) {
         this.chainId$.set(chainId);
+      } else if (this.isMiniPay$()) {
+        this.chainId$.set(42220);
       }
 
       const connections = getConnections(config);
       const connection = connections?.[0];
       if (connection?.accounts?.[0]) {
         this.account$.set(connection.accounts[0] as Address);
+      } else if (this.isMiniPay$() && typeof window !== 'undefined' && (window as any).ethereum?.selectedAddress) {
+        this.account$.set((window as any).ethereum.selectedAddress as Address);
       }
     } catch (error) {
       console.warn('Error syncing connected state:', error);
+      if (this.isMiniPay$()) {
+        if (!this.chainId$()) this.chainId$.set(42220);
+        if (!this.account$() && typeof window !== 'undefined' && (window as any).ethereum?.selectedAddress) {
+          this.account$.set((window as any).ethereum.selectedAddress as Address);
+        }
+      }
     }
   }
 
@@ -697,35 +752,164 @@ export class Web3Service {
   // Method to connect wallet
   public async connectWallet() {
     try {
-      let wallets;
-      if (this.isMiniPay$()) {
-        wallets = await this.onboard.connectWallet({
-          autoSelect: {
-            label: 'Opera MiniPay',
-            disableModals: true
+      const isMiniPay = this.isMiniPayEnvironment();
+      this.isMiniPay$.set(isMiniPay);
+
+      if (isMiniPay) {
+        this.toastService.show('MiniPay Step 1', 'Detecting MiniPay provider...', 3000, 'bg-info text-light');
+
+        let userAddress: Address | undefined;
+
+        // 1. Direct EIP-1193 provider request for authorized accounts
+        if (typeof window !== 'undefined' && (window as any).ethereum) {
+          const provider = (window as any).ethereum;
+          try {
+            this.toastService.show('MiniPay Step 2', 'Requesting eth_accounts...', 3000, 'bg-info text-light');
+            let accounts = await provider.request({ method: 'eth_accounts' });
+            if (!accounts || accounts.length === 0) {
+              this.toastService.show('MiniPay Step 2b', 'Requesting eth_requestAccounts...', 3000, 'bg-info text-light');
+              accounts = await provider.request({ method: 'eth_requestAccounts' });
+            }
+
+            if (accounts && accounts.length > 0) {
+              userAddress = accounts[0] as Address;
+              this.toastService.show('MiniPay Account', `Found: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, 4000, 'bg-success text-light');
+            } else {
+              this.toastService.error('MiniPay Error', 'eth_accounts returned empty list');
+            }
+          } catch (reqErr: any) {
+            console.warn('[MiniPay] Provider request error:', reqErr);
+            this.toastService.error('MiniPay Provider Error', reqErr?.message || 'eth_accounts failed');
           }
-        });
+        } else {
+          this.toastService.error('MiniPay Error', 'window.ethereum not found on window object');
+        }
+
+        // 2. Connect Wagmi connector natively so all contract writes and reads work cleanly
+        const config = this.wagmiConfig;
+        if (config) {
+          try {
+            this.toastService.show('MiniPay Step 3', 'Connecting Wagmi injected connector...', 3000, 'bg-info text-light');
+            const connectors = getConnectors(config);
+            const injectedConn = connectors.find((c: any) =>
+              c.type === 'injected' || c.id === 'injected' || c.name?.toLowerCase().includes('injected')
+            );
+            if (injectedConn) {
+              const res = await connect(config, { connector: injectedConn });
+              console.log('[MiniPay] Wagmi connect result:', res);
+              if (res?.accounts?.[0]) {
+                userAddress = res.accounts[0] as Address;
+              }
+              this.toastService.show('Wagmi Ready', 'Connected via Wagmi injected connector', 4000, 'bg-success text-light');
+            } else {
+              this.toastService.error('Wagmi Notice', 'Injected connector not found in Wagmi config');
+            }
+          } catch (wagmiErr: any) {
+            console.warn('[MiniPay] Wagmi connect error:', wagmiErr);
+            this.toastService.show('Wagmi Connect Notice', wagmiErr?.message || 'Wagmi connect fallback');
+          }
+        }
+
+        // 3. Fallback to Onboard autoSelect if needed
+        if (!userAddress) {
+          this.toastService.show('MiniPay Step 4', 'Trying Onboard autoSelect...', 3000, 'bg-info text-light');
+          const candidateLabels = ['Opera MiniPay', 'Opera', 'Injected', 'Injected Wallet', 'MetaMask'];
+          for (const label of candidateLabels) {
+            try {
+              const wallets = await this.onboard.connectWallet({
+                autoSelect: { label, disableModals: true }
+              });
+              if (wallets && wallets.length > 0 && wallets[0].accounts?.[0]) {
+                userAddress = wallets[0].accounts[0].address as Address;
+                this.toastService.show('Onboard Connected', `Label: ${label}`, 4000, 'bg-success text-light');
+                break;
+              }
+            } catch (e) {}
+          }
+        }
+
+        // 4. Set account and chain signals
+        if (userAddress) {
+          this.account$.set(userAddress);
+          if (!this.chainId$()) this.chainId$.set(42220); // Default Celo Mainnet
+        }
       } else {
-        wallets = await this.onboard.connectWallet();
+        this.isConnecting$.set(true);
+        const wallets = await this.onboard.connectWallet();
+        if (wallets && wallets.length > 0 && wallets[0].accounts?.[0]) {
+          this.account$.set(wallets[0].accounts[0].address as Address);
+        }
       }
-      if (wallets.length > 0) {
-        // Setup wagmi watchers after successful connection
-        await this.setupWagmiWatchers();
-        this.syncConnectedStateFromConfig();
+
+      // Ensure Wagmi watchers and state are synced after connection
+      await this.setupWagmiWatchers();
+      this.syncConnectedStateFromConfig();
+
+      if (this.account$()) {
+        this.toastService.show('Wallet Active! 🎉', `Address: ${this.account$()?.slice(0, 6)}...${this.account$()?.slice(-4)}`, 5000, 'bg-success text-light');
         return true;
+      } else {
+        this.toastService.error('Connection Failed', 'Account signal is still undefined after connection steps');
+        return false;
       }
-      return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to connect wallet:', error);
+      this.toastService.error('Connection Exception', error?.message || 'Fatal error in connectWallet');
       return false;
+    } finally {
+      this.isConnecting$.set(false);
     }
   }
 
   // Method to disconnect wallet
   public async disconnectWallet() {
-    const wallets = this.onboard.state.get().wallets;
-    if (wallets.length > 0) {
-      await this.onboard.disconnectWallet({ label: wallets[0].label });
+    try {
+      const wallets = this.onboard?.state?.get()?.wallets || [];
+      for (const wallet of wallets) {
+        if (wallet?.provider && typeof (wallet.provider as any).disconnect === 'function') {
+          try {
+            await (wallet.provider as any).disconnect();
+          } catch (e) { }
+        }
+        if (wallet?.label) {
+          await this.onboard.disconnectWallet({ label: wallet.label });
+        }
+      }
+    } catch (e) {
+      console.warn('Error disconnecting Web3-Onboard wallet:', e);
+    }
+
+    const config = this.wagmiConfig;
+    if (config) {
+      try {
+        await disconnect(config);
+      } catch (e) {
+        console.warn('Error disconnecting wagmi:', e);
+      }
+    }
+
+    // Reset account and chain signals so all dependent getters/views update instantly
+    this.account$.set(undefined);
+    this.chainId$.set(undefined);
+
+    // Clear wagmi & walletconnect local storage keys to ensure clean reconnect
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('wagmi.recentConnectorId');
+        localStorage.removeItem('wagmi.store');
+        localStorage.removeItem('wagmi.state');
+        localStorage.removeItem('wagmi.connected');
+      }
+    } catch (e) { }
+
+    // Cleanup watchers
+    if (this.unwatchAccount) {
+      try { this.unwatchAccount(); } catch (e) { }
+      this.unwatchAccount = undefined;
+    }
+    if (this.unwatchNetwork) {
+      try { this.unwatchNetwork(); } catch (e) { }
+      this.unwatchNetwork = undefined;
     }
   }
 

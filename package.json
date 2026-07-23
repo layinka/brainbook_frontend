@@ -43,6 +43,7 @@
     "@web3-onboard/injected-wallets": "^2.11.3",
     "@web3-onboard/wagmi": "^2.0.1",
     "@web3-onboard/walletconnect": "^2.6.3",
+    "@walletconnect/ethereum-provider": "^2.23.10",
     "better-auth": "^1.6.15",
     "bootstrap": "^5.3.6",
     "canvas-confetti": "^1.9.4",

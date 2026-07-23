@@ -37,8 +37,7 @@
             "externalDependencies": [
               "@metamask/connect-evm",
               "porto",
-              "porto/internal",
-              "@walletconnect/ethereum-provider"
+              "porto/internal"
             ]
           },
           "configurations": {

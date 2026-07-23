@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Howl, Howler } from 'howler';
 
 export type SoundKey =
@@ -48,8 +48,18 @@ const SOUND_MAP: Record<SoundKey, string> = {
 export class SoundService {
   private sounds: Partial<Record<SoundKey, Howl>> = {};
   private bgMusic: Howl | null = null;
-  private _muted = false;
+  public isMuted = signal<boolean>(false);
   private _volume = 0.7;
+
+  constructor() {
+    try {
+      const saved = localStorage.getItem('bb_sound_muted');
+      if (saved === 'true') {
+        this.isMuted.set(true);
+        Howler.mute(true);
+      }
+    } catch {}
+  }
 
   /** Preload gameplay-critical sounds. Call once on game start. */
   preloadGameSounds(): void {
@@ -75,7 +85,7 @@ export class SoundService {
   }
 
   play(key: SoundKey): void {
-    if (this._muted) return;
+    if (this.isMuted()) return;
     if (!this.sounds[key]) {
       this.sounds[key] = new Howl({ src: [SOUND_MAP[key]], volume: this._volume });
     }
@@ -83,7 +93,7 @@ export class SoundService {
   }
 
   startBackgroundMusic(): void {
-    if (this._muted) return;
+    if (this.isMuted()) return;
     if (!this.bgMusic) {
       this.bgMusic = new Howl({
         src: [SOUND_MAP['gameplay']],
@@ -105,16 +115,21 @@ export class SoundService {
   }
 
   resumeBackgroundMusic(): void {
-    if (!this._muted) {
+    if (!this.isMuted()) {
       this.bgMusic?.play();
     }
   }
 
-  get muted(): boolean { return this._muted; }
+  get muted(): boolean { return this.isMuted(); }
 
-  toggleMute(): void {
-    this._muted = !this._muted;
-    Howler.mute(this._muted);
+  toggleMute(): boolean {
+    const newMuted = !this.isMuted();
+    this.isMuted.set(newMuted);
+    Howler.mute(newMuted);
+    try {
+      localStorage.setItem('bb_sound_muted', String(newMuted));
+    } catch {}
+    return newMuted;
   }
 
   setVolume(vol: number): void {
