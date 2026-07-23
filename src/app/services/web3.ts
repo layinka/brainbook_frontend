@@ -4,8 +4,6 @@ import {
   sendTransaction as wagmiSendTransaction,
   switchChain,
   disconnect,
-  getConnectors,
-  connect,
   writeContract,
   readContract,
   multicall,
@@ -127,6 +125,10 @@ export class Web3Service {
   private readonly selectedFeeCurrency$ = signal<Address | undefined>(undefined);
   private hasAttemptedMiniPayConnect = false;
   private toastService = inject(AppToastService);
+  private _cachedWagmiConfig: any = null;
+  // Guard so overlapping callers reuse a single in-flight connect instead of
+  // racing onboard (web3-onboard does not tolerate concurrent connectWallet calls).
+  private connectInFlight?: Promise<boolean>;
 
   public get account() {
     return this.account$();
@@ -152,13 +154,15 @@ export class Web3Service {
 
   onboard!: OnboardAPI;
 
-  // Getter for wagmi config from onboard state
-  private get wagmiConfig() {
-    const config = this.onboard?.state?.get()?.wagmiConfig;
-    if (!config) {
-      console.warn('Wagmi config not yet available from onboard state');
-    }
-    return config;
+  // Public method and getter for wagmi config from onboard state
+  public getWagmiConfig() {
+    // Try live state first, fall back to cached
+    const config = this.onboard?.state?.get()?.wagmiConfig || this._cachedWagmiConfig;
+    return config || null;
+  }
+
+  public get wagmiConfig(): any {
+    return this.getWagmiConfig();
   }
 
   constructor() {
@@ -171,10 +175,16 @@ export class Web3Service {
       this.setPreferredFeeCurrency(storedFeeCurrency);
     }
 
-    // Define custom MiniPay wallet for silent auto-connection
+    // Define custom MiniPay wallet for silent auto-connection.
+    // platforms: ['all'] — the MiniPay webview's UA can be misclassified (not 'mobile'),
+    // which would filter the wallet out of walletModules and make autoSelect('Opera MiniPay')
+    // silently no-op. checkProviderIdentity is broad: MiniPay sets isMiniPay, some builds
+    // report isOpera, and as a last resort any injected provider inside the MiniPay env.
     const miniPayWallet = {
       label: 'Opera MiniPay',
       injectedNamespace: 'ethereum',
+      // Official MiniPay identity flag. platforms:['all'] below prevents the wallet from
+      // being filtered out when the MiniPay webview UA isn't classified as 'mobile'.
       checkProviderIdentity: ({ provider }: any) => !!provider && !!provider.isMiniPay,
       getIcon: async () => `
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -184,7 +194,7 @@ export class Web3Service {
       getInterface: async () => ({
         provider: (window as any).ethereum
       }),
-      platforms: ['mobile']
+      platforms: ['all']
     };
 
     // Initialize Web3-Onboard wallets
@@ -246,7 +256,8 @@ export class Web3Service {
     // Watch for wagmiConfig becoming available to set up watchers exactly when config is ready
     this.onboard.state.select('wagmiConfig').subscribe(async (config) => {
       if (config) {
-        console.log('[Web3Service] Wagmi config available. Setting up watchers.');
+        this._cachedWagmiConfig = config;
+        console.log('[Web3Service] Wagmi config available and cached. Setting up watchers.');
         await this.setupWagmiWatchers();
         this.syncConnectedStateFromConfig();
 
@@ -255,19 +266,21 @@ export class Web3Service {
         this.isMiniPay$.set(isMiniPay);
         if (isMiniPay && !this.account$() && !this.hasAttemptedMiniPayConnect) {
           this.hasAttemptedMiniPayConnect = true;
-          this.toastService.show('MiniPay Detected', 'Auto-connecting wallet on config ready...', 4000, 'bg-info text-light');
           console.log('[MiniPay] Auto-connecting MiniPay wallet...');
           await this.connectWallet();
         }
       }
     });
 
-    // Boot auto-connect check for MiniPay
+    // Boot auto-connect check for MiniPay — a single guarded attempt.
+    // connectWallet() is self-serializing, and hasAttemptedMiniPayConnect prevents
+    // this from overlapping the wagmiConfig-subscription auto-connect above.
     const autoConnectMiniPay = async () => {
       const isMP = this.isMiniPayEnvironment();
       this.isMiniPay$.set(isMP);
 
-      if (isMP && !this.account$()) {
+      if (isMP && !this.account$() && !this.hasAttemptedMiniPayConnect) {
+        this.hasAttemptedMiniPayConnect = true;
         console.log('[MiniPay] Auto-connecting MiniPay wallet...');
         const connected = await this.connectWallet();
         if (connected && this.account$()) {
@@ -276,10 +289,14 @@ export class Web3Service {
       }
     };
 
+    // Staggered attempts in case MiniPay injects window.ethereum slightly after bootstrap.
+    // Each attempt is a no-op until isMiniPayEnvironment() is true; the first one that runs
+    // sets hasAttemptedMiniPayConnect, and connectWallet() is serialized, so at most one
+    // real connect happens.
     if (typeof window !== 'undefined') {
-      setTimeout(() => void autoConnectMiniPay(), 100);
-      setTimeout(() => void autoConnectMiniPay(), 600);
-      setTimeout(() => void autoConnectMiniPay(), 1800);
+      setTimeout(() => void autoConnectMiniPay(), 300);
+      setTimeout(() => void autoConnectMiniPay(), 1000);
+      setTimeout(() => void autoConnectMiniPay(), 2500);
     }
 
     // void this.initializeConnectionState();
@@ -316,23 +333,17 @@ export class Web3Service {
     // });
   }
 
-  // Public method to get wagmi config for use in other services
-  // Returns as 'any' to work around type incompatibility between wagmi versions
-  public getWagmiConfig(): any {
-    return this.wagmiConfig;
-  }
+
 
   public isMiniPayEnvironment(): boolean {
     if (typeof window === 'undefined') {
       return false;
     }
+    // Official MiniPay detection (Celo docs): the injected provider sets `isMiniPay`.
+    // We intentionally do NOT check `isOpera` (true in regular Opera — a false positive)
+    // or the user-agent string.
     const win = window as any;
-    const nav = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-    return Boolean(
-      (win.ethereum && (win.ethereum.isMiniPay || win.ethereum.isOpera)) ||
-      win.isMiniPay ||
-      nav.includes('MiniPay')
-    );
+    return Boolean(win.ethereum && win.ethereum.isMiniPay);
   }
 
   private syncConnectedStateFromConfig() {
@@ -652,9 +663,28 @@ export class Web3Service {
     request: Parameters<typeof writeContract>[1],
     options?: MiniPayWriteOptions
   ) {
-    const config = this.wagmiConfig;
+    let config = this.getWagmiConfig();
+
+    // If config not available, try connecting first
     if (!config) {
-      throw new Error('Wagmi config not available. Please connect wallet first.');
+      this.toast.show('WRITE CONTRACT', 'Wagmi config missing. Connecting wallet...', 4000, 'bg-warning text-dark');
+      await this.connectWallet();
+      config = this.getWagmiConfig();
+    }
+
+    // If still not available, wait up to 5 seconds for the subscription to fire
+    if (!config) {
+      this.toast.show('WRITE CONTRACT', 'Waiting for Wagmi config initialization...', 4000, 'bg-warning text-dark');
+      for (let i = 0; i < 25; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        config = this.getWagmiConfig();
+        if (config) break;
+      }
+    }
+
+    if (!config) {
+      this.toast.error('WRITE CONTRACT', 'Wagmi config still null after 5s wait. Cannot execute transaction.');
+      throw new Error('Wagmi config not available. Please reconnect wallet and try again.');
     }
 
     const normalizedRequest = await this.applyMiniPayTransactionOverrides(request, options);
@@ -749,104 +779,102 @@ export class Web3Service {
     });
   }
 
-  // Method to connect wallet
-  public async connectWallet() {
+  // Method to connect wallet.
+  // Serialized: overlapping callers (boot timer, wagmiConfig subscription, mint retry)
+  // reuse the same in-flight connect instead of racing onboard, which would otherwise
+  // leave the autoSelect returning empty and wagmiConfig null.
+  public async connectWallet(): Promise<boolean> {
+    if (this.connectInFlight) {
+      return this.connectInFlight;
+    }
+    this.connectInFlight = this._connectWalletInner().finally(() => {
+      this.connectInFlight = undefined;
+    });
+    return this.connectInFlight;
+  }
+
+  private async _connectWalletInner(): Promise<boolean> {
     try {
       const isMiniPay = this.isMiniPayEnvironment();
       this.isMiniPay$.set(isMiniPay);
+      this.isConnecting$.set(true);
 
       if (isMiniPay) {
-        this.toastService.show('MiniPay Step 1', 'Detecting MiniPay provider...', 3000, 'bg-info text-light');
+        // Connect through web3-onboard ONLY. A successful onboard connect is the single thing
+        // that builds wagmiConfig; `disableModals: true` keeps it silent (no wallet dialog
+        // popup inside MiniPay). We never fall back to a raw window.ethereum request — that
+        // sets an address without a config and masks the real failure.
+        //
+        // IMPORTANT: onboard initializes walletModules LAZILY on the first connectWallet()
+        // call (core: `if (!walletModules.length) setWalletModules(...)`), re-reading
+        // window.ethereum at that moment. So reading walletModules up front returns [] — we
+        // must ATTEMPT a connect to trigger detection. A label not present just no-ops
+        // silently under disableModals, so this stays popup-free.
 
-        let userAddress: Address | undefined;
-
-        // 1. Direct EIP-1193 provider request for authorized accounts
-        if (typeof window !== 'undefined' && (window as any).ethereum) {
-          const provider = (window as any).ethereum;
+        const tryLabel = async (label: string): Promise<boolean> => {
           try {
-            this.toastService.show('MiniPay Step 2', 'Requesting eth_accounts...', 3000, 'bg-info text-light');
-            let accounts = await provider.request({ method: 'eth_accounts' });
-            if (!accounts || accounts.length === 0) {
-              this.toastService.show('MiniPay Step 2b', 'Requesting eth_requestAccounts...', 3000, 'bg-info text-light');
-              accounts = await provider.request({ method: 'eth_requestAccounts' });
+            const wallets = await this.onboard.connectWallet({
+              autoSelect: { label, disableModals: true }
+            });
+            const connectedAcct = wallets?.[0]?.accounts?.[0]?.address as Address | undefined;
+            let cfg = this.onboard?.state?.get()?.wagmiConfig;
+            // wagmiConfig can settle a tick after connectWallet resolves — only wait if a
+            // wallet actually connected (otherwise this label didn't match, move on).
+            for (let i = 0; connectedAcct && !cfg && i < 10; i++) {
+              await new Promise(r => setTimeout(r, 100));
+              cfg = this.onboard?.state?.get()?.wagmiConfig;
             }
-
-            if (accounts && accounts.length > 0) {
-              userAddress = accounts[0] as Address;
-              this.toastService.show('MiniPay Account', `Found: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, 4000, 'bg-success text-light');
-            } else {
-              this.toastService.error('MiniPay Error', 'eth_accounts returned empty list');
+            if (cfg) {
+              this._cachedWagmiConfig = cfg;
+              if (connectedAcct) this.account$.set(connectedAcct);
+              this.toastService.show('Onboard OK', `Connected via '${label}'`, 5000, 'bg-success text-light');
+              return true;
             }
-          } catch (reqErr: any) {
-            console.warn('[MiniPay] Provider request error:', reqErr);
-            this.toastService.error('MiniPay Provider Error', reqErr?.message || 'eth_accounts failed');
+          } catch (e) {
+            // Try the next label.
           }
-        } else {
-          this.toastService.error('MiniPay Error', 'window.ethereum not found on window object');
-        }
+          return false;
+        };
 
-        // 2. Connect Wagmi connector natively so all contract writes and reads work cleanly
-        const config = this.wagmiConfig;
-        if (config) {
-          try {
-            this.toastService.show('MiniPay Step 3', 'Connecting Wagmi injected connector...', 3000, 'bg-info text-light');
-            const connectors = getConnectors(config);
-            const injectedConn = connectors.find((c: any) =>
-              c.type === 'injected' || c.id === 'injected' || c.name?.toLowerCase().includes('injected')
-            );
-            if (injectedConn) {
-              const res = await connect(config, { connector: injectedConn });
-              console.log('[MiniPay] Wagmi connect result:', res);
-              if (res?.accounts?.[0]) {
-                userAddress = res.accounts[0] as Address;
-              }
-              this.toastService.show('Wagmi Ready', 'Connected via Wagmi injected connector', 4000, 'bg-success text-light');
-            } else {
-              this.toastService.error('Wagmi Notice', 'Injected connector not found in Wagmi config');
-            }
-          } catch (wagmiErr: any) {
-            console.warn('[MiniPay] Wagmi connect error:', wagmiErr);
-            this.toastService.show('Wagmi Connect Notice', wagmiErr?.message || 'Wagmi connect fallback');
-          }
-        }
+        // First attempt our known MiniPay label — this call also primes walletModules
+        // detection so subsequent label reads are populated.
+        let connected = await tryLabel('Opera MiniPay');
 
-        // 3. Fallback to Onboard autoSelect if needed
-        if (!userAddress) {
-          this.toastService.show('MiniPay Step 4', 'Trying Onboard autoSelect...', 3000, 'bg-info text-light');
-          const candidateLabels = ['Opera MiniPay', 'Opera', 'Injected', 'Injected Wallet', 'MetaMask'];
-          for (const label of candidateLabels) {
-            try {
-              const wallets = await this.onboard.connectWallet({
-                autoSelect: { label, disableModals: true }
-              });
-              if (wallets && wallets.length > 0 && wallets[0].accounts?.[0]) {
-                userAddress = wallets[0].accounts[0].address as Address;
-                this.toastService.show('Onboard Connected', `Label: ${label}`, 4000, 'bg-success text-light');
-                break;
-              }
-            } catch (e) {}
+        // Fallback: try each label onboard actually detected (e.g. a MiniPay provider
+        // announced via EIP-6963 under a different name), MiniPay/injected ranked first.
+        if (!connected) {
+          const detectedLabels: string[] = (this.onboard.state.get().walletModules || []).map((m: any) => m.label);
+          this.toastService.show('MiniPay Wallets', detectedLabels.length ? detectedLabels.join(', ') : 'NONE detected', 6000, 'bg-secondary text-light');
+          const rank = (l: string) => {
+            const s = l.toLowerCase();
+            if (s.includes('minipay')) return 0;
+            if (s.includes('opera')) return 1;
+            if (s.includes('inject')) return 2;
+            if (s.includes('metamask')) return 3;
+            return 4;
+          };
+          for (const label of [...detectedLabels].sort((a, b) => rank(a) - rank(b))) {
+            if (label.toLowerCase() === 'opera minipay') continue; // already tried
+            if (await tryLabel(label)) { connected = true; break; }
           }
         }
 
-        // 4. Set account and chain signals
-        if (userAddress) {
-          this.account$.set(userAddress);
-          if (!this.chainId$()) this.chainId$.set(42220); // Default Celo Mainnet
+        if (!this.getWagmiConfig()) {
+          this.toastService.show('MiniPay', 'Could not connect via onboard', 6000, 'bg-warning text-dark');
         }
       } else {
-        this.isConnecting$.set(true);
         const wallets = await this.onboard.connectWallet();
         if (wallets && wallets.length > 0 && wallets[0].accounts?.[0]) {
           this.account$.set(wallets[0].accounts[0].address as Address);
         }
       }
 
-      // Ensure Wagmi watchers and state are synced after connection
+      // Ensure Wagmi watchers and state are synced after connection.
+      // These read from the freshly-built wagmiConfig and populate account$/chainId$.
       await this.setupWagmiWatchers();
       this.syncConnectedStateFromConfig();
 
       if (this.account$()) {
-        this.toastService.show('Wallet Active! 🎉', `Address: ${this.account$()?.slice(0, 6)}...${this.account$()?.slice(-4)}`, 5000, 'bg-success text-light');
         return true;
       } else {
         this.toastService.error('Connection Failed', 'Account signal is still undefined after connection steps');
