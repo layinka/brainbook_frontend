@@ -107,7 +107,7 @@ const DEFAULT_FEE_CURRENCY_INTRINSIC_GAS = 50_000n;
 })
 export class Web3Service {
 
-  private toast = inject(AppToastService);
+  
   chains: Chain[] = supportedChains;
 
   // Chain ID signal
@@ -124,7 +124,7 @@ export class Web3Service {
   public readonly isMiniPay$ = signal<boolean>(false);
   private readonly selectedFeeCurrency$ = signal<Address | undefined>(undefined);
   private hasAttemptedMiniPayConnect = false;
-  private toastService = inject(AppToastService);
+  // private toastService = inject(AppToastService);
   private _cachedWagmiConfig: any = null;
   // Guard so overlapping callers reuse a single in-flight connect instead of
   // racing onboard (web3-onboard does not tolerate concurrent connectWallet calls).
@@ -257,7 +257,7 @@ export class Web3Service {
     this.onboard.state.select('wagmiConfig').subscribe(async (config) => {
       if (config) {
         this._cachedWagmiConfig = config;
-        console.log('[Web3Service] Wagmi config available and cached. Setting up watchers.');
+        // console.log('[Web3Service] Wagmi config available and cached. Setting up watchers.');
         await this.setupWagmiWatchers();
         this.syncConnectedStateFromConfig();
 
@@ -266,7 +266,7 @@ export class Web3Service {
         this.isMiniPay$.set(isMiniPay);
         if (isMiniPay && !this.account$() && !this.hasAttemptedMiniPayConnect) {
           this.hasAttemptedMiniPayConnect = true;
-          console.log('[MiniPay] Auto-connecting MiniPay wallet...');
+          // console.log('[MiniPay] Auto-connecting MiniPay wallet...');
           await this.connectWallet();
         }
       }
@@ -281,10 +281,10 @@ export class Web3Service {
 
       if (isMP && !this.account$() && !this.hasAttemptedMiniPayConnect) {
         this.hasAttemptedMiniPayConnect = true;
-        console.log('[MiniPay] Auto-connecting MiniPay wallet...');
+        // console.log('[MiniPay] Auto-connecting MiniPay wallet...');
         const connected = await this.connectWallet();
         if (connected && this.account$()) {
-          console.log('[MiniPay] Auto-connection completed successfully:', this.account$());
+          // console.log('[MiniPay] Auto-connection completed successfully:', this.account$());
         }
       }
     };
@@ -667,14 +667,14 @@ export class Web3Service {
 
     // If config not available, try connecting first
     if (!config) {
-      this.toast.show('WRITE CONTRACT', 'Wagmi config missing. Connecting wallet...', 4000, 'bg-warning text-dark');
+      // this.toast.show('WRITE CONTRACT', 'Wagmi config missing. Connecting wallet...', 4000, 'bg-warning text-dark');
       await this.connectWallet();
       config = this.getWagmiConfig();
     }
 
     // If still not available, wait up to 5 seconds for the subscription to fire
     if (!config) {
-      this.toast.show('WRITE CONTRACT', 'Waiting for Wagmi config initialization...', 4000, 'bg-warning text-dark');
+      // this.toast.show('WRITE CONTRACT', 'Waiting for Wagmi config initialization...', 4000, 'bg-warning text-dark');
       for (let i = 0; i < 25; i++) {
         await new Promise(r => setTimeout(r, 200));
         config = this.getWagmiConfig();
@@ -683,7 +683,7 @@ export class Web3Service {
     }
 
     if (!config) {
-      this.toast.error('WRITE CONTRACT', 'Wagmi config still null after 5s wait. Cannot execute transaction.');
+      // this.toast.error('WRITE CONTRACT', 'Wagmi config still null after 5s wait. Cannot execute transaction.');
       throw new Error('Wagmi config not available. Please reconnect wallet and try again.');
     }
 
@@ -827,7 +827,7 @@ export class Web3Service {
             if (cfg) {
               this._cachedWagmiConfig = cfg;
               if (connectedAcct) this.account$.set(connectedAcct);
-              this.toastService.show('Onboard OK', `Connected via '${label}'`, 5000, 'bg-success text-light');
+              // this.toastService.show('Onboard OK', `Connected via '${label}'`, 5000, 'bg-success text-light');
               return true;
             }
           } catch (e) {
@@ -844,7 +844,7 @@ export class Web3Service {
         // announced via EIP-6963 under a different name), MiniPay/injected ranked first.
         if (!connected) {
           const detectedLabels: string[] = (this.onboard.state.get().walletModules || []).map((m: any) => m.label);
-          this.toastService.show('MiniPay Wallets', detectedLabels.length ? detectedLabels.join(', ') : 'NONE detected', 6000, 'bg-secondary text-light');
+          // this.toastService.show('MiniPay Wallets', detectedLabels.length ? detectedLabels.join(', ') : 'NONE detected', 6000, 'bg-secondary text-light');
           const rank = (l: string) => {
             const s = l.toLowerCase();
             if (s.includes('minipay')) return 0;
@@ -860,7 +860,7 @@ export class Web3Service {
         }
 
         if (!this.getWagmiConfig()) {
-          this.toastService.show('MiniPay', 'Could not connect via onboard', 6000, 'bg-warning text-dark');
+          // this.toastService.show('MiniPay', 'Could not connect via onboard', 6000, 'bg-warning text-dark');
         }
       } else {
         const wallets = await this.onboard.connectWallet();
@@ -877,12 +877,12 @@ export class Web3Service {
       if (this.account$()) {
         return true;
       } else {
-        this.toastService.error('Connection Failed', 'Account signal is still undefined after connection steps');
+        // this.toastService.error('Connection Failed', 'Account signal is still undefined after connection steps');
         return false;
       }
     } catch (error: any) {
       console.error('Failed to connect wallet:', error);
-      this.toastService.error('Connection Exception', error?.message || 'Fatal error in connectWallet');
+      // this.toastService.error('Connection Exception', error?.message || 'Fatal error in connectWallet');
       return false;
     } finally {
       this.isConnecting$.set(false);
