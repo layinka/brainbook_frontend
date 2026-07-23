@@ -56,6 +56,7 @@ export class AuthOverlayComponent {
 
       if (isMiniPay && isConnected && !isLoggedIn && !this.isLoading() && !this.hasAttemptedAutoSignIn) {
         this.hasAttemptedAutoSignIn = true;
+        this.toastService.show('SIWE Needed', 'MiniPay wallet connected. Opening SIWE prompt...', 5000, 'bg-warning text-dark');
         console.log('[MiniPay] Wallet auto-connected. Triggering automatic SIWE signature...');
         setTimeout(() => {
           if (!this.isLoggedIn && !this.isLoading()) {
@@ -110,6 +111,10 @@ export class AuthOverlayComponent {
 
   // Determine if overlay needs to be displayed
   get showOverlay(): boolean {
+    // Do not display the auth overlay while user is actively picking/connecting a wallet in the modal
+    if (this.authService.web3Service.isConnecting$()) {
+      return false;
+    }
     // Show overlay if wallet is connected BUT either:
     // 1. User is not signed in via SIWE
     // 2. User is signed in but email is not verified
@@ -118,6 +123,7 @@ export class AuthOverlayComponent {
 
   async onSignIn() {
     this.isLoading.set(true);
+    this.toastService.show('SIWE Signature', 'Requesting signature from MiniPay...', 4000, 'bg-info text-light');
     await this.spinner.show('siwe-spinner');
     try {
       if (this.referralInput && this.referralInput.trim()) {
@@ -179,8 +185,13 @@ export class AuthOverlayComponent {
     }
   }
 
-  onCancel() {
-    // If they cancel or disconnect, we disconnect their wallet so the overlay hides
-    this.authService.web3Service.disconnectWallet();
+  async onCancel() {
+    // If they cancel or disconnect, we disconnect their wallet and sign out session so the overlay hides
+    await this.authService.web3Service.disconnectWallet();
+    try {
+      await this.authService.signOut();
+    } catch (e) {
+      console.warn('Sign out on cancel error:', e);
+    }
   }
 }

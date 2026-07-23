@@ -127,15 +127,57 @@ Nonce: ${nonce}
 Issued At: ${issuedAt}`;
       console.log('[SIWE] SIWE Message:\n', message);
 
-      // 3. Request signature from wallet via wagmi config
+      // 3. Request signature from wallet via direct provider or wagmi config
       console.log('[SIWE] 3. Prompting wallet signature...');
-      const wagmiConfig = this.web3Service.getWagmiConfig();
-      if (!wagmiConfig) {
-        throw new Error('Wagmi config not available. Please reconnect your wallet.');
+      let signature: string | undefined;
+
+      // Method A: In MiniPay or when window.ethereum is available, try direct provider personal_sign
+      if (typeof window !== 'undefined' && (window as any).ethereum && (window as any).ethereum.request) {
+        try {
+          console.log('[SIWE] Attempting direct personal_sign via window.ethereum...');
+          const provider = (window as any).ethereum;
+          
+          try {
+            // Standard EIP-1193 personal_sign: params [message, walletAddress]
+            signature = await provider.request({
+              method: 'personal_sign',
+              params: [message, walletAddress]
+            });
+          } catch (err1) {
+            // Alternative EIP-1193 params order or hex encoding
+            const hexMsg = `0x${Array.from(new TextEncoder().encode(message)).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+            try {
+              signature = await provider.request({
+                method: 'personal_sign',
+                params: [hexMsg, walletAddress]
+              });
+            } catch (err2) {
+              // Try reversed params [walletAddress, message]
+              signature = await provider.request({
+                method: 'personal_sign',
+                params: [walletAddress, message]
+              });
+            }
+          }
+          console.log('[SIWE] Direct personal_sign succeeded:', signature);
+        } catch (e: any) {
+          console.warn('[SIWE] Direct personal_sign failed, falling back to Wagmi signMessage:', e);
+        }
       }
-      const signature = await signMessage(wagmiConfig, {
-        message
-      });
+
+      // Method B: Fallback to Wagmi signMessage if direct personal_sign did not return a signature
+      if (!signature) {
+        console.log('[SIWE] Attempting Wagmi signMessage fallback...');
+        const wagmiConfig = this.web3Service.getWagmiConfig();
+        if (!wagmiConfig) {
+          throw new Error('Wagmi config not available. Please reconnect your wallet.');
+        }
+        signature = await signMessage(wagmiConfig, { message });
+      }
+
+      if (!signature) {
+        throw new Error('Failed to obtain signature from wallet.');
+      }
       console.log('[SIWE] Signature successfully received:', signature);
 
       // 4. Verify the message and signature with better-auth server

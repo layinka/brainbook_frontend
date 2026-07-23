@@ -102,6 +102,64 @@
   }
 }
 
+.sound-toggle-btn {
+  background: rgba(124, 58, 237, 0.18);
+  color: var(--bb-gold-light, #fcd34d);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  font-weight: 700;
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.15);
+
+  &:hover {
+    background: rgba(124, 58, 237, 0.32);
+    border-color: rgba(124, 58, 237, 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+    color: #fff;
+  }
+
+  &:focus,
+  &:active {
+    box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.25) !important;
+  }
+
+  &.muted {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
+    box-shadow: none;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.3);
+      border-color: rgba(239, 68, 68, 0.6);
+      color: #fff;
+    }
+  }
+
+  .sound-icon {
+    font-size: 1rem;
+    line-height: 1;
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .sound-label {
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  &:active .sound-icon {
+    transform: scale(0.85);
+  }
+}
+
 .auth-status-badge {
   .badge {
     font-weight: 700;

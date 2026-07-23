@@ -8,6 +8,7 @@ import { W3MCoreButtonComponentWrapperComponent } from '../w3-mcore-button-compo
 import { AutoUnsubscribe } from '../auto-unsubscribe.decorator';
 import { SIWEAuthService } from '../services/siwe-auth.service';
 import { GameContractService } from '../services/game-contract.service';
+import { SoundService } from '../services/sound.service';
 import { Chain } from 'viem';
 
 @Component({
@@ -34,6 +35,7 @@ export class NavbarComponent {
 
   public authService = inject(SIWEAuthService);
   private gameContract = inject(GameContractService);
+  public soundService = inject(SoundService);
 
   constructor(public w3s: Web3Service) {
 
@@ -66,6 +68,13 @@ export class NavbarComponent {
         this.tokenBalance.set('0.0');
       }
     });
+  }
+
+  toggleSound() {
+    const isMuted = this.soundService.toggleMute();
+    if (!isMuted) {
+      this.soundService.play('click');
+    }
   }
 
   toggleTheme() {
