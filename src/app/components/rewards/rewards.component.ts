@@ -7,11 +7,12 @@ import { GameContractService } from '../../services/game-contract.service';
 import { AppToastService } from '../../services/app-toast.service';
 import { environment } from '../../../environments/environment';
 import { W3MCoreButtonComponentWrapperComponent } from '../../w3-mcore-button-component-wrapper/w3-mcore-button-component-wrapper.component';
+import { AadsDesktopAdaptiveAdComponent } from '../adverts/aads/aads-desktop-adaptive-ad/aads-desktop-adaptive-ad.component';
 
 @Component({
   selector: 'app-rewards',
   standalone: true,
-  imports: [CommonModule, RouterLink, W3MCoreButtonComponentWrapperComponent],
+  imports: [CommonModule, RouterLink, W3MCoreButtonComponentWrapperComponent, AadsDesktopAdaptiveAdComponent],
   templateUrl: './rewards.component.html',
   styleUrl: './rewards.component.scss'
 })

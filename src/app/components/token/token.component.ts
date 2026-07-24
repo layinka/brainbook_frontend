@@ -6,11 +6,12 @@ import { GameContractService, AggregatedPrice, PriceSource, SwapParams } from '.
 import { DEX_REGISTRY, DexEntry } from '../../../environments/environment';
 import { parseEther } from 'viem';
 import { W3MCoreButtonComponentWrapperComponent } from '../../w3-mcore-button-component-wrapper/w3-mcore-button-component-wrapper.component';
+import { AadsDesktopAdaptiveAdComponent } from '../adverts/aads/aads-desktop-adaptive-ad/aads-desktop-adaptive-ad.component';
 
 @Component({
   selector: 'app-token',
   standalone: true,
-  imports: [CommonModule, FormsModule, W3MCoreButtonComponentWrapperComponent],
+  imports: [CommonModule, FormsModule, W3MCoreButtonComponentWrapperComponent, AadsDesktopAdaptiveAdComponent],
   templateUrl: './token.component.html',
   styleUrl: './token.component.scss'
 })

@@ -398,7 +398,7 @@ export class GameContractService {
     const userAddress = this.w3s.account$();
     if (!userAddress) throw new Error('Wallet not connected');
 
-    console.log(`Claiming achievement badge NFT ${tokenId}...`);
+    // console.log(`Claiming achievement badge NFT ${tokenId}...`);
     const hash = await writeContract(this.getWagmi(), {
       address: this.managerAddress,
       abi: BRAIN_BOOK_GAME_MANAGER_ABI,
@@ -407,7 +407,7 @@ export class GameContractService {
     });
 
     await waitForTransactionReceipt(this.getWagmi(), { hash });
-    console.log('Achievement claim confirmed!');
+    // console.log('Achievement claim confirmed!');
     return hash;
   }
 
@@ -464,7 +464,7 @@ export class GameContractService {
     }
 
     try {
-      console.log(`Minting achievement NFT ${tokenId} via GameManager...`);
+      // console.log(`Minting achievement NFT ${tokenId} via GameManager...`);
       // Call the GameManager contract, not the NFT contract directly
       // The GameManager validates the signature and then mints the NFT
       const hash = await this.w3s.writeContractWithMiniPay({
@@ -474,7 +474,7 @@ export class GameContractService {
         args: [BigInt(tokenId), BigInt(1), signature as `0x${string}`]
       });
 
-      console.log('Achievement NFT mint transaction submitted:', hash);
+      // console.log('Achievement NFT mint transaction submitted:', hash);
       return hash;
     } catch (error: any) {
       console.error('Error minting achievement NFT:', error);

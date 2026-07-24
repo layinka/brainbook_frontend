@@ -28,7 +28,7 @@ export class SIWEAuthService {
       if (currentSession && currentSession.user) {
         try {
           if (localStorage.getItem('brainbook_referrer_code') || document.cookie.includes('brainbook_referrer_code=')) {
-            console.log('[SIWE] User is logged in (already signed up). Clearing stored referral code.');
+            // console.log('[SIWE] User is logged in (already signed up). Clearing stored referral code.');
             localStorage.removeItem('brainbook_referrer_code');
             document.cookie = "brainbook_referrer_code=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax; Secure";
           }
@@ -48,19 +48,19 @@ export class SIWEAuthService {
 
         if (sessionWallet && currentWallet) {
           if (sessionWallet.toLowerCase() !== currentWallet.toLowerCase()) {
-            console.log('Wallet address mismatch. Signing out session.');
+            // console.log('Wallet address mismatch. Signing out session.');
             void this.signOut();
           } else if (currentChainId) {
             // Check if chain ID has changed since SIWE login
             const loggedInChainId = localStorage.getItem('brainbook_siwe_chain_id');
             if (loggedInChainId && String(currentChainId) !== loggedInChainId) {
-              console.log(`Chain ID mismatch (current: ${currentChainId}, loggedIn: ${loggedInChainId}). Signing out session.`);
+              // console.log(`Chain ID mismatch (current: ${currentChainId}, loggedIn: ${loggedInChainId}). Signing out session.`);
               void this.signOut();
             }
           }
         } else if (!currentWallet && status === 'disconnected') {
           // If wallet explicitly disconnected, clear Better-Auth session
-          console.log('Wallet disconnected. Signing out session.');
+          // console.log('Wallet disconnected. Signing out session.');
           void this.signOut();
         }
       }
@@ -85,10 +85,10 @@ export class SIWEAuthService {
    * 4. Verify message and signature on the backend to log in and set session cookies.
    */
   async signInWithEthereum(): Promise<any> {
-    console.log('[SIWE] Starting sign-in flow...');
+    // console.log('[SIWE] Starting sign-in flow...');
     const walletAddress = this.web3Service.account;
     const chainId = this.web3Service.chainId;
-    console.log('[SIWE] Current wallet details:', { walletAddress, chainId });
+    // console.log('[SIWE] Current wallet details:', { walletAddress, chainId });
 
     if (!walletAddress || !chainId) {
       console.warn('[SIWE] Wallet address or chainId is missing!');
@@ -97,11 +97,11 @@ export class SIWEAuthService {
 
     try {
       // 1. Fetch Nonce from backend
-      console.log('[SIWE] 1. Requesting nonce from backend...');
+      // console.log('[SIWE] 1. Requesting nonce from backend...');
       const nonceResult = await firstValueFrom(
         this.siweService.getNonce({ walletAddress, chainId })
       );
-      console.log('[SIWE] Nonce response received:', nonceResult);
+      // console.log('[SIWE] Nonce response received:', nonceResult);
       const nonce = nonceResult?.nonce;
 
       if (!nonce) {
@@ -109,7 +109,7 @@ export class SIWEAuthService {
       }
 
       // 2. Construct standard EIP-4361 SIWE message
-      console.log('[SIWE] 2. Constructing EIP-4361 SIWE message...');
+      // console.log('[SIWE] 2. Constructing EIP-4361 SIWE message...');
       const domain = window.location.host;
       const origin = window.location.origin;
       const statement = 'Sign in with Ethereum to BrainBook.';
@@ -128,13 +128,13 @@ Issued At: ${issuedAt}`;
       console.log('[SIWE] SIWE Message:\n', message);
 
       // 3. Request signature from wallet via direct provider or wagmi config
-      console.log('[SIWE] 3. Prompting wallet signature...');
+      // console.log('[SIWE] 3. Prompting wallet signature...');
       let signature: string | undefined;
 
       // Method A: In MiniPay or when window.ethereum is available, try direct provider personal_sign
       if (typeof window !== 'undefined' && (window as any).ethereum && (window as any).ethereum.request) {
         try {
-          console.log('[SIWE] Attempting direct personal_sign via window.ethereum...');
+          // console.log('[SIWE] Attempting direct personal_sign via window.ethereum...');
           const provider = (window as any).ethereum;
           
           try {
@@ -159,7 +159,7 @@ Issued At: ${issuedAt}`;
               });
             }
           }
-          console.log('[SIWE] Direct personal_sign succeeded:', signature);
+          // console.log('[SIWE] Direct personal_sign succeeded:', signature);
         } catch (e: any) {
           console.warn('[SIWE] Direct personal_sign failed, falling back to Wagmi signMessage:', e);
         }
@@ -167,7 +167,7 @@ Issued At: ${issuedAt}`;
 
       // Method B: Fallback to Wagmi signMessage if direct personal_sign did not return a signature
       if (!signature) {
-        console.log('[SIWE] Attempting Wagmi signMessage fallback...');
+        // console.log('[SIWE] Attempting Wagmi signMessage fallback...');
         const wagmiConfig = this.web3Service.getWagmiConfig();
         if (!wagmiConfig) {
           throw new Error('Wagmi config not available. Please reconnect your wallet.');
@@ -178,10 +178,10 @@ Issued At: ${issuedAt}`;
       if (!signature) {
         throw new Error('Failed to obtain signature from wallet.');
       }
-      console.log('[SIWE] Signature successfully received:', signature);
+      // console.log('[SIWE] Signature successfully received:', signature);
 
       // 4. Verify the message and signature with better-auth server
-      console.log('[SIWE] 4. Submitting message and signature to backend...');
+      // console.log('[SIWE] 4. Submitting message and signature to backend...');
       // WORKAROUND: Using direct HttpClient call instead of this.siweService.verifyMessage().
       // The ngx-better-auth SiweService wrapper internally waits for the Angular session signal
       // to emit an updated value after verification. If Better Auth's session atom listener
@@ -212,7 +212,7 @@ Issued At: ${issuedAt}`;
       // Success - clear stored referral code if user was already signed up, OR if a referral code was successfully used
       const isAlreadySignedUp = !!verifyResult.isAlreadySignedUp;
       if (isAlreadySignedUp || referrerCode) {
-        console.log(`[SIWE] Clearing referral code. alreadySignedUp=${isAlreadySignedUp}, usedCode=${!!referrerCode}`);
+        // console.log(`[SIWE] Clearing referral code. alreadySignedUp=${isAlreadySignedUp}, usedCode=${!!referrerCode}`);
         try {
           localStorage.removeItem('brainbook_referrer_code');
         } catch (e) { }
@@ -220,13 +220,13 @@ Issued At: ${issuedAt}`;
         document.cookie = "brainbook_referrer_code=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax; Secure";
       }
 
-      console.log('[SIWE] Backend verification result data:', verifyResult.user);
+      // console.log('[SIWE] Backend verification result data:', verifyResult.user);
 
       // Save the signed-in chain ID so we can reactively log out if they switch networks
       localStorage.setItem('brainbook_siwe_chain_id', String(chainId));
 
       // Force session refetch after SIWE verification to update ngx-better-auth session signal
-      console.log('[SIWE] 5. Requesting session refetch...');
+      // console.log('[SIWE] 5. Requesting session refetch...');
       await this.refreshSession();
 
       return verifyResult.user;
@@ -241,7 +241,7 @@ Issued At: ${issuedAt}`;
    * Request email OTP code (initiating email change/link flow)
    */
   async sendEmailOtp(email: string): Promise<any> {
-    console.log('[SIWE] User has a regular email. Initiating change-email OTP request for:', email);
+    // console.log('[SIWE] User has a regular email. Initiating change-email OTP request for:', email);
     return firstValueFrom(
       this.http.post(`${environment.apiUrl.replace('/api/v1', '')}/api/auth/email-otp/request-email-change`, {
         newEmail: email
@@ -271,14 +271,14 @@ Issued At: ${issuedAt}`;
    * Fetch current session data directly from the server to refresh the AuthService session signal
    */
   async refreshSession(): Promise<any> {
-    console.log('[SIWE] Fetching updated session from server...');
+    // console.log('[SIWE] Fetching updated session from server...');
     try {
       const sessionData = await firstValueFrom(
         this.http.get<any>(`${environment.apiUrl.replace('/api/v1', '')}/api/auth/get-session`, {
           withCredentials: true
         })
       );
-      console.log('[SIWE] Updated session data received:', sessionData);
+      // console.log('[SIWE] Updated session data received:', sessionData);
       this.authService.session.set(sessionData);
       return sessionData;
     } catch (error) {

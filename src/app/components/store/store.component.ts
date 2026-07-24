@@ -7,6 +7,7 @@ import { AdService } from '../../services/ad.service';
 import { AppToastService } from '../../services/app-toast.service';
 import { LocalStorageService, ItemInventory } from '../../services/local-storage.service';
 import { W3MCoreButtonComponentWrapperComponent } from '../../w3-mcore-button-component-wrapper/w3-mcore-button-component-wrapper.component';
+import { AadsDesktopAdaptiveAdComponent } from '../adverts/aads/aads-desktop-adaptive-ad/aads-desktop-adaptive-ad.component';
 
 interface StoreItem {
   id: number;
@@ -19,7 +20,7 @@ interface StoreItem {
 @Component({
   selector: 'app-store',
   standalone: true,
-  imports: [CommonModule, RouterLink, W3MCoreButtonComponentWrapperComponent],
+  imports: [CommonModule, RouterLink, W3MCoreButtonComponentWrapperComponent, AadsDesktopAdaptiveAdComponent],
   templateUrl: './store.component.html',
   styleUrl: './store.component.scss'
 })
