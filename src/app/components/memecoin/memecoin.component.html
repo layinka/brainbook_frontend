@@ -1,0 +1,730 @@
+<div class="memecoin-page">
+  <!-- Ambient Cosmic Glow Elements -->
+  <div class="glow-orb glow-orb--purple"></div>
+  <div class="glow-orb glow-orb--cyan"></div>
+  <div class="glow-orb glow-orb--gold"></div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- HERO SECTION                                                          -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="hero-section">
+    <div class="container text-center">
+
+      <!-- Badge -->
+      <div class="inline-badge mb-3">
+        <span class="badge-dot"></span>
+        <span>🌊 100% FAIR LAUNCH ON POOLS.TRADE | ROBINHOOD & MINIPAY NATIVE</span>
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="hero-title">
+        SMOOTH BRAINS BUY DOGS.<br>
+        <span class="text-gradient-galaxy">GIGABRAINS APE $BRAINBOOK.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        The world's first Proof-of-Gigabrain memecoin fair launching on <strong>pools.trade</strong> (Celo & Base). 
+        Zero presale. 100% rug-proof bonding curve. Compatible with <strong>Robinhood Wallet</strong> and <strong>Opera MiniPay</strong>.
+      </p>
+
+      <!-- 3D Mascot & Hologram Container -->
+      <div class="mascot-container my-4">
+        <div class="mascot-card">
+          <div class="mascot-glow-ring"></div>
+          <img src="/images/gigabrain_mascot.jpg" alt="Gigabrain Chad Mascot" class="mascot-img">
+          <div class="mascot-tag">
+            <span class="iq-pill">⚡ 160+ IQ EVOLVED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- LIVE BONDING CURVE PROGRESS WIDGET (POOLS.TRADE)                    -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <div class="bonding-curve-banner mx-auto my-4 p-3 p-md-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="live-pulse"></span>
+            <strong class="text-gradient-gold">POOLS.TRADE BONDING CURVE:</strong>
+            <span class="badge bg-primary">{{ bondingCurveProgress() }}% FILLED</span>
+          </div>
+          <div class="small text-muted">
+            Graduation Target: <strong class="text-light">{{ graduationTargetMcap() }}</strong>
+          </div>
+        </div>
+
+        <!-- Progress Track -->
+        <div class="curve-track mb-3">
+          <div class="curve-fill" [style.width.%]="bondingCurveProgress()">
+            <span class="curve-glow-head">🚀</span>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between small text-muted flex-wrap gap-2">
+          <span>Current Cap: <strong class="text-warning">{{ currentMcap() }}</strong></span>
+          <span>👑 King of the Hill: <strong class="text-info">{{ kingOfTheHillHolder() }}</strong></span>
+          <span>🔥 Upon 100%: <strong>Auto-Migrates to Ubeswap V3 & Burns 100% LP</strong></span>
+        </div>
+      </div>
+
+      <!-- Contract Address Bar (1-Click Copy) -->
+      <div class="contract-copy-bar mx-auto">
+        <div class="contract-label">
+          <span class="pulse-indicator"></span>
+          <span>POOLS.TRADE CONTRACT ADDRESS:</span>
+        </div>
+        <div class="contract-address-box" (click)="copyContract()">
+          <code>{{ contractAddress() }}</code>
+          <button class="copy-btn" [class.copied]="copiedContract()" title="Copy Contract Address">
+            <span *ngIf="!copiedContract()">📋 Copy</span>
+            <span *ngIf="copiedContract()">✅ Copied!</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CTA Action Buttons -->
+      <div class="hero-actions d-flex flex-wrap justify-content-center gap-3 mt-4">
+        <a [href]="poolsTradeUrl" target="_blank" class="bb-btn bb-btn--gold bb-btn--lg">
+          <span>🌊 Buy on pools.trade</span>
+        </a>
+        <button (click)="navigateToPlay()" class="bb-btn bb-btn--primary bb-btn--lg">
+          <span>🧠 Play Trivia Game (Free)</span>
+        </button>
+        <button (click)="navigateToDaily()" class="bb-btn bb-btn--ghost bb-btn--lg">
+          <span>🎁 Claim Daily Faucet</span>
+        </button>
+      </div>
+
+      <!-- Mini stats ticker -->
+      <div class="hero-stats-grid mt-5">
+        <div class="stat-card">
+          <div class="stat-icon">🌊</div>
+          <div class="stat-val text-gradient-gold">pools.trade</div>
+          <div class="stat-lbl">Fair Launch Curve</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-val text-gradient-purple">0% / 0%</div>
+          <div class="stat-lbl">Buy / Sell Tax</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">♻️</div>
+          <div class="stat-val text-gradient-cyan">50% Recycled</div>
+          <div class="stat-lbl">Game Store Buybacks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📱</div>
+          <div class="stat-val text-gradient-green">&lt; $0.001</div>
+          <div class="stat-lbl">Robinhood & MiniPay Gas</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- INTERACTIVE IQ CALCULATOR & MEME DIAGNOSIS                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="iq-section py-5">
+    <div class="container">
+      <div class="section-header text-center mb-4">
+        <div class="badge-tag">INTERACTIVE DIAGNOSTIC</div>
+        <h2 class="section-title">WHAT IS YOUR BRAIN POWER? 🧠</h2>
+        <p class="section-desc">
+          Drag the slider to your estimated IQ and discover your degen classification, 
+          meme diagnosis, and daily $BRAINBOOK trivia mining potential.
+        </p>
+      </div>
+
+      <div class="iq-calculator-card">
+        <!-- Slider Control -->
+        <div class="slider-wrapper text-center">
+          <div class="current-iq-display">
+            <span class="iq-number">{{ userIq() }}</span>
+            <span class="iq-unit">IQ</span>
+          </div>
+
+          <input 
+            type="range" 
+            min="60" 
+            max="200" 
+            step="1" 
+            [value]="userIq()" 
+            (input)="onIqChange($event)"
+            class="iq-range-slider"
+          >
+
+          <div class="slider-labels d-flex justify-content-between mt-2">
+            <span class="text-muted">🥔 60 (Smooth Brain)</span>
+            <span class="text-muted">📊 100 (Midcurve)</span>
+            <span class="text-muted">⚡ 150 (Gigabrain)</span>
+            <span class="text-muted">🌌 200 (Galaxy Brain)</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Diagnosis Result -->
+        <div class="diagnosis-box mt-4" [ngClass]="currentDiagnosis.badgeClass">
+          <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+            <div class="diagnosis-avatar">
+              <span class="diagnosis-emoji">{{ currentDiagnosis.emoji }}</span>
+            </div>
+            <div class="diagnosis-info flex-grow-1">
+              <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                <span class="tier-pill">{{ currentDiagnosis.tier }}</span>
+                <h3 class="diagnosis-title m-0">{{ currentDiagnosis.title }}</h3>
+              </div>
+              <p class="diagnosis-desc mb-2">{{ currentDiagnosis.description }}</p>
+              <div class="diagnosis-advice">
+                <strong>💡 BigBrain Prescription:</strong> {{ currentDiagnosis.advice }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Mining Potential Projections -->
+          <div class="mining-projections-grid mt-4">
+            <div class="proj-box">
+              <div class="proj-lbl">DAILY TRIVIA REWARD EST.</div>
+              <div class="proj-val text-gradient-gold">+{{ currentDiagnosis.dailyRewardEst }} $BRAINBOOK</div>
+            </div>
+            <div class="proj-box">
+              <div class="proj-lbl">MONTHLY YIELD POTENTIAL</div>
+              <div class="proj-val text-gradient-cyan">+{{ currentDiagnosis.monthlyRewardEst }} $BRAINBOOK</div>
+            </div>
+            <div class="proj-box">
+              <div class="proj-lbl">BEST TRIVIA CATEGORY</div>
+              <div class="proj-val text-gradient-purple">{{ currentDiagnosis.recommendedCategory }}</div>
+            </div>
+          </div>
+
+          <div class="text-center mt-4">
+            <button (click)="navigateToPlay()" class="bb-btn bb-btn--primary bb-btn--lg">
+              <span>🚀 Test Your IQ in Game Right Now</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- QUICK SWAP & POOLS.TRADE INTEGRATION                                  -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section id="quick-swap" class="swap-section py-5">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        
+        <!-- Left Explainer -->
+        <div class="col-lg-6">
+          <div class="badge-tag">POOLS.TRADE FAIR LAUNCH</div>
+          <h2 class="section-title">0% TAX. 100% FAIR BONDING CURVE.</h2>
+          <p class="section-desc">
+            No team allocations. No presale dumping. The token is minted on the <strong>pools.trade</strong> bonding curve and auto-migrates to Ubeswap V3 once the $50k graduation threshold is met.
+          </p>
+
+          <div class="dex-perks-list mt-4">
+            <div class="dex-perk-item">
+              <div class="perk-icon">🛡️</div>
+              <div>
+                <h4 class="perk-title">100% Anti-Rug Protection</h4>
+                <p class="perk-desc">Bonding curves cannot be rugged. All graduation liquidity is permanently burned on-chain.</p>
+              </div>
+            </div>
+            <div class="dex-perk-item">
+              <div class="perk-icon">📱</div>
+              <div>
+                <h4 class="perk-title">Robinhood & MiniPay Compatible</h4>
+                <p class="perk-desc">Connect with Robinhood Wallet, Opera MiniPay, or Valora with stablecoin gas (cUSD/USDm).</p>
+              </div>
+            </div>
+            <div class="dex-perk-item">
+              <div class="perk-icon">🥩</div>
+              <div>
+                <h4 class="perk-title">Trivia Shop Automated Buybacks</h4>
+                <p class="perk-desc">50% of all in-game power-up sales execute automated buy orders directly on pools.trade!</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-3 flex-wrap">
+            <a [href]="poolsTradeUrl" target="_blank" class="bb-btn bb-btn--gold">
+              <span>🌊 Open pools.trade Direct</span>
+            </a>
+            <button (click)="navigateToPlay()" class="bb-btn bb-btn--ghost">
+              <span>🧠 Play Trivia Game</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Quick Swap Widget -->
+        <div class="col-lg-6">
+          <div class="swap-card">
+            <div class="swap-card-header d-flex justify-content-between align-items-center mb-3">
+              <h3 class="swap-title m-0">⚡ Quick Swap Simulator</h3>
+              <span class="fee-badge">0% PROTOCOL FEE</span>
+            </div>
+
+            <!-- Input Box -->
+            <div class="swap-input-box">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="swap-label">You Pay</span>
+                <span class="swap-balance" *ngIf="web3.account$()">Balance: {{ swapDirection === 'buy' ? 'cUSD / CELO' : (walletBalance() + ' $BRAINBOOK') }}</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <input 
+                  type="number" 
+                  [(ngModel)]="swapAmount" 
+                  class="swap-input" 
+                  placeholder="0.0"
+                >
+                <div class="token-selector">
+                  <span class="token-symbol">{{ swapDirection === 'buy' ? 'cUSD' : 'BRAINBOOK' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Flip Button -->
+            <div class="text-center my-2">
+              <button class="flip-btn" (click)="flipSwapDirection()" title="Flip Swap Direction">
+                <span>⇅</span>
+              </button>
+            </div>
+
+            <!-- Output Box -->
+            <div class="swap-input-box">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="swap-label">You Receive (Estimated)</span>
+                <span class="swap-price">1 $BRAINBOOK ≈ ${{ tokenPrice() }} cUSD</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <input 
+                  type="text" 
+                  [value]="estimatedSwapOutput" 
+                  readonly 
+                  class="swap-input"
+                >
+                <div class="token-selector token-selector--highlight">
+                  <span class="token-symbol">{{ swapDirection === 'buy' ? 'BRAINBOOK' : 'cUSD' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slippage & Route Info -->
+            <div class="swap-meta mt-3 d-flex justify-content-between text-muted small">
+              <span>Launchpad: <strong>pools.trade (Celo/Base)</strong></span>
+              <span>Bonding Curve: <strong>{{ bondingCurveProgress() }}% Filled</strong></span>
+            </div>
+
+            <!-- Action Button -->
+            <div class="mt-4">
+              <a [href]="poolsTradeUrl" target="_blank" class="bb-btn bb-btn--gold bb-btn--full bb-btn--lg">
+                <span>🌊 Buy on pools.trade</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- GIGANOMICS & CIRCULAR TOKEN SINK                                      -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="tokenomics-section py-5">
+    <div class="container">
+      <div class="section-header text-center mb-5">
+        <div class="badge-tag">GIGANOMICS</div>
+        <h2 class="section-title">100% FAIR LAUNCH TOKENOMICS</h2>
+        <p class="section-desc">
+          No seed allocations, no private presales. 100% public fair launch on the pools.trade curve with automatic Ubeswap V3 LP burn.
+        </p>
+      </div>
+
+      <!-- Token Distribution Cards -->
+      <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+          <div class="token-alloc-card alloc-p2e">
+            <div class="alloc-pct">100%</div>
+            <div class="alloc-title">🌊 pools.trade Curve</div>
+            <div class="alloc-amount">1,000,000,000 $BRAINBOOK</div>
+            <p class="alloc-desc">Available to the public on the bonding curve from block 1.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="token-alloc-card alloc-lp">
+            <div class="alloc-pct">0%</div>
+            <div class="alloc-title">🛡️ Zero Team Allocation</div>
+            <div class="alloc-amount">Zero Insider Dumping</div>
+            <p class="alloc-desc">Team buys on the public bonding curve alongside the community.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="token-alloc-card alloc-stake">
+            <div class="alloc-pct">0%</div>
+            <div class="alloc-title">🔥 Buy / Sell Taxes</div>
+            <div class="alloc-amount">Pure Degen Frictionless</div>
+            <p class="alloc-desc">Trade freely with 0% tax on pools.trade and DEX.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="token-alloc-card alloc-raids">
+            <div class="alloc-pct">🔥</div>
+            <div class="alloc-title">🔒 100% Burn on Graduation</div>
+            <div class="alloc-amount">Auto-Locked Liquidity</div>
+            <p class="alloc-desc">Liquidity pool locked and burned forever on DEX migration.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Circular Sink Flowchart Graphic -->
+      <div class="sink-flow-card p-4 p-md-5">
+        <h3 class="text-center mb-4 text-gradient-gold">🔄 The Trivia Buyback & Burn Engine</h3>
+        
+        <div class="flow-steps-grid">
+          <div class="flow-node">
+            <div class="flow-icon">🧠</div>
+            <div class="flow-node-title">1. Play Trivia</div>
+            <p class="flow-node-desc">Players answer questions and compete on the global leaderboard.</p>
+          </div>
+
+          <div class="flow-arrow">➔</div>
+
+          <div class="flow-node">
+            <div class="flow-icon">🛍️</div>
+            <div class="flow-node-title">2. Shop Revenue</div>
+            <p class="flow-node-desc">Players buy Time Freezes, Hints, and Power-ups in the store.</p>
+          </div>
+
+          <div class="flow-arrow">➔</div>
+
+          <div class="flow-node flow-node--highlight">
+            <div class="flow-icon">⚡</div>
+            <div class="flow-node-title">3. Automated Buybacks</div>
+            <p class="flow-node-desc">Shop revenue buys tokens off pools.trade, accelerating graduation!</p>
+          </div>
+
+          <div class="flow-arrow">➔</div>
+
+          <div class="flow-node">
+            <div class="flow-icon">🚀</div>
+            <div class="flow-node-title">4. DEX Graduation</div>
+            <p class="flow-node-desc">Curve hits 100%, graduates to Ubeswap V3, LP is burned forever.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- DOG COINS VS GIGABRAIN (MEME BATTLE MATRIX)                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="comparison-section py-5">
+    <div class="container">
+      <div class="section-header text-center mb-5">
+        <div class="badge-tag">THE HARD TRUTH</div>
+        <h2 class="section-title">SMOOTH COINS VS $BRAINBOOK</h2>
+        <p class="section-desc">Why intellect always wins the endgame.</p>
+      </div>
+
+      <div class="table-responsive comparison-table-wrapper">
+        <table class="table comparison-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="text-danger">🐶 Generic Dog/Cat Memecoin</th>
+              <th class="text-success highlight-col">🧠 $BRAINBOOK (Proof-of-Gigabrain)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Actual Utility</strong></td>
+              <td>❌ Zero. Waiting for someone to dump on you.</td>
+              <td class="highlight-col">✅ Full Web3 Trivia Game live on Celo & Base.</td>
+            </tr>
+            <tr>
+              <td><strong>Launch Mechanism</strong></td>
+              <td>❌ Shady presales & sniper bots.</td>
+              <td class="highlight-col">✅ 100% Fair Launch on pools.trade.</td>
+            </tr>
+            <tr>
+              <td><strong>Transaction Taxes</strong></td>
+              <td>❌ 5% - 10% Buy/Sell Slippage Traps</td>
+              <td class="highlight-col">✅ 0% Buy / 0% Sell Tax.</td>
+            </tr>
+            <tr>
+              <td><strong>Onboarding Friction</strong></td>
+              <td>❌ Requires 24-word seed phrase & complex bridges.</td>
+              <td class="highlight-col">✅ Robinhood Wallet & Opera MiniPay 5-second login.</td>
+            </tr>
+            <tr>
+              <td><strong>Buyback Mechanics</strong></td>
+              <td>❌ None. Pure inflationary dump.</td>
+              <td class="highlight-col">✅ In-game store revenue buys back off pools.trade!</td>
+            </tr>
+            <tr>
+              <td><strong>Brain Cell Impact</strong></td>
+              <td>💀 Decreases IQ by 25 points daily.</td>
+              <td class="highlight-col">⚡ Evolving you into a 200 IQ Galaxy Brain Chad.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- INTERACTIVE MEME SOUNDBOARD                                           -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="soundboard-section py-5">
+    <div class="container">
+      <div class="section-header text-center mb-4">
+        <div class="badge-tag">HYPE ENGINE</div>
+        <h2 class="section-title">THE GIGABRAIN SOUNDBOARD 🔊</h2>
+        <p class="section-desc">Press buttons to trigger on-chain meme frequencies and celebrate alpha!</p>
+      </div>
+
+      <div class="soundboard-grid">
+        <button class="sound-card sound-card--purple" (click)="triggerHypeSound('ascend')">
+          <div class="sound-emoji">🌌</div>
+          <div class="sound-title">ASCEND TO 200 IQ</div>
+          <div class="sound-sub">Galaxy Brain Glow</div>
+        </button>
+
+        <button class="sound-card sound-card--gold" (click)="triggerHypeSound('kaching')">
+          <div class="sound-emoji">💰</div>
+          <div class="sound-title">POOLS.TRADE BUY</div>
+          <div class="sound-sub">Ka-Ching Pump</div>
+        </button>
+
+        <button class="sound-card sound-card--green" (click)="triggerHypeSound('victory')">
+          <div class="sound-emoji">👑</div>
+          <div class="sound-title">KING OF THE HILL</div>
+          <div class="sound-sub">Leaderboard Dominance</div>
+        </button>
+
+        <button class="sound-card sound-card--cyan" (click)="triggerHypeSound('ape')">
+          <div class="sound-emoji">🚀</div>
+          <div class="sound-title">GRADUATION PUMP</div>
+          <div class="sound-sub">Party Confetti Blast</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- FOUR-PHASE MOON MAP (ROADMAP)                                         -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="roadmap-section py-5">
+    <div class="container">
+      <div class="section-header text-center mb-5">
+        <div class="badge-tag">THE ASCENSION</div>
+        <h2 class="section-title">THE FOUR-PHASE MOON MAP 🗺️</h2>
+        <p class="section-desc">Our trajectory from pools.trade launch to intergalactic dominance.</p>
+      </div>
+
+      <div class="roadmap-timeline">
+        
+        <!-- Phase 1 -->
+        <div class="roadmap-node active-node">
+          <div class="node-marker">1</div>
+          <div class="node-content">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h3 class="node-title m-0">Phase 1: Working GameFi Platform</h3>
+              <span class="node-status status-live">🟢 COMPLETED / LIVE</span>
+            </div>
+            <p class="node-desc">
+              • Working trivia dApp live on Celo Mainnet & Base<br>
+              • Robinhood Wallet & Opera MiniPay frictionless integration<br>
+              • Game store lifelines and daily reward streaks<br>
+              • Proof of Ship Celo Mainnet release
+            </p>
+          </div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div class="roadmap-node current-node">
+          <div class="node-marker">2</div>
+          <div class="node-content">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h3 class="node-title m-0">Phase 2: Fair Launch on pools.trade</h3>
+              <span class="node-status status-current">⚡ IN PROGRESS</span>
+            </div>
+            <p class="node-desc">
+              • Fair Launch on pools.trade (Celo/Base)<br>
+              • Fill Bonding Curve to 100% (King of the Hill)<br>
+              • 30-Day TikTok & YouTube Shorts influencer blitz<br>
+              • Game store revenue executing automated buy orders on curve
+            </p>
+          </div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div class="roadmap-node">
+          <div class="node-marker">3</div>
+          <div class="node-content">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h3 class="node-title m-0">Phase 3: DEX Graduation & Staking Yield</h3>
+              <span class="node-status status-upcoming">🔒 UPCOMING</span>
+            </div>
+            <p class="node-desc">
+              • Auto-migration of liquidity to Ubeswap V3 & LP burned<br>
+              • Activate single-sided token staking with 10% shop rakes<br>
+              • Soulbound "200 IQ Chad" Achievement Badge minting<br>
+              • CoinGecko & CoinMarketCap fast-track listings
+            </p>
+          </div>
+        </div>
+
+        <!-- Phase 4 -->
+        <div class="roadmap-node">
+          <div class="node-marker">4</div>
+          <div class="node-content">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h3 class="node-title m-0">Phase 4: Intergalactic Dominance</h3>
+              <span class="node-status status-upcoming">🔒 UPCOMING</span>
+            </div>
+            <p class="node-desc">
+              • Tier-1/2 Centralized Exchange (CEX) listings<br>
+              • High-Roller 1v1 P2P Trivia Battle Arenas with stablecoin pots<br>
+              • AI-Hosted Live Stream Trivia Shows with on-chain betting<br>
+              • Global Gigabrain DAO Governance
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- MEME ARSENAL & VIRAL RAIDING KIT                                     -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="raids-section py-5">
+    <div class="container">
+      <div class="section-header text-center mb-4">
+        <div class="badge-tag">COMMUNITY WEAPONS</div>
+        <h2 class="section-title">THE GIGABRAIN RAIDING KIT ⚔️</h2>
+        <p class="section-desc">1-Click copy viral copypastas and raid Twitter/Telegram with high-IQ alpha!</p>
+      </div>
+
+      <!-- Banner Showcase -->
+      <div class="meme-banner-box mb-4">
+        <img src="/images/galaxy_brain_banner.jpg" alt="Galaxy Brain Meme Evolution" class="w-100 banner-img rounded-4">
+      </div>
+
+      <!-- Raid Template Box -->
+      <div class="raid-card">
+        <div class="raid-tabs d-flex gap-2 mb-3">
+          <button 
+            *ngFor="let t of raidTemplates; let i = index" 
+            class="raid-tab-btn" 
+            [class.active]="activeRaidTab() === i"
+            (click)="activeRaidTab.set(i)"
+          >
+            {{ t.category }}: {{ t.title }}
+          </button>
+        </div>
+
+        <div class="raid-content-box">
+          <pre class="raid-pre">{{ raidTemplates[activeRaidTab()].text }}</pre>
+          <button class="bb-btn bb-btn--gold mt-3" (click)="copyRaid(raidTemplates[activeRaidTab()].text)">
+            <span>📋 Copy Raid Template to Clipboard</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- FAQ ACCORDION                                                         -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="faq-section py-5">
+    <div class="container" style="max-width: 800px;">
+      <div class="section-header text-center mb-5">
+        <div class="badge-tag">TRANSPARENCY</div>
+        <h2 class="section-title">FREQUENTLY ASKED QUESTIONS</h2>
+      </div>
+
+      <div class="faq-accordion">
+        
+        <div class="faq-item" [class.open]="activeFaqIndex() === 0">
+          <div class="faq-question" (click)="toggleFaq(0)">
+            <span>How does the pools.trade bonding curve launch work?</span>
+            <span class="faq-arrow">{{ activeFaqIndex() === 0 ? '▲' : '▼' }}</span>
+          </div>
+          <div class="faq-answer" *ngIf="activeFaqIndex() === 0">
+            <p>
+              $BRAINBOOK launches on the pools.trade bonding curve with 0% presale and 0% taxes. As people buy, the price rises along the mathematical curve. Once the target market cap is reached, 100% of the accumulated liquidity is automatically migrated to Ubeswap V3 and burned permanently on-chain.
+            </p>
+          </div>
+        </div>
+
+        <div class="faq-item" [class.open]="activeFaqIndex() === 1">
+          <div class="faq-question" (click)="toggleFaq(1)">
+            <span>How does the BrainBook game pump the pools.trade curve?</span>
+            <span class="faq-arrow">{{ activeFaqIndex() === 1 ? '▲' : '▼' }}</span>
+          </div>
+          <div class="faq-answer" *ngIf="activeFaqIndex() === 1">
+            <p>
+              When players buy power-ups in the Store (Time Freezes, Hints, 50/50 Lifelines), 50% of the store revenue is used to execute automated buy orders on pools.trade, creating relentless upward pressure until graduation!
+            </p>
+          </div>
+        </div>
+
+        <div class="faq-item" [class.open]="activeFaqIndex() === 2">
+          <div class="faq-question" (click)="toggleFaq(2)">
+            <span>Can I buy and play using Robinhood Wallet?</span>
+            <span class="faq-arrow">{{ activeFaqIndex() === 2 ? '▲' : '▼' }}</span>
+          </div>
+          <div class="faq-answer" *ngIf="activeFaqIndex() === 2">
+            <p>
+              Yes! pools.trade and BrainBook support Robinhood Web3 Wallet, Opera MiniPay, Valora, and MetaMask. You can connect your Robinhood Wallet and buy $BRAINBOOK with sub-cent transaction fees.
+            </p>
+          </div>
+        </div>
+
+        <div class="faq-item" [class.open]="activeFaqIndex() === 3">
+          <div class="faq-question" (click)="toggleFaq(3)">
+            <span>What are the buy and sell taxes?</span>
+            <span class="faq-arrow">{{ activeFaqIndex() === 3 ? '▲' : '▼' }}</span>
+          </div>
+          <div class="faq-answer" *ngIf="activeFaqIndex() === 3">
+            <p>
+              <strong>0% Buy Tax and 0% Sell Tax</strong>. There are zero developer fees or transfer taxes.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- FOOTER CTA                                                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <footer class="memecoin-footer py-5 text-center">
+    <div class="container">
+      <div class="footer-badge mb-3">JOIN THE CULT</div>
+      <h2 class="footer-title mb-3">READY TO ASCEND YOUR IQ? 🧠</h2>
+      <p class="footer-sub mb-4">Ape the pools.trade bonding curve and stack your $BRAINBOOK on-chain today.</p>
+
+      <div class="d-flex justify-content-center gap-3 flex-wrap mb-5">
+        <a [href]="poolsTradeUrl" target="_blank" class="bb-btn bb-btn--gold bb-btn--lg">
+          <span>🌊 Buy on pools.trade</span>
+        </a>
+        <button (click)="navigateToPlay()" class="bb-btn bb-btn--primary bb-btn--lg">
+          <span>🧠 Play Trivia Now</span>
+        </button>
+        <button (click)="navigateToDaily()" class="bb-btn bb-btn--ghost bb-btn--lg">
+          <span>🎁 Daily Reward Streak</span>
+        </button>
+      </div>
+
+      <div class="footer-links text-muted small">
+        <p>© 2026 BrainBook Ecosystem • The Proof-of-Gigabrain Movement • Fair Launch on pools.trade • Compatible with Robinhood & MiniPay</p>
+      </div>
+    </div>
+  </footer>
+
+</div>

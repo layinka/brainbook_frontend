@@ -95,6 +95,12 @@ export class QuizGameComponent implements OnInit, OnDestroy {
   tokenClaimed = signal<boolean>(false);
   nftClaimed = signal<boolean>(false);
 
+  // Challenge & Sharing state
+  challengeInfo = signal<{ challenger: string; score: number; total?: number } | null>(null);
+  shareModalOpen = signal<boolean>(false);
+  myReferralCode = signal<string | null>(null);
+  challengeLinkCopied = signal<boolean>(false);
+
   readonly OPTION_LETTERS = ['A', 'B', 'C'];
   readonly MAX_LIVES = 3;
 
@@ -140,6 +146,25 @@ export class QuizGameComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     const categoryKey = this.route.snapshot.paramMap.get('category') ?? '';
+
+    // Read incoming challenge query params
+    const challenger = this.route.snapshot.queryParamMap.get('challenger');
+    const scoreParam = this.route.snapshot.queryParamMap.get('score');
+    const totalParam = this.route.snapshot.queryParamMap.get('total');
+    if (challenger && scoreParam) {
+      const parsedScore = parseInt(scoreParam, 10);
+      const parsedTotal = totalParam ? parseInt(totalParam, 10) : undefined;
+      if (!isNaN(parsedScore)) {
+        this.challengeInfo.set({
+          challenger: decodeURIComponent(challenger),
+          score: parsedScore,
+          total: parsedTotal
+        });
+      }
+    }
+
+    // Fetch user referral code for outgoing challenge links
+    void this.fetchUserReferralCode();
 
     try {
       const cat = await this.quizService.loadCategory(categoryKey);
@@ -518,5 +543,131 @@ export class QuizGameComponent implements OnInit, OnDestroy {
     } finally {
       this.claimingNft.set(false);
     }
+  }
+
+  // ─── Challenge & Social Sharing Helpers ─────────────────────────────────────
+
+  async fetchUserReferralCode(): Promise<void> {
+    try {
+      const session = this.siweAuth.authService.session();
+      if (session?.user?.referrerCode) {
+        this.myReferralCode.set(session.user.referrerCode);
+        return;
+      }
+      const localCode = localStorage.getItem('brainbook_my_referral_code');
+      if (localCode) {
+        this.myReferralCode.set(localCode);
+        return;
+      }
+      // Fetch from backend if logged in
+      const res = await this.http.get<any>(`${environment.apiUrl}/referrals/stats`, { withCredentials: true }).toPromise();
+      if (res?.success && res.data?.referralCode) {
+        this.myReferralCode.set(res.data.referralCode);
+        localStorage.setItem('brainbook_my_referral_code', res.data.referralCode);
+      }
+    } catch (e) {
+      // Ignored for unauthenticated users
+    }
+  }
+
+  getUserDisplayName(): string {
+    const session = this.siweAuth.authService.session();
+    if (session?.user?.displayName) return session.user.displayName;
+    if (session?.user?.name) return session.user.name;
+    const acct = this.w3s.account$();
+    if (acct) return `${acct.slice(0, 6)}...${acct.slice(-4)}`;
+    return 'A Trivia Player';
+  }
+
+  getChallengeUrl(): string {
+    const catKey = this.category()?.category || 'generalknowledge';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://brainbook.roxsolid.co';
+    const refCode = this.myReferralCode() || localStorage.getItem('brainbook_referrer_code') || '';
+    const challengerName = this.getUserDisplayName();
+    const sess = this.session();
+    const score = sess?.correctCount ?? 0;
+    const total = sess?.questions?.length ?? 10;
+
+    let url = `${origin}/play/${catKey}?challenger=${encodeURIComponent(challengerName)}&score=${score}&total=${total}`;
+    if (refCode) {
+      url += `&ref=${encodeURIComponent(refCode)}`;
+    }
+    return url;
+  }
+
+  getShareText(): string {
+    const catName = this.category()?.displayName || 'Trivia';
+    const sess = this.session();
+    const score = sess?.correctCount ?? 0;
+    const total = sess?.questions?.length ?? 10;
+    const challengeUrl = this.getChallengeUrl();
+
+    return `🧠 I scored ${score}/${total} in ${catName} Trivia on BrainBook! Can you beat my score? Challenge me here: ${challengeUrl}`;
+  }
+
+  openShareModal(): void {
+    const shareText = this.getShareText();
+    const challengeUrl = this.getChallengeUrl();
+
+    // Trigger Web Share API if available on mobile
+    if (typeof navigator !== 'undefined' && navigator.share && window.innerWidth < 768) {
+      navigator.share({
+        title: 'BrainBook Trivia Challenge',
+        text: shareText,
+        url: challengeUrl
+      }).catch(err => {
+        // User cancelled or share failed — fallback to custom modal
+        this.shareModalOpen.set(true);
+      });
+    } else {
+      this.shareModalOpen.set(true);
+    }
+  }
+
+  closeShareModal(): void {
+    this.shareModalOpen.set(false);
+  }
+
+  copyChallengeLink(): void {
+    const challengeUrl = this.getChallengeUrl();
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(challengeUrl).then(() => {
+        this.challengeLinkCopied.set(true);
+        this.toast.show('Link Copied!', 'Challenge link copied to clipboard!', undefined, 'bg-success text-light');
+        setTimeout(() => this.challengeLinkCopied.set(false), 3000);
+      }).catch(() => {
+        this.fallbackCopyText(challengeUrl);
+      });
+    } else {
+      this.fallbackCopyText(challengeUrl);
+    }
+  }
+
+  private fallbackCopyText(text: string): void {
+    const input = document.createElement('textarea');
+    input.value = text;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    this.challengeLinkCopied.set(true);
+    this.toast.show('Link Copied!', 'Challenge link copied to clipboard!', undefined, 'bg-success text-light');
+    setTimeout(() => this.challengeLinkCopied.set(false), 3000);
+  }
+
+  shareToTwitter(): void {
+    const text = encodeURIComponent(this.getShareText());
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+  }
+
+  shareToWhatsApp(): void {
+    const text = encodeURIComponent(this.getShareText());
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  }
+
+  shareToTelegram(): void {
+    const text = encodeURIComponent(this.getShareText());
+    const url = encodeURIComponent(this.getChallengeUrl());
+    window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
   }
 }

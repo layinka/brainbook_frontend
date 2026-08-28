@@ -13,6 +13,14 @@
       <img src="/images/background-sheet0.png" alt="" class="qg-countdown__bgimg" />
     </div>
     <div class="qg-countdown__inner">
+      @if (challengeInfo(); as challenge) {
+        <div class="qg-challenge-banner bb-anim-bounce-in">
+          <span class="qg-challenge-banner__icon">⚔️</span>
+          <div class="qg-challenge-banner__text">
+            <strong>{{ challenge.challenger }}</strong> challenged you to beat their score of <strong>{{ challenge.score }}{{ challenge.total ? '/' + challenge.total : '' }}</strong>!
+          </div>
+        </div>
+      }
       <div class="qg-countdown__cat-name bb-anim-fade-in">{{ category()?.displayName }}</div>
       <div class="qg-countdown__number" [@countdownAnim]="countdownValue()">
         {{ countdownValue() }}
@@ -25,6 +33,12 @@
 <!-- PLAYING / ANSWERING PHASE -->
 @if (phase() === 'playing' || phase() === 'answering') {
   <div class="qg-game">
+
+    @if (challengeInfo(); as challenge) {
+      <div class="qg-challenge-banner qg-challenge-banner--sm bb-anim-slide-up">
+        <span>⚔️ <strong>{{ challenge.challenger }}'s</strong> Challenge: Beat <strong>{{ challenge.score }}{{ challenge.total ? '/' + challenge.total : '' }}</strong></span>
+      </div>
+    }
 
     <!-- Top Bar -->
     <div class="qg-topbar bb-anim-fade-in">
@@ -277,6 +291,7 @@
         }
 
         <div class="qg-gameover__actions">
+          <button class="bb-btn bb-btn--gold bb-btn--lg" (click)="openShareModal()" id="btn-share-challenge">⚔️ Share & Challenge Friends</button>
           <button class="bb-btn bb-btn--gold bb-btn--lg" (click)="playAgain()" id="btn-play-again">🔄 Play Again</button>
           <button class="bb-btn bb-btn--ghost" (click)="goCategories()" id="btn-back-cats">📚 Categories</button>
           <button class="bb-btn bb-btn--ghost" (click)="goHome()" id="btn-go-home">🏠 Home</button>
@@ -321,11 +336,50 @@
         }
 
         <div class="qg-gameover__actions">
+          <button class="bb-btn bb-btn--gold bb-btn--lg" (click)="openShareModal()" id="btn-share-challenge-lose">⚔️ Share & Challenge Friends</button>
           <button class="bb-btn bb-btn--primary bb-btn--lg" (click)="playAgain()" id="btn-retry">🔄 Try Again</button>
           <button class="bb-btn bb-btn--ghost" (click)="goCategories()" id="btn-back-cats-lose">📚 Categories</button>
           <button class="bb-btn bb-btn--ghost" (click)="goHome()" id="btn-go-home-lose">🏠 Home</button>
         </div>
       </div>
     }
+  </div>
+}
+
+<!-- SHARE OPTIONS MODAL -->
+@if (shareModalOpen()) {
+  <div class="qg-share-modal-backdrop" (click)="closeShareModal()">
+    <div class="qg-share-modal bb-glass bb-anim-bounce-in" (click)="$event.stopPropagation()">
+      <div class="qg-share-modal__header">
+        <h3 class="qg-share-modal__title">⚔️ Challenge Your Friends</h3>
+        <button class="qg-share-modal__close" (click)="closeShareModal()">✕</button>
+      </div>
+
+      <p class="qg-share-modal__desc">
+        Share your trivia score and challenge your friends to beat your high score!
+      </p>
+
+      <div class="qg-share-modal__preview">
+        <p class="qg-share-modal__preview-text">"{{ getShareText() }}"</p>
+      </div>
+
+      <div class="qg-share-modal__actions">
+        <button class="bb-btn bb-btn--gold w-100 mb-3 py-2" (click)="copyChallengeLink()" id="btn-copy-challenge">
+          📋 {{ challengeLinkCopied() ? '✓ Challenge Link Copied!' : 'Copy Challenge Link' }}
+        </button>
+
+        <div class="qg-share-social-grid">
+          <button class="qg-social-btn qg-social-btn--twitter" (click)="shareToTwitter()">
+            🪽 X / Twitter
+          </button>
+          <button class="qg-social-btn qg-social-btn--whatsapp" (click)="shareToWhatsApp()">
+            💬 WhatsApp
+          </button>
+          <button class="qg-social-btn qg-social-btn--telegram" (click)="shareToTelegram()">
+            ✈️ Telegram
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 }

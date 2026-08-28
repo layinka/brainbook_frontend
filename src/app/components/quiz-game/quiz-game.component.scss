@@ -473,3 +473,163 @@
   flex-wrap: wrap;
   justify-content: center;
 }
+
+/* ── Challenge Banner ───────────────────────────────────────────────────────── */
+.qg-challenge-banner {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: var(--bb-radius-lg);
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+
+  &__icon {
+    font-size: 1.5rem;
+  }
+
+  &__text {
+    font-size: 0.9rem;
+    color: #ffffff;
+    line-height: 1.3;
+
+    strong {
+      color: var(--bb-gold);
+    }
+  }
+
+  &--sm {
+    padding: 0.4rem 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    justify-content: center;
+    border-radius: var(--bb-radius-md);
+  }
+}
+
+/* ── Share Options Modal ────────────────────────────────────────────────────── */
+.qg-share-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  padding: 1rem;
+}
+
+.qg-share-modal {
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(145deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 26, 0.98) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--bb-gold);
+    margin: 0;
+  }
+
+  &__close {
+    background: transparent;
+    border: none;
+    color: var(--bb-text-muted);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  &__desc {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 1rem;
+  }
+
+  &__preview {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 0.85rem;
+    margin-bottom: 1.25rem;
+
+    &-text {
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      font-style: italic;
+      margin: 0;
+      word-break: break-word;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.qg-share-social-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+
+  .qg-social-btn {
+    padding: 0.6rem 0.5rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+
+    &--twitter {
+      background: rgba(29, 155, 240, 0.15);
+      border-color: rgba(29, 155, 240, 0.3);
+      &:hover {
+        background: rgba(29, 155, 240, 0.3);
+      }
+    }
+
+    &--whatsapp {
+      background: rgba(37, 211, 102, 0.15);
+      border-color: rgba(37, 211, 102, 0.3);
+      &:hover {
+        background: rgba(37, 211, 102, 0.3);
+      }
+    }
+
+    &--telegram {
+      background: rgba(34, 158, 217, 0.15);
+      border-color: rgba(34, 158, 217, 0.3);
+      &:hover {
+        background: rgba(34, 158, 217, 0.3);
+      }
+    }
+  }
+}

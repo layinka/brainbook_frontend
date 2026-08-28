@@ -55,6 +55,14 @@ export const routes: Routes = [
     loadComponent: () => import('./components/attributions/attributions.component').then(m => m.AttributionsComponent),
   },
   {
+    path: 'memecoin',
+    loadComponent: () => import('./components/memecoin/memecoin.component').then(m => m.MemecoinComponent),
+  },
+  {
+    path: 'brain',
+    redirectTo: 'memecoin',
+  },
+  {
     path: '**',
     redirectTo: ''
   }
